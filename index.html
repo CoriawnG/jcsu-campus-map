@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JCSU Interactive Campus Map</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Johnson C. Smith University</p>
+      <h1>Interactive Campus Map</h1>
+    </div>
+    <a class="map-link" href="https://www.google.com/maps/d/viewer?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w&usp=sharing" target="_blank" rel="noreferrer">
+      Open full map
+    </a>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar is-expanded" aria-label="Campus location search">
+      <button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-expanded="true">
+        Search and Directions
+      </button>
+      <section class="search-panel">
+        <label for="locationSearch">Find a building or place</label>
+        <input
+          id="locationSearch"
+          type="search"
+          placeholder="Search library, Biddle, cafeteria..."
+          autocomplete="off"
+        >
+
+        <div class="filter-group" aria-label="Filter locations by category">
+          <button class="filter-button is-active" type="button" data-layer="All">All</button>
+          <button class="filter-button" type="button" data-layer="Academic Buildings">Academic</button>
+          <button class="filter-button" type="button" data-layer="Campus Services">Services</button>
+          <button class="filter-button" type="button" data-layer="Dining and Student Life">Dining</button>
+          <button class="filter-button" type="button" data-layer="Housing">Housing</button>
+          <button class="filter-button" type="button" data-layer="Athletics">Athletics</button>
+          <button class="filter-button" type="button" data-layer="Parking and Transportation">Parking</button>
+        </div>
+      </section>
+
+      <section class="results-panel" aria-live="polite">
+        <div class="panel-heading">
+          <h2>Locations</h2>
+          <span id="resultCount">0</span>
+        </div>
+        <div id="locationResults" class="location-list"></div>
+      </section>
+
+      <section id="selectedLocation" class="details-panel">
+        <p class="eyebrow">Selected Location</p>
+        <h2>Choose a place</h2>
+        <p>Search or select a location to see its category, layer, and notes.</p>
+      </section>
+
+      <section class="directions-panel" aria-label="Campus directions">
+        <div class="panel-heading compact-heading">
+          <h2>Directions</h2>
+        </div>
+        <div class="directions-form">
+          <label for="fromLocation">From</label>
+          <select id="fromLocation">
+            <option value="">Choose starting point</option>
+          </select>
+
+          <button id="useMyLocation" class="secondary-button" type="button">Use My Location</button>
+
+          <label for="toLocation">To</label>
+          <select id="toLocation">
+            <option value="">Choose destination</option>
+          </select>
+
+          <button id="getDirections" class="primary-button" type="button">Get Directions</button>
+          <button id="clearRoute" class="secondary-button" type="button">Clear Route</button>
+        </div>
+        <div id="directionsOutput" class="directions-output">
+          Choose a starting point and destination to preview the route request.
+        </div>
+      </section>
+    </aside>
+
+    <section class="map-panel" aria-label="Campus map views">
+      <div class="map-tabs" role="tablist" aria-label="Map views">
+        <button class="map-tab is-active" id="campusMapTab" type="button" role="tab" aria-selected="true" aria-controls="campusMapView" data-map-view="campusMapView">
+          Campus Map
+        </button>
+        <button class="map-tab" id="navigationMapTab" type="button" role="tab" aria-selected="false" aria-controls="navigationMapView" data-map-view="navigationMapView">
+          Navigation Map
+        </button>
+      </div>
+
+      <div class="map-view is-active" id="campusMapView" role="tabpanel" aria-labelledby="campusMapTab">
+        <iframe
+          id="campusMap"
+          title="Johnson C. Smith University Interactive Campus Map"
+          src="https://www.google.com/maps/d/embed?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+
+      <div class="map-view" id="navigationMapView" role="tabpanel" aria-labelledby="navigationMapTab" hidden>
+        <div id="navigationMap" class="navigation-map" aria-label="Custom campus navigation map"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="locations.js"></script>
+  <script src="paths.js"></script>
+  <script src="navigation.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
