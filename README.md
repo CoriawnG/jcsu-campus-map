@@ -2,6 +2,10 @@
 
 An interactive campus map and navigation prototype for Johnson C. Smith University. The project started with Google My Maps campus data and is being extended into a web app with search, filters, location details, GPS support, and campus walking directions.
 
+## Website
+
+https://coriawng.github.io/jcsu-campus-map/
+
 ## Features
 
 - Embedded Google My Maps campus map
