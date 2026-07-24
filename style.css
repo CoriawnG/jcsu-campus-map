@@ -472,7 +472,8 @@ select:focus {
     display: grid;
     grid-template-rows: auto auto minmax(120px, 1fr) auto auto;
     gap: 10px;
-    max-height: 72vh;
+    height: min(74vh, 680px);
+    max-height: none;
     padding: 0 12px 12px;
     overflow-y: auto;
     background: rgba(247, 248, 251, 0.98);
@@ -480,11 +481,19 @@ select:focus {
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -10px 28px rgba(29, 36, 51, 0.18);
     transform: translateY(calc(100% - 54px));
-    transition: transform 180ms ease;
+    transition: transform 220ms ease;
     -webkit-overflow-scrolling: touch;
   }
 
-  .sidebar.is-expanded {
+  .sidebar.sheet-collapsed {
+    transform: translateY(calc(100% - 54px));
+  }
+
+  .sidebar.sheet-half {
+    transform: translateY(38vh);
+  }
+
+  .sidebar.sheet-full {
     transform: translateY(0);
   }
 
@@ -527,6 +536,17 @@ select:focus {
 
   .location-list {
     max-height: 180px;
+  }
+
+  .sidebar.sheet-half .location-list {
+    max-height: 120px;
+  }
+
+  .sidebar.sheet-collapsed .search-panel,
+  .sidebar.sheet-collapsed .results-panel,
+  .sidebar.sheet-collapsed .details-panel,
+  .sidebar.sheet-collapsed .directions-panel {
+    display: none;
   }
 
   .map-panel {

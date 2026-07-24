@@ -29,6 +29,12 @@ const layerStyles = {
   "Landmarks": { label: "Landmarks", color: "#7f4b24" }
 };
 
+const mobilePanelStates = ["collapsed", "half", "full"];
+const mobilePanelLabels = {
+  collapsed: "Search and Directions",
+  half: "Search and Directions - Half",
+  full: "Search and Directions - Full"
+};
 let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
@@ -76,26 +82,47 @@ function renderLocations(list) {
       renderSelectedLocation(location);
       focusMapOnLocation(location);
       renderLocations(getFilteredLocations());
+      renderNavigationMarkers(getFilteredLocations());
+      expandMobilePanel();
     });
 
     resultsContainer.appendChild(button);
   });
 }
 
+function setMobilePanelState(state) {
+  const nextState = mobilePanelStates.includes(state) ? state : "half";
+
+  sidebar.classList.remove("sheet-collapsed", "sheet-half", "sheet-full");
+  sidebar.classList.add(`sheet-${nextState}`);
+  sidebar.dataset.panelState = nextState;
+  mobilePanelToggle.textContent = mobilePanelLabels[nextState];
+  mobilePanelToggle.setAttribute("aria-expanded", String(nextState !== "collapsed"));
+
+  if (navigationMap) {
+    setTimeout(() => navigationMap.invalidateSize(), 230);
+  }
+}
+
 function setMobilePanelExpanded(isExpanded) {
-  sidebar.classList.toggle("is-expanded", isExpanded);
-  mobilePanelToggle.setAttribute("aria-expanded", String(isExpanded));
+  setMobilePanelState(isExpanded ? "full" : "collapsed");
 }
 
 function expandMobilePanel() {
   if (window.matchMedia("(max-width: 860px)").matches) {
-    setMobilePanelExpanded(true);
+    setMobilePanelState("full");
+  }
+}
+
+function halfOpenMobilePanel() {
+  if (window.matchMedia("(max-width: 860px)").matches) {
+    setMobilePanelState("half");
   }
 }
 
 function collapseMobilePanel() {
   if (window.matchMedia("(max-width: 860px)").matches) {
-    setMobilePanelExpanded(false);
+    setMobilePanelState("collapsed");
   }
 }
 
@@ -251,7 +278,7 @@ function renderDirectionsPreview() {
 
   drawNavigationRoute(route, start, end);
   switchMapView("navigationMapView");
-  collapseMobilePanel();
+  halfOpenMobilePanel();
   focusMapOnLocation(end);
 }
 
@@ -608,7 +635,9 @@ useMyLocationButton.addEventListener("click", () => {
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);
 clearRouteButton.addEventListener("click", clearRoute);
 mobilePanelToggle.addEventListener("click", () => {
-  setMobilePanelExpanded(!sidebar.classList.contains("is-expanded"));
+  const currentState = sidebar.dataset.panelState || "full";
+  const nextState = currentState === "collapsed" ? "half" : currentState === "half" ? "full" : "collapsed";
+  setMobilePanelState(nextState);
 });
 
 mapTabs.forEach((tab) => {
@@ -623,3 +652,4 @@ locations.forEach((location, index) => {
 
 renderLocationOptions();
 renderLocations(locations);
+setMobilePanelState("full");
