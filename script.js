@@ -14,6 +14,7 @@ const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel")
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
 const directionsOutput = document.querySelector("#directionsOutput");
+const mapLocationStatus = document.querySelector("#mapLocationStatus");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
@@ -160,6 +161,24 @@ function submitFeedback(event) {
   feedbackStatus.textContent = "Opening the Google feedback form in a new tab.";
 }
 
+function setLocationStatus(message, options = {}) {
+  directionsOutput.innerHTML = message;
+
+  if (!mapLocationStatus) {
+    return;
+  }
+
+  mapLocationStatus.innerHTML = message;
+  mapLocationStatus.hidden = false;
+  mapLocationStatus.classList.toggle("is-error", Boolean(options.isError));
+}
+
+function hideLocationStatus() {
+  if (mapLocationStatus) {
+    mapLocationStatus.hidden = true;
+    mapLocationStatus.classList.remove("is-error");
+  }
+}
 function getSearchText(location) {
   return [
     location.name,
@@ -413,6 +432,7 @@ function renderDirectionsPreview() {
 
   if (!start || !end) {
     directionsOutput.textContent = "Choose a starting point and destination.";
+    hideLocationStatus();
     return;
   }
 
@@ -741,6 +761,7 @@ function clearRoute() {
   fromLocationSelect.value = "";
   toLocationSelect.value = "";
   directionsOutput.textContent = "Choose a starting point and destination.";
+  hideLocationStatus();
 
   if (navigationRouteLayer) {
     navigationRouteLayer.clearLayers();
@@ -816,18 +837,18 @@ function setLocationButtonsLoading(isLoading) {
 
 function requestCurrentLocation() {
   if (!navigator.geolocation) {
-    directionsOutput.textContent = "This browser does not support current-location access.";
+    setLocationStatus("This browser does not support current-location access.", { isError: true });
     return;
   }
 
   if (!window.isSecureContext) {
-    directionsOutput.innerHTML = "<strong>Current location needs HTTPS.</strong><br>Open the GitHub Pages version of the site, or use localhost while testing.";
+    setLocationStatus("<strong>Current location needs HTTPS.</strong><br>Open the GitHub Pages version of the site, or use localhost while testing.", { isError: true });
     expandMobilePanel();
     return;
   }
 
   setLocationButtonsLoading(true);
-  directionsOutput.textContent = "Requesting your current location. Your browser may ask for permission.";
+  setLocationStatus("<strong>Requesting your current location...</strong><br>Your browser may ask for permission.");
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -844,7 +865,7 @@ function requestCurrentLocation() {
       }
 
       fromLocationSelect.value = "current-location";
-      directionsOutput.innerHTML = "<strong>Current location set as the starting point.</strong><br>Choose a destination to build your route.";
+      setLocationStatus("<strong>Current location set as the starting point.</strong><br>Choose a destination to build your route.");
       showCurrentLocationMarker();
       switchMapView("navigationMapView");
 
@@ -857,7 +878,7 @@ function requestCurrentLocation() {
       setLocationButtonsLoading(false);
     },
     (error) => {
-      directionsOutput.textContent = getLocationErrorMessage(error);
+      setLocationStatus(getLocationErrorMessage(error), { isError: true });
       expandMobilePanel();
       setLocationButtonsLoading(false);
     },
