@@ -9,6 +9,8 @@ const filterButtons = document.querySelectorAll(".filter-button");
 const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
 const useMyLocationButton = document.querySelector("#useMyLocation");
+const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
+const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
 const directionsOutput = document.querySelector("#directionsOutput");
@@ -802,7 +804,17 @@ function getLocationErrorMessage(error) {
   return "Location is unavailable right now. Choose a starting point from the list instead.";
 }
 
-useMyLocationButton.addEventListener("click", () => {
+function setLocationButtonsLoading(isLoading) {
+  useMyLocationButton.disabled = isLoading;
+  useMyLocationButton.textContent = isLoading ? "Finding location..." : "Use My Location";
+
+  if (useMyLocationMapButton) {
+    useMyLocationMapButton.disabled = isLoading;
+    useMyLocationMapButton.textContent = isLoading ? "Finding location..." : "Use My Location";
+  }
+}
+
+function requestCurrentLocation() {
   if (!navigator.geolocation) {
     directionsOutput.textContent = "This browser does not support current-location access.";
     return;
@@ -810,11 +822,11 @@ useMyLocationButton.addEventListener("click", () => {
 
   if (!window.isSecureContext) {
     directionsOutput.innerHTML = "<strong>Current location needs HTTPS.</strong><br>Open the GitHub Pages version of the site, or use localhost while testing.";
+    expandMobilePanel();
     return;
   }
 
-  useMyLocationButton.disabled = true;
-  useMyLocationButton.textContent = "Finding location...";
+  setLocationButtonsLoading(true);
   directionsOutput.textContent = "Requesting your current location. Your browser may ask for permission.";
 
   navigator.geolocation.getCurrentPosition(
@@ -842,17 +854,26 @@ useMyLocationButton.addEventListener("click", () => {
         collapseMobilePanel();
       }
 
-      useMyLocationButton.disabled = false;
-      useMyLocationButton.textContent = "Use My Location";
+      setLocationButtonsLoading(false);
     },
     (error) => {
       directionsOutput.textContent = getLocationErrorMessage(error);
-      useMyLocationButton.disabled = false;
-      useMyLocationButton.textContent = "Use My Location";
+      expandMobilePanel();
+      setLocationButtonsLoading(false);
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
   );
-});
+}
+
+useMyLocationButton.addEventListener("click", requestCurrentLocation);
+
+if (useMyLocationMapButton) {
+  useMyLocationMapButton.addEventListener("click", requestCurrentLocation);
+}
+
+if (openDirectionsPanelButton) {
+  openDirectionsPanelButton.addEventListener("click", expandMobilePanel);
+}
 
 feedbackButton.addEventListener("click", openFeedbackModal);
 closeFeedbackButton.addEventListener("click", closeFeedbackModal);
@@ -904,7 +925,3 @@ locations.forEach((location, index) => {
 renderLocationOptions();
 renderLocations(locations);
 setMobilePanelState("full");
-
-
-
-

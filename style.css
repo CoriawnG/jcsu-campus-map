@@ -366,6 +366,7 @@ select:focus {
 }
 
 .map-view {
+  position: relative;
   min-height: 0;
 }
 
@@ -384,6 +385,43 @@ select:focus {
 
 .navigation-map {
   background: #eef2f7;
+}
+
+.map-floating-actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 500;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: min(360px, calc(100% - 28px));
+  pointer-events: none;
+}
+
+.map-action-button {
+  min-height: 40px;
+  padding: 9px 12px;
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #b8c8e7;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(29, 36, 51, 0.16);
+  cursor: pointer;
+  font-weight: 800;
+  pointer-events: auto;
+}
+
+.primary-map-action {
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.map-action-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .leaflet-popup-content {
