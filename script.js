@@ -23,6 +23,9 @@ const closeFeedbackButton = document.querySelector("#closeFeedback");
 const feedbackForm = document.querySelector("#feedbackForm");
 const feedbackType = document.querySelector("#feedbackType");
 const feedbackMessage = document.querySelector("#feedbackMessage");
+const feedbackLocation = document.querySelector("#feedbackLocation");
+const feedbackRouteStart = document.querySelector("#feedbackRouteStart");
+const feedbackRouteDestination = document.querySelector("#feedbackRouteDestination");
 const feedbackContact = document.querySelector("#feedbackContact");
 const feedbackStatus = document.querySelector("#feedbackStatus");
 const copyFeedbackButton = document.querySelector("#copyFeedback");
@@ -32,7 +35,8 @@ const googleFeedbackEntries = {
   message: "entry.1731304365",
   location: "entry.816222739",
   routeStart: "entry.442614904",
-  routeDestination: "entry.975708749"
+  routeDestination: "entry.975708749",
+  contact: ""
 };
 const jcsuCenter = [35.2435, -80.8565];
 const layerStyles = {
@@ -68,6 +72,13 @@ let panelDragMoved = false;
 
 
 function openFeedbackModal() {
+  const selectedLocationName = activeLocationName || "";
+  const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "";
+  const end = getLocationBySelectValue(toLocationSelect.value)?.name || "";
+
+  feedbackLocation.value = selectedLocationName;
+  feedbackRouteStart.value = start;
+  feedbackRouteDestination.value = end;
   feedbackModal.hidden = false;
   document.body.classList.add("modal-open");
   feedbackMessage.focus();
@@ -81,9 +92,9 @@ function closeFeedbackModal() {
 }
 
 function getFeedbackBody() {
-  const selectedLocationName = activeLocationName || "None selected";
-  const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "Not selected";
-  const end = getLocationBySelectValue(toLocationSelect.value)?.name || "Not selected";
+  const selectedLocationName = feedbackLocation.value.trim() || "Not provided";
+  const start = feedbackRouteStart.value.trim() || "Not selected";
+  const end = feedbackRouteDestination.value.trim() || "Not selected";
   const contact = feedbackContact.value.trim() || "Not provided";
 
   return [
@@ -99,11 +110,11 @@ function getFeedbackBody() {
 }
 
 function getGoogleFeedbackUrl() {
-  const selectedLocationName = activeLocationName || "None selected";
-  const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "Not selected";
-  const end = getLocationBySelectValue(toLocationSelect.value)?.name || "Not selected";
+  const selectedLocationName = feedbackLocation.value.trim() || "Not provided";
+  const start = feedbackRouteStart.value.trim() || "Not selected";
+  const end = feedbackRouteDestination.value.trim() || "Not selected";
   const contact = feedbackContact.value.trim();
-  const message = contact
+  const message = contact && !googleFeedbackEntries.contact
     ? `${feedbackMessage.value.trim()}\n\nContact: ${contact}`
     : feedbackMessage.value.trim();
   const params = new URLSearchParams({
@@ -114,6 +125,10 @@ function getGoogleFeedbackUrl() {
     [googleFeedbackEntries.routeStart]: start,
     [googleFeedbackEntries.routeDestination]: end
   });
+
+  if (googleFeedbackEntries.contact && contact) {
+    params.set(googleFeedbackEntries.contact, contact);
+  }
 
   return `${googleFeedbackFormBaseUrl}?${params.toString()}`;
 }
@@ -857,3 +872,4 @@ locations.forEach((location, index) => {
 renderLocationOptions();
 renderLocations(locations);
 setMobilePanelState("full");
+
