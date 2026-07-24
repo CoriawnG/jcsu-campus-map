@@ -26,7 +26,14 @@ const feedbackMessage = document.querySelector("#feedbackMessage");
 const feedbackContact = document.querySelector("#feedbackContact");
 const feedbackStatus = document.querySelector("#feedbackStatus");
 const copyFeedbackButton = document.querySelector("#copyFeedback");
-const googleFeedbackFormUrl = "https://forms.gle/R42Kvqa8UEW8QQu26";
+const googleFeedbackFormBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfzX_fnWqgj1gF3L_-DniH_02m-dfLPXlBVjRzVEhaVTvSWyQ/viewform";
+const googleFeedbackEntries = {
+  type: "entry.1854494049",
+  message: "entry.1731304365",
+  location: "entry.816222739",
+  routeStart: "entry.442614904",
+  routeDestination: "entry.975708749"
+};
 const jcsuCenter = [35.2435, -80.8565];
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
@@ -92,7 +99,23 @@ function getFeedbackBody() {
 }
 
 function getGoogleFeedbackUrl() {
-  return googleFeedbackFormUrl.trim();
+  const selectedLocationName = activeLocationName || "None selected";
+  const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "Not selected";
+  const end = getLocationBySelectValue(toLocationSelect.value)?.name || "Not selected";
+  const contact = feedbackContact.value.trim();
+  const message = contact
+    ? `${feedbackMessage.value.trim()}\n\nContact: ${contact}`
+    : feedbackMessage.value.trim();
+  const params = new URLSearchParams({
+    usp: "pp_url",
+    [googleFeedbackEntries.type]: feedbackType.value,
+    [googleFeedbackEntries.message]: message,
+    [googleFeedbackEntries.location]: selectedLocationName,
+    [googleFeedbackEntries.routeStart]: start,
+    [googleFeedbackEntries.routeDestination]: end
+  });
+
+  return `${googleFeedbackFormBaseUrl}?${params.toString()}`;
 }
 
 async function copyFeedbackText() {
@@ -116,15 +139,10 @@ function submitFeedback(event) {
   }
 
   const formUrl = getGoogleFeedbackUrl();
-
-  if (!formUrl) {
-    feedbackStatus.textContent = "Google Form link is not connected yet. Use Copy for now.";
-    return;
-  }
-
   window.open(formUrl, "_blank", "noreferrer");
   feedbackStatus.textContent = "Opening the Google feedback form in a new tab.";
 }
+
 function getSearchText(location) {
   return [
     location.name,
