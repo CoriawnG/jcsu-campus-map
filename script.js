@@ -43,6 +43,11 @@ let navigationMap = null;
 let navigationMarkerLayer = null;
 let navigationRouteLayer = null;
 let currentLocationLayer = null;
+let isPanelDragging = false;
+let panelDragStartY = 0;
+let panelDragStartTranslate = 0;
+let panelDragLatestTranslate = 0;
+let panelDragMoved = false;
 
 function getSearchText(location) {
   return [
@@ -124,6 +129,86 @@ function collapseMobilePanel() {
   if (window.matchMedia("(max-width: 860px)").matches) {
     setMobilePanelState("collapsed");
   }
+}
+function isMobilePanelEnabled() {
+  return window.matchMedia("(max-width: 860px)").matches;
+}
+
+function getPanelStateTranslate(state) {
+  const panelHeight = sidebar.offsetHeight;
+
+  if (state === "full") {
+    return 0;
+  }
+
+  if (state === "half") {
+    return Math.min(window.innerHeight * 0.38, panelHeight - 54);
+  }
+
+  return panelHeight - 54;
+}
+
+function getCurrentPanelTranslate() {
+  return getPanelStateTranslate(sidebar.dataset.panelState || "full");
+}
+
+function getNearestPanelState(translateY) {
+  return mobilePanelStates.reduce((nearestState, state) => {
+    const currentDistance = Math.abs(translateY - getPanelStateTranslate(state));
+    const nearestDistance = Math.abs(translateY - getPanelStateTranslate(nearestState));
+    return currentDistance < nearestDistance ? state : nearestState;
+  }, "half");
+}
+
+function startPanelDrag(event) {
+  if (!isMobilePanelEnabled()) {
+    return;
+  }
+
+  isPanelDragging = true;
+  panelDragMoved = false;
+  panelDragStartY = event.clientY;
+  panelDragStartTranslate = getCurrentPanelTranslate();
+  panelDragLatestTranslate = panelDragStartTranslate;
+  sidebar.classList.add("is-dragging");
+  mobilePanelToggle.setPointerCapture(event.pointerId);
+}
+
+function updatePanelDrag(event) {
+  if (!isPanelDragging) {
+    return;
+  }
+
+  const deltaY = event.clientY - panelDragStartY;
+  const maxTranslate = getPanelStateTranslate("collapsed");
+  const nextTranslate = Math.max(0, Math.min(maxTranslate, panelDragStartTranslate + deltaY));
+
+  if (Math.abs(deltaY) > 8) {
+    panelDragMoved = true;
+  }
+
+  panelDragLatestTranslate = nextTranslate;
+  sidebar.style.transform = `translateY(${nextTranslate}px)`;
+}
+
+function endPanelDrag(event) {
+  if (!isPanelDragging) {
+    return;
+  }
+
+  isPanelDragging = false;
+  sidebar.classList.remove("is-dragging");
+  sidebar.style.transform = "";
+
+  if (mobilePanelToggle.hasPointerCapture(event.pointerId)) {
+    mobilePanelToggle.releasePointerCapture(event.pointerId);
+  }
+
+  setMobilePanelState(getNearestPanelState(panelDragLatestTranslate));
+
+  setTimeout(() => {
+    panelDragMoved = false;
+  }, 0);
 }
 
 function focusMapOnLocation(location) {
@@ -634,7 +719,16 @@ useMyLocationButton.addEventListener("click", () => {
 
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);
 clearRouteButton.addEventListener("click", clearRoute);
+mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);
+mobilePanelToggle.addEventListener("pointermove", updatePanelDrag);
+mobilePanelToggle.addEventListener("pointerup", endPanelDrag);
+mobilePanelToggle.addEventListener("pointercancel", endPanelDrag);
+
 mobilePanelToggle.addEventListener("click", () => {
+  if (panelDragMoved) {
+    return;
+  }
+
   const currentState = sidebar.dataset.panelState || "full";
   const nextState = currentState === "collapsed" ? "half" : currentState === "half" ? "full" : "collapsed";
   setMobilePanelState(nextState);

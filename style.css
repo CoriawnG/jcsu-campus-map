@@ -485,6 +485,10 @@ select:focus {
     -webkit-overflow-scrolling: touch;
   }
 
+  .sidebar.is-dragging {
+    transition: none;
+  }
+
   .sidebar.sheet-collapsed {
     transform: translateY(calc(100% - 54px));
   }
@@ -508,8 +512,14 @@ select:focus {
     background: rgba(247, 248, 251, 0.98);
     border: 0;
     border-bottom: 1px solid var(--line);
-    cursor: pointer;
+    cursor: grab;
     font-weight: 800;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .sidebar.is-dragging .mobile-panel-toggle {
+    cursor: grabbing;
   }
 
   .mobile-panel-toggle::before {
