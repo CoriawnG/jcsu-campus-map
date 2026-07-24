@@ -26,7 +26,7 @@ const feedbackMessage = document.querySelector("#feedbackMessage");
 const feedbackContact = document.querySelector("#feedbackContact");
 const feedbackStatus = document.querySelector("#feedbackStatus");
 const copyFeedbackButton = document.querySelector("#copyFeedback");
-const feedbackIssueUrl = "https://github.com/CoriawnG/jcsu-campus-map/issues/new";
+const googleFeedbackFormUrl = "https://forms.gle/R42Kvqa8UEW8QQu26";
 const jcsuCenter = [35.2435, -80.8565];
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
@@ -69,7 +69,7 @@ function openFeedbackModal() {
 function closeFeedbackModal() {
   feedbackModal.hidden = true;
   document.body.classList.remove("modal-open");
-  feedbackStatus.textContent = "Submitting opens a prefilled GitHub issue.";
+  feedbackStatus.textContent = "Submitting opens the Google feedback form.";
   feedbackButton.focus();
 }
 
@@ -91,11 +91,8 @@ function getFeedbackBody() {
   ].join("\n");
 }
 
-function getFeedbackIssueUrl() {
-  const title = `[${feedbackType.value}] Campus map feedback`;
-  const body = getFeedbackBody();
-  const params = new URLSearchParams({ title, body });
-  return `${feedbackIssueUrl}?${params.toString()}`;
+function getGoogleFeedbackUrl() {
+  return googleFeedbackFormUrl.trim();
 }
 
 async function copyFeedbackText() {
@@ -118,8 +115,15 @@ function submitFeedback(event) {
     return;
   }
 
-  window.open(getFeedbackIssueUrl(), "_blank", "noreferrer");
-  feedbackStatus.textContent = "Opening GitHub Issues in a new tab.";
+  const formUrl = getGoogleFeedbackUrl();
+
+  if (!formUrl) {
+    feedbackStatus.textContent = "Google Form link is not connected yet. Use Copy for now.";
+    return;
+  }
+
+  window.open(formUrl, "_blank", "noreferrer");
+  feedbackStatus.textContent = "Opening the Google feedback form in a new tab.";
 }
 function getSearchText(location) {
   return [
