@@ -624,14 +624,22 @@ textarea:focus,
   }
 
   .sidebar.sheet-collapsed {
+    overflow: visible;
+    pointer-events: none;
     transform: translateY(calc(100% - 54px));
   }
 
+  .sidebar.sheet-collapsed .mobile-panel-toggle {
+    pointer-events: auto;
+  }
+
   .sidebar.sheet-half {
+    pointer-events: auto;
     transform: translateY(38vh);
   }
 
   .sidebar.sheet-full {
+    pointer-events: auto;
     transform: translateY(0);
   }
 
@@ -723,3 +731,4 @@ textarea:focus,
     display: none;
   }
 }
+

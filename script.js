@@ -862,6 +862,10 @@ mobilePanelToggle.addEventListener("click", () => {
 mapTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     switchMapView(tab.dataset.mapView);
+
+    if (tab.dataset.mapView === "navigationMapView") {
+      collapseMobilePanel();
+    }
   });
 });
 
@@ -872,4 +876,6 @@ locations.forEach((location, index) => {
 renderLocationOptions();
 renderLocations(locations);
 setMobilePanelState("full");
+
+
 
