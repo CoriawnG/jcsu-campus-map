@@ -21,6 +21,9 @@ body {
   color: var(--text);
   background: var(--bg);
   font-family: Arial, Helvetica, sans-serif;
+}
+body.modal-open {
+  overflow: hidden;
 }
 
 .app-header {
@@ -425,6 +428,118 @@ select:focus {
   border-radius: 999px;
 }
 
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feedback-button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 10px 14px;
+  color: #ffffff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.feedback-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.feedback-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(13, 20, 33, 0.58);
+}
+
+.feedback-modal[hidden] {
+  display: none;
+}
+
+.feedback-dialog {
+  width: min(520px, 100%);
+  max-height: min(720px, 92vh);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 22px 60px rgba(13, 20, 33, 0.32);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.feedback-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  color: var(--text);
+  background: #f6f8fc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+textarea,
+.feedback-form input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+textarea:focus,
+.feedback-form input[type="text"]:focus {
+  border-color: var(--blue);
+  outline: 3px solid rgba(28, 79, 156, 0.18);
+}
+
+.feedback-status {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.feedback-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 .empty-state {
   padding: 18px 12px;
   color: var(--muted);
@@ -432,9 +547,28 @@ select:focus {
 }
 
 @media (max-width: 860px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .feedback-button {
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .feedback-modal {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .feedback-dialog {
+    max-height: 88vh;
+    border-radius: 14px 14px 8px 8px;
+  }
   body {
     overflow: hidden;
-  }
+  }
 
   .app-header {
     position: relative;

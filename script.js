@@ -17,6 +17,16 @@ const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
 const sidebar = document.querySelector(".sidebar");
 const mobilePanelToggle = document.querySelector("#mobilePanelToggle");
+const feedbackButton = document.querySelector("#feedbackButton");
+const feedbackModal = document.querySelector("#feedbackModal");
+const closeFeedbackButton = document.querySelector("#closeFeedback");
+const feedbackForm = document.querySelector("#feedbackForm");
+const feedbackType = document.querySelector("#feedbackType");
+const feedbackMessage = document.querySelector("#feedbackMessage");
+const feedbackContact = document.querySelector("#feedbackContact");
+const feedbackStatus = document.querySelector("#feedbackStatus");
+const copyFeedbackButton = document.querySelector("#copyFeedback");
+const feedbackIssueUrl = "https://github.com/CoriawnG/jcsu-campus-map/issues/new";
 const jcsuCenter = [35.2435, -80.8565];
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
@@ -49,6 +59,68 @@ let panelDragStartTranslate = 0;
 let panelDragLatestTranslate = 0;
 let panelDragMoved = false;
 
+
+function openFeedbackModal() {
+  feedbackModal.hidden = false;
+  document.body.classList.add("modal-open");
+  feedbackMessage.focus();
+}
+
+function closeFeedbackModal() {
+  feedbackModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  feedbackStatus.textContent = "Submitting opens a prefilled GitHub issue.";
+  feedbackButton.focus();
+}
+
+function getFeedbackBody() {
+  const selectedLocationName = activeLocationName || "None selected";
+  const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "Not selected";
+  const end = getLocationBySelectValue(toLocationSelect.value)?.name || "Not selected";
+  const contact = feedbackContact.value.trim() || "Not provided";
+
+  return [
+    `Type: ${feedbackType.value}`,
+    `Selected location: ${selectedLocationName}`,
+    `Route start: ${start}`,
+    `Route destination: ${end}`,
+    `Contact: ${contact}`,
+    "",
+    "Feedback:",
+    feedbackMessage.value.trim()
+  ].join("\n");
+}
+
+function getFeedbackIssueUrl() {
+  const title = `[${feedbackType.value}] Campus map feedback`;
+  const body = getFeedbackBody();
+  const params = new URLSearchParams({ title, body });
+  return `${feedbackIssueUrl}?${params.toString()}`;
+}
+
+async function copyFeedbackText() {
+  const body = getFeedbackBody();
+
+  try {
+    await navigator.clipboard.writeText(body);
+    feedbackStatus.textContent = "Feedback copied. You can paste it into an email or message.";
+  } catch {
+    feedbackStatus.textContent = "Copy failed. Select the text and copy it manually.";
+  }
+}
+
+function submitFeedback(event) {
+  event.preventDefault();
+
+  if (!feedbackMessage.value.trim()) {
+    feedbackStatus.textContent = "Write a critique or suggestion before submitting.";
+    feedbackMessage.focus();
+    return;
+  }
+
+  window.open(getFeedbackIssueUrl(), "_blank", "noreferrer");
+  feedbackStatus.textContent = "Opening GitHub Issues in a new tab.";
+}
 function getSearchText(location) {
   return [
     location.name,
@@ -717,6 +789,22 @@ useMyLocationButton.addEventListener("click", () => {
   );
 });
 
+feedbackButton.addEventListener("click", openFeedbackModal);
+closeFeedbackButton.addEventListener("click", closeFeedbackModal);
+copyFeedbackButton.addEventListener("click", copyFeedbackText);
+feedbackForm.addEventListener("submit", submitFeedback);
+
+feedbackModal.addEventListener("click", (event) => {
+  if (event.target === feedbackModal) {
+    closeFeedbackModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !feedbackModal.hidden) {
+    closeFeedbackModal();
+  }
+});
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);
 clearRouteButton.addEventListener("click", clearRoute);
 mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);

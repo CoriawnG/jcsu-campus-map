@@ -16,9 +16,12 @@
       <p class="eyebrow">Johnson C. Smith University</p>
       <h1>Interactive Campus Map</h1>
     </div>
-    <a class="map-link" href="https://www.google.com/maps/d/viewer?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w&usp=sharing" target="_blank" rel="noreferrer">
-      Open full map
-    </a>
+    <div class="header-actions">
+      <button id="feedbackButton" class="feedback-button" type="button">Feedback</button>
+      <a class="map-link" href="https://www.google.com/maps/d/viewer?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w&usp=sharing" target="_blank" rel="noreferrer">
+        Open full map
+      </a>
+    </div>
   </header>
 
   <main class="app-shell">
@@ -112,6 +115,42 @@
     </section>
   </main>
 
+
+  <div id="feedbackModal" class="feedback-modal" hidden>
+    <div class="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+      <div class="feedback-header">
+        <div>
+          <p class="eyebrow">App Feedback</p>
+          <h2 id="feedbackTitle">Send a suggestion</h2>
+        </div>
+        <button id="closeFeedback" class="icon-button" type="button" aria-label="Close feedback form">x</button>
+      </div>
+
+      <form id="feedbackForm" class="feedback-form">
+        <label for="feedbackType">Type</label>
+        <select id="feedbackType">
+          <option value="Suggestion">Suggestion</option>
+          <option value="Wrong location">Wrong location</option>
+          <option value="Missing place">Missing place</option>
+          <option value="Route issue">Route issue</option>
+          <option value="Mobile issue">Mobile issue</option>
+        </select>
+
+        <label for="feedbackMessage">Critique or suggestion</label>
+        <textarea id="feedbackMessage" rows="6" placeholder="Tell us what should be changed, added, or fixed." required></textarea>
+
+        <label for="feedbackContact">Contact info optional</label>
+        <input id="feedbackContact" type="text" placeholder="Email, phone, or name if you want follow-up">
+
+        <p id="feedbackStatus" class="feedback-status">Submitting opens a prefilled GitHub issue.</p>
+
+        <div class="feedback-actions">
+          <button class="secondary-button" id="copyFeedback" type="button">Copy</button>
+          <button class="primary-button" type="submit">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="locations.js"></script>
   <script src="paths.js"></script>
