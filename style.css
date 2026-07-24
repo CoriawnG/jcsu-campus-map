@@ -671,6 +671,15 @@ textarea:focus,
     pointer-events: auto;
   }
 
+  body.navigation-map-active:not(.directions-panel-open) .sidebar {
+    pointer-events: none;
+    transform: translateY(100%);
+  }
+
+  body.navigation-map-active:not(.directions-panel-open) .mobile-panel-toggle {
+    pointer-events: none;
+  }
+
   .sidebar.sheet-half {
     pointer-events: auto;
     transform: translateY(38vh);

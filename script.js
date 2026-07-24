@@ -228,6 +228,7 @@ function renderLocations(list) {
 function setMobilePanelState(state) {
   const nextState = mobilePanelStates.includes(state) ? state : "half";
 
+  document.body.classList.toggle("directions-panel-open", nextState !== "collapsed");
   sidebar.classList.remove("sheet-collapsed", "sheet-half", "sheet-full");
   sidebar.classList.add(`sheet-${nextState}`);
   sidebar.dataset.panelState = nextState;
@@ -258,6 +259,14 @@ function halfOpenMobilePanel() {
 function collapseMobilePanel() {
   if (window.matchMedia("(max-width: 860px)").matches) {
     setMobilePanelState("collapsed");
+  }
+}
+
+function openDirectionsPanel() {
+  if (window.matchMedia("(max-width: 860px)").matches) {
+    setMobilePanelState("half");
+  } else {
+    setMobilePanelState("full");
   }
 }
 function isMobilePanelEnabled() {
@@ -769,6 +778,13 @@ function clearRoute() {
 }
 
 function switchMapView(targetId) {
+  const isNavigationMapActive = targetId === "navigationMapView";
+
+  document.body.classList.toggle("navigation-map-active", isNavigationMapActive);
+  if (!isNavigationMapActive) {
+    document.body.classList.remove("directions-panel-open");
+  }
+
   mapTabs.forEach((item) => {
     const isActive = item.dataset.mapView === targetId;
     item.classList.toggle("is-active", isActive);
@@ -893,7 +909,7 @@ if (useMyLocationMapButton) {
 }
 
 if (openDirectionsPanelButton) {
-  openDirectionsPanelButton.addEventListener("click", expandMobilePanel);
+  openDirectionsPanelButton.addEventListener("click", openDirectionsPanel);
 }
 
 feedbackButton.addEventListener("click", openFeedbackModal);
@@ -946,3 +962,4 @@ locations.forEach((location, index) => {
 renderLocationOptions();
 renderLocations(locations);
 setMobilePanelState("full");
+
