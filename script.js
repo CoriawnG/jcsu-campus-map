@@ -786,13 +786,36 @@ filterButtons.forEach((button) => {
   });
 });
 
+function getLocationErrorMessage(error) {
+  if (error?.code === 1) {
+    return "Location permission was blocked. In your browser settings, allow location access for this site, then try again.";
+  }
+
+  if (error?.code === 2) {
+    return "Your device could not find your location. Turn on Location Services/GPS and try again outdoors or near a window.";
+  }
+
+  if (error?.code === 3) {
+    return "Location lookup timed out. Try again, or choose a starting point from the list.";
+  }
+
+  return "Location is unavailable right now. Choose a starting point from the list instead.";
+}
+
 useMyLocationButton.addEventListener("click", () => {
   if (!navigator.geolocation) {
     directionsOutput.textContent = "This browser does not support current-location access.";
     return;
   }
 
-  directionsOutput.textContent = "Requesting your current location...";
+  if (!window.isSecureContext) {
+    directionsOutput.innerHTML = "<strong>Current location needs HTTPS.</strong><br>Open the GitHub Pages version of the site, or use localhost while testing.";
+    return;
+  }
+
+  useMyLocationButton.disabled = true;
+  useMyLocationButton.textContent = "Finding location...";
+  directionsOutput.textContent = "Requesting your current location. Your browser may ask for permission.";
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -809,20 +832,25 @@ useMyLocationButton.addEventListener("click", () => {
       }
 
       fromLocationSelect.value = "current-location";
-      directionsOutput.textContent = "Current location set as the starting point.";
+      directionsOutput.innerHTML = "<strong>Current location set as the starting point.</strong><br>Choose a destination to build your route.";
       showCurrentLocationMarker();
       switchMapView("navigationMapView");
 
       if (toLocationSelect.value) {
         renderDirectionsPreview();
       } else {
-        expandMobilePanel();
+        collapseMobilePanel();
       }
+
+      useMyLocationButton.disabled = false;
+      useMyLocationButton.textContent = "Use My Location";
     },
-    () => {
-      directionsOutput.textContent = "Location permission was blocked or unavailable. Choose a starting point from the list instead.";
+    (error) => {
+      directionsOutput.textContent = getLocationErrorMessage(error);
+      useMyLocationButton.disabled = false;
+      useMyLocationButton.textContent = "Use My Location";
     },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
   );
 });
 
@@ -876,6 +904,7 @@ locations.forEach((location, index) => {
 renderLocationOptions();
 renderLocations(locations);
 setMobilePanelState("full");
+
 
 
 
