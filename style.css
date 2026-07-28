@@ -340,11 +340,14 @@ select:focus {
 }
 
 .map-tabs {
+  position: relative;
+  z-index: 800;
   display: flex;
   gap: 6px;
   padding: 10px;
   background: #ffffff;
   border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
 }
 
 .map-tab {
@@ -368,6 +371,7 @@ select:focus {
 .map-view {
   position: relative;
   min-height: 0;
+  overflow: hidden;
 }
 
 .map-view.is-active {
@@ -391,7 +395,7 @@ select:focus {
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 500;
+  z-index: 600;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
