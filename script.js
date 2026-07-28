@@ -10,6 +10,8 @@ const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
 const useMyLocationButton = document.querySelector("#useMyLocation");
 const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
+const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
+const toggleLiveTrackingMapButton = document.querySelector("#toggleLiveTrackingMap");
 const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
@@ -63,6 +65,8 @@ let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
 let currentPosition = null;
+let liveTrackingWatchId = null;
+let isLiveTracking = false;
 let navigationMap = null;
 let navigationMarkerLayer = null;
 let navigationRouteLayer = null;
@@ -512,8 +516,14 @@ function renderDirectionsPreview() {
 
   drawNavigationRoute(route, start, end);
   switchMapView("navigationMapView");
-  halfOpenMobilePanel();
-  focusMapOnLocation(end);
+
+  if (isCurrentLocationStart) {
+    showCurrentLocationMarker();
+    collapseMobilePanel();
+  } else {
+    halfOpenMobilePanel();
+    focusMapOnLocation(end);
+  }
 }
 
 function formatRouteDistance(meters) {
@@ -781,6 +791,7 @@ function drawNavigationRoute(route, start, end) {
 }
 
 function clearRoute() {
+  stopLiveTracking();
   fromLocationSelect.value = "";
   toLocationSelect.value = "";
   directionsOutput.textContent = "Choose a starting point and destination.";
@@ -865,15 +876,76 @@ function setLocationButtonsLoading(isLoading) {
   }
 }
 
-function requestCurrentLocation() {
+function setLiveTrackingButtons() {
+  const label = isLiveTracking ? "Stop Live Tracking" : "Start Live Tracking";
+
+  if (toggleLiveTrackingButton) {
+    toggleLiveTrackingButton.textContent = label;
+  }
+
+  if (toggleLiveTrackingMapButton) {
+    toggleLiveTrackingMapButton.textContent = label;
+    toggleLiveTrackingMapButton.classList.toggle("primary-map-action", isLiveTracking);
+  }
+}
+
+function canUseCurrentLocation() {
   if (!navigator.geolocation) {
     setLocationStatus("This browser does not support current-location access.", { isError: true });
-    return;
+    return false;
   }
 
   if (!window.isSecureContext) {
     setLocationStatus("<strong>Current location needs HTTPS.</strong><br>Open the GitHub Pages version of the site, or use localhost while testing.", { isError: true });
     expandMobilePanel();
+    return false;
+  }
+
+  return true;
+}
+
+function saveCurrentPosition(position) {
+  currentPosition = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracy: position.coords.accuracy
+  };
+
+  if (!fromLocationSelect.querySelector('option[value="current-location"]')) {
+    const option = document.createElement("option");
+    option.value = "current-location";
+    option.textContent = "Current Location";
+    fromLocationSelect.prepend(option);
+  }
+
+  fromLocationSelect.value = "current-location";
+}
+
+function updateCurrentLocation(position, mode) {
+  saveCurrentPosition(position);
+
+  const accuracy = Math.round(currentPosition.accuracy || 0);
+  const message = mode === "live"
+    ? `<strong>Live tracking on.</strong><br>Your pin updates as you move. Accuracy: about ${accuracy} meters.`
+    : `<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${accuracy} meters.`;
+
+  setLocationStatus(message);
+  showCurrentLocationMarker();
+  switchMapView("navigationMapView");
+
+  if (toLocationSelect.value) {
+    renderDirectionsPreview();
+  } else {
+    collapseMobilePanel();
+  }
+}
+
+function requestCurrentLocation() {
+  if (isLiveTracking) {
+    stopLiveTracking();
+  }
+
+  if (!canUseCurrentLocation()) {
     return;
   }
 
@@ -882,30 +954,7 @@ function requestCurrentLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      currentPosition = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy
-      };
-
-      if (!fromLocationSelect.querySelector('option[value="current-location"]')) {
-        const option = document.createElement("option");
-        option.value = "current-location";
-        option.textContent = "Current Location";
-        fromLocationSelect.prepend(option);
-      }
-
-      fromLocationSelect.value = "current-location";
-      setLocationStatus(`<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${Math.round(currentPosition.accuracy || 0)} meters.`);
-      showCurrentLocationMarker();
-      switchMapView("navigationMapView");
-
-      if (toLocationSelect.value) {
-        renderDirectionsPreview();
-      } else {
-        collapseMobilePanel();
-      }
-
+      updateCurrentLocation(position, "fixed");
       setLocationButtonsLoading(false);
     },
     (error) => {
@@ -917,10 +966,58 @@ function requestCurrentLocation() {
   );
 }
 
+function stopLiveTracking(options = {}) {
+  if (liveTrackingWatchId !== null) {
+    navigator.geolocation.clearWatch(liveTrackingWatchId);
+    liveTrackingWatchId = null;
+  }
+
+  isLiveTracking = false;
+  setLiveTrackingButtons();
+
+  if (options.showStatus !== false) {
+    setLocationStatus("<strong>Live tracking stopped.</strong><br>Your last location pin stays on the map until you set or track your location again.");
+  }
+}
+
+function toggleLiveTracking() {
+  if (isLiveTracking) {
+    stopLiveTracking();
+    return;
+  }
+
+  if (!canUseCurrentLocation()) {
+    return;
+  }
+
+  isLiveTracking = true;
+  setLiveTrackingButtons();
+  setLocationStatus("<strong>Starting live tracking...</strong><br>Your browser may ask for permission.");
+
+  liveTrackingWatchId = navigator.geolocation.watchPosition(
+    (position) => {
+      updateCurrentLocation(position, "live");
+    },
+    (error) => {
+      setLocationStatus(getLocationErrorMessage(error), { isError: true });
+      expandMobilePanel();
+      stopLiveTracking({ showStatus: false });
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+}
 useMyLocationButton.addEventListener("click", requestCurrentLocation);
 
 if (useMyLocationMapButton) {
   useMyLocationMapButton.addEventListener("click", requestCurrentLocation);
+}
+
+if (toggleLiveTrackingButton) {
+  toggleLiveTrackingButton.addEventListener("click", toggleLiveTracking);
+}
+
+if (toggleLiveTrackingMapButton) {
+  toggleLiveTrackingMapButton.addEventListener("click", toggleLiveTracking);
 }
 
 if (openDirectionsPanelButton) {

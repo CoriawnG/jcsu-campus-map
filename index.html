@@ -8,7 +8,7 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
-  <link rel="stylesheet" href="style.css?v=20260728-fixed-location">
+  <link rel="stylesheet" href="style.css?v=20260728-live-tracking">
 </head>
 <body>
   <header class="app-header">
@@ -74,6 +74,7 @@
           </select>
 
           <button id="useMyLocation" class="secondary-button" type="button">Set My Location</button>
+          <button id="toggleLiveTracking" class="secondary-button" type="button">Start Live Tracking</button>
 
           <label for="toLocation">To</label>
           <select id="toLocation">
@@ -115,6 +116,7 @@
           <div id="mapLocationStatus" class="map-action-button" aria-live="polite" hidden></div>
           <button id="openDirectionsPanel" class="map-action-button" type="button">Directions</button>
           <button id="useMyLocationMap" class="map-action-button primary-map-action" type="button">Set My Location</button>
+          <button id="toggleLiveTrackingMap" class="map-action-button" type="button">Start Live Tracking</button>
         </div>
       </div>
     </section>
@@ -166,10 +168,10 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260728-fixed-location"></script>
-  <script src="paths.js?v=20260728-fixed-location"></script>
-  <script src="navigation.js?v=20260728-fixed-location"></script>
-  <script src="script.js?v=20260728-fixed-location"></script>
+  <script src="locations.js?v=20260728-live-tracking"></script>
+  <script src="paths.js?v=20260728-live-tracking"></script>
+  <script src="navigation.js?v=20260728-live-tracking"></script>
+  <script src="script.js?v=20260728-live-tracking"></script>
 </body>
 </html>
 
