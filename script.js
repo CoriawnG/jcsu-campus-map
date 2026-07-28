@@ -857,11 +857,11 @@ function getLocationErrorMessage(error) {
 
 function setLocationButtonsLoading(isLoading) {
   useMyLocationButton.disabled = isLoading;
-  useMyLocationButton.textContent = isLoading ? "Finding location..." : "Use My Location";
+  useMyLocationButton.textContent = isLoading ? "Setting location..." : "Set My Location";
 
   if (useMyLocationMapButton) {
     useMyLocationMapButton.disabled = isLoading;
-    useMyLocationMapButton.textContent = isLoading ? "Finding location..." : "Use My Location";
+    useMyLocationMapButton.textContent = isLoading ? "Setting location..." : "Set My Location";
   }
 }
 
@@ -878,7 +878,7 @@ function requestCurrentLocation() {
   }
 
   setLocationButtonsLoading(true);
-  setLocationStatus("<strong>Requesting your current location...</strong><br>Your browser may ask for permission.");
+  setLocationStatus("<strong>Setting your starting location...</strong><br>Your browser may ask for permission.");
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -896,7 +896,7 @@ function requestCurrentLocation() {
       }
 
       fromLocationSelect.value = "current-location";
-      setLocationStatus(`<strong>Current location found.</strong><br>Accuracy: about ${Math.round(currentPosition.accuracy || 0)} meters. Choose a destination to build your route.`);
+      setLocationStatus(`<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${Math.round(currentPosition.accuracy || 0)} meters.`);
       showCurrentLocationMarker();
       switchMapView("navigationMapView");
 
