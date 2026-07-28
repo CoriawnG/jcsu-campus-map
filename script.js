@@ -438,6 +438,7 @@ function estimateWalkingMinutes(start, end) {
 function renderDirectionsPreview() {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
+  const isCurrentLocationStart = fromLocationSelect.value === "current-location";
 
   if (!start || !end) {
     directionsOutput.textContent = "Choose a starting point and destination.";
@@ -462,7 +463,11 @@ function renderDirectionsPreview() {
       Navigation data is not loaded yet.
     `;
 
-    focusMapOnLocation(end);
+    if (isCurrentLocationStart) {
+      showCurrentLocationMarker();
+    } else {
+      focusMapOnLocation(end);
+    }
     return;
   }
 
@@ -474,7 +479,11 @@ function renderDirectionsPreview() {
       <br>
       Choose another nearby starting point or destination.
     `;
-    focusMapOnLocation(end);
+    if (isCurrentLocationStart) {
+      showCurrentLocationMarker();
+    } else {
+      focusMapOnLocation(end);
+    }
     return;
   }
 
@@ -707,8 +716,13 @@ function showCurrentLocationMarker() {
 
   currentLocationLayer.clearLayers();
 
+  const accuracyRadius = Math.max(18, Math.min(currentPosition.accuracy || 30, 120));
+  const accuracyText = currentPosition.accuracy
+    ? `<br>Accuracy: about ${Math.round(currentPosition.accuracy)} meters`
+    : "";
+
   L.circle([currentPosition.lat, currentPosition.lng], {
-    radius: 12,
+    radius: accuracyRadius,
     color: "#1c4f9c",
     weight: 2,
     fillColor: "#1c4f9c",
@@ -716,12 +730,12 @@ function showCurrentLocationMarker() {
   }).addTo(currentLocationLayer);
 
   L.circleMarker([currentPosition.lat, currentPosition.lng], {
-    radius: 7,
+    radius: 12,
     color: "#ffffff",
-    weight: 3,
+    weight: 4,
     fillColor: "#1c4f9c",
     fillOpacity: 1
-  }).bindPopup("<strong>You are here</strong>").addTo(currentLocationLayer);
+  }).bindPopup(`<strong>You are here</strong>${accuracyText}`).addTo(currentLocationLayer);
 
   navigationMap.setView([currentPosition.lat, currentPosition.lng], 19);
 }
@@ -870,7 +884,8 @@ function requestCurrentLocation() {
     (position) => {
       currentPosition = {
         lat: position.coords.latitude,
-        lng: position.coords.longitude
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy
       };
 
       if (!fromLocationSelect.querySelector('option[value="current-location"]')) {
@@ -881,7 +896,7 @@ function requestCurrentLocation() {
       }
 
       fromLocationSelect.value = "current-location";
-      setLocationStatus("<strong>Current location set as the starting point.</strong><br>Choose a destination to build your route.");
+      setLocationStatus(`<strong>Current location found.</strong><br>Accuracy: about ${Math.round(currentPosition.accuracy || 0)} meters. Choose a destination to build your route.`);
       showCurrentLocationMarker();
       switchMapView("navigationMapView");
 
