@@ -72,6 +72,8 @@ body.modal-open {
 }
 
 .sidebar {
+  position: relative;
+  z-index: 20;
   display: grid;
   grid-template-rows: auto minmax(240px, 1.25fr) auto;
   gap: 14px;
@@ -350,6 +352,8 @@ select:focus {
 }
 
 .map-panel {
+  position: relative;
+  z-index: 10;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   min-height: 0;
@@ -634,7 +638,7 @@ textarea:focus,
 
   .app-header {
     position: relative;
-    z-index: 20;
+    z-index: 950;
     flex-direction: row;
     min-height: 70px;
     padding: 12px 14px;
@@ -664,7 +668,7 @@ textarea:focus,
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 30;
+    z-index: 900;
     display: grid;
     grid-template-rows: auto auto minmax(220px, 1fr) auto;
     gap: 10px;
