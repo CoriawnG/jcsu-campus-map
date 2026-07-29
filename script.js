@@ -12,6 +12,7 @@ const useMyLocationButton = document.querySelector("#useMyLocation");
 const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
 const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
 const toggleLiveTrackingMapButton = document.querySelector("#toggleLiveTrackingMap");
+const recenterLocationMapButton = document.querySelector("#recenterLocationMap");
 const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
@@ -67,6 +68,7 @@ let activeLayer = "All";
 let currentPosition = null;
 let liveTrackingWatchId = null;
 let isLiveTracking = false;
+let hasLiveTrackingCentered = false;
 let navigationMap = null;
 let navigationMarkerLayer = null;
 let navigationRouteLayer = null;
@@ -468,7 +470,7 @@ function renderDirectionsPreview() {
     `;
 
     if (isCurrentLocationStart) {
-      showCurrentLocationMarker();
+      showCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
       focusMapOnLocation(end);
     }
@@ -484,7 +486,7 @@ function renderDirectionsPreview() {
       Choose another nearby starting point or destination.
     `;
     if (isCurrentLocationStart) {
-      showCurrentLocationMarker();
+      showCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
       focusMapOnLocation(end);
     }
@@ -518,7 +520,7 @@ function renderDirectionsPreview() {
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
-    showCurrentLocationMarker();
+    showCurrentLocationMarker({ centerMap: !isLiveTracking });
     collapseMobilePanel();
   } else {
     halfOpenMobilePanel();
@@ -717,7 +719,7 @@ function focusNavigationMapOnLocation(location) {
   navigationMap.setView([location.lat, location.lng], 19);
 }
 
-function showCurrentLocationMarker() {
+function showCurrentLocationMarker(options = {}) {
   initializeNavigationMap();
 
   if (!currentLocationLayer || !currentPosition || !window.L) {
@@ -747,7 +749,9 @@ function showCurrentLocationMarker() {
     fillOpacity: 1
   }).bindPopup(`<strong>You are here</strong>${accuracyText}`).addTo(currentLocationLayer);
 
-  navigationMap.setView([currentPosition.lat, currentPosition.lng], 19);
+  if (options.centerMap !== false) {
+    navigationMap.setView([currentPosition.lat, currentPosition.lng], 19);
+  }
 }
 
 function drawNavigationRoute(route, start, end) {
@@ -930,7 +934,12 @@ function updateCurrentLocation(position, mode) {
     : `<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${accuracy} meters.`;
 
   setLocationStatus(message);
-  showCurrentLocationMarker();
+  const shouldCenterMap = mode !== "live" || !hasLiveTrackingCentered;
+
+  showCurrentLocationMarker({ centerMap: shouldCenterMap });
+  if (mode === "live") {
+    hasLiveTrackingCentered = true;
+  }
   switchMapView("navigationMapView");
 
   if (toLocationSelect.value) {
@@ -973,6 +982,7 @@ function stopLiveTracking(options = {}) {
   }
 
   isLiveTracking = false;
+  hasLiveTrackingCentered = false;
   setLiveTrackingButtons();
 
   if (options.showStatus !== false) {
@@ -980,6 +990,15 @@ function stopLiveTracking(options = {}) {
   }
 }
 
+function recenterOnCurrentLocation() {
+  if (!currentPosition) {
+    setLocationStatus("Set or start tracking your location first.", { isError: true });
+    return;
+  }
+
+  showCurrentLocationMarker({ centerMap: true });
+  switchMapView("navigationMapView");
+}
 function toggleLiveTracking() {
   if (isLiveTracking) {
     stopLiveTracking();
@@ -991,6 +1010,7 @@ function toggleLiveTracking() {
   }
 
   isLiveTracking = true;
+  hasLiveTrackingCentered = false;
   setLiveTrackingButtons();
   setLocationStatus("<strong>Starting live tracking...</strong><br>Your browser may ask for permission.");
 
@@ -1018,6 +1038,10 @@ if (toggleLiveTrackingButton) {
 
 if (toggleLiveTrackingMapButton) {
   toggleLiveTrackingMapButton.addEventListener("click", toggleLiveTracking);
+}
+
+if (recenterLocationMapButton) {
+  recenterLocationMapButton.addEventListener("click", recenterOnCurrentLocation);
 }
 
 if (openDirectionsPanelButton) {
