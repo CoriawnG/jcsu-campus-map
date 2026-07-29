@@ -701,11 +701,11 @@ textarea:focus,
 
   body.navigation-map-active:not(.directions-panel-open) .sidebar {
     pointer-events: none;
-    transform: translateY(100%);
+    transform: translateY(calc(100% - 54px));
   }
 
   body.navigation-map-active:not(.directions-panel-open) .mobile-panel-toggle {
-    pointer-events: none;
+    pointer-events: auto;
   }
 
   .sidebar.sheet-half {
