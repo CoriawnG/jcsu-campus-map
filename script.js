@@ -4,7 +4,6 @@ const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
 const resultCount = document.querySelector("#resultCount");
 const selectedLocation = document.querySelector("#selectedLocation");
-const campusMap = document.querySelector("#campusMap");
 const filterButtons = document.querySelectorAll(".filter-button");
 const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
@@ -357,19 +356,27 @@ function endPanelDrag(event) {
 }
 
 function focusMapOnLocation(location) {
-  if (!location.lat || !location.lng) {
-    campusMap.src = defaultMapUrl;
-    return;
-  }
-
-  campusMap.src = `${defaultMapUrl}&ll=${location.lat},${location.lng}&z=19`;
   focusNavigationMapOnLocation(location);
 }
 
+function showSearchPanel() {
+  sidebar.classList.remove("location-detail-active");
+  activeLocationName = "";
+  activeLocationIndex = -1;
+  renderLocations(getFilteredLocations());
+  renderNavigationMarkers(getFilteredLocations());
+}
+
 function renderSelectedLocation(location) {
+  sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
-    <p class="eyebrow">Selected Location</p>
-    <h2>${location.name}</h2>
+    <div class="details-heading-row">
+      <div>
+        <p class="eyebrow">Selected Location</p>
+        <h2>${location.name}</h2>
+      </div>
+      <button id="closeLocationDetails" class="icon-button" type="button" aria-label="Back to search">x</button>
+    </div>
     <p>${location.description}</p>
     <div class="detail-meta">
       <span class="tag">${location.layer}</span>
@@ -380,6 +387,8 @@ function renderSelectedLocation(location) {
       <button class="primary-button" type="button" data-route-action="destination">Set as Destination</button>
     </div>
   `;
+
+  selectedLocation.querySelector("#closeLocationDetails").addEventListener("click", showSearchPanel);
 
   selectedLocation.querySelector('[data-route-action="start"]').addEventListener("click", () => {
     setRouteEndpoint("start", location);
@@ -807,7 +816,8 @@ function clearRoute() {
 }
 
 function switchMapView(targetId) {
-  const isNavigationMapActive = targetId === "navigationMapView";
+  const isNavigationMapActive = true;
+  targetId = "navigationMapView";
 
   document.body.classList.toggle("navigation-map-active", isNavigationMapActive);
   if (!isNavigationMapActive) {
@@ -1097,5 +1107,7 @@ locations.forEach((location, index) => {
 
 renderLocationOptions();
 renderLocations(locations);
+initializeNavigationMap();
+switchMapView("navigationMapView");
 setMobilePanelState("full");
 

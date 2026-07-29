@@ -3,24 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JCSU Interactive Campus Map</title>
+  <title>JCSU Campus Navigation</title>
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
-  <link rel="stylesheet" href="style.css?v=20260729-live-pan">
+  <link rel="stylesheet" href="style.css?v=20260729-nav-only">
 </head>
 <body>
   <header class="app-header">
     <div>
       <p class="eyebrow">Johnson C. Smith University</p>
-      <h1>Interactive Campus Map</h1>
+      <h1>Campus Navigation</h1>
     </div>
     <div class="header-actions">
       <button id="feedbackButton" class="feedback-button" type="button">Feedback</button>
-      <a class="map-link" href="https://www.google.com/maps/d/viewer?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w&usp=sharing" target="_blank" rel="noreferrer">
-        Open full map
-      </a>
     </div>
   </header>
 
@@ -57,7 +54,7 @@
         <div id="locationResults" class="location-list"></div>
       </section>
 
-      <section id="selectedLocation" class="details-panel">
+      <section id="selectedLocation" class="details-panel" aria-live="polite">
         <p class="eyebrow">Selected Location</p>
         <h2>Choose a place</h2>
         <p>Search or select a location to see its category, layer, and notes.</p>
@@ -90,27 +87,8 @@
       </section>
     </aside>
 
-    <section class="map-panel" aria-label="Campus map views">
-      <div class="map-tabs" role="tablist" aria-label="Map views">
-        <button class="map-tab is-active" id="campusMapTab" type="button" role="tab" aria-selected="true" aria-controls="campusMapView" data-map-view="campusMapView">
-          Campus Map
-        </button>
-        <button class="map-tab" id="navigationMapTab" type="button" role="tab" aria-selected="false" aria-controls="navigationMapView" data-map-view="navigationMapView">
-          Navigation Map
-        </button>
-      </div>
-
-      <div class="map-view is-active" id="campusMapView" role="tabpanel" aria-labelledby="campusMapTab">
-        <iframe
-          id="campusMap"
-          title="Johnson C. Smith University Interactive Campus Map"
-          src="https://www.google.com/maps/d/embed?mid=1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
-      </div>
-
-      <div class="map-view" id="navigationMapView" role="tabpanel" aria-labelledby="navigationMapTab" hidden>
+    <section class="map-panel" aria-label="Campus navigation map">
+      <div class="map-view is-active" id="navigationMapView" role="region" aria-label="Navigation Map">
         <div id="navigationMap" class="navigation-map" aria-label="Custom campus navigation map"></div>
         <div class="map-floating-actions" aria-label="Navigation map actions">
           <div id="mapLocationStatus" class="map-action-button" aria-live="polite" hidden></div>
@@ -169,10 +147,10 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260729-live-pan"></script>
-  <script src="paths.js?v=20260729-live-pan"></script>
-  <script src="navigation.js?v=20260729-live-pan"></script>
-  <script src="script.js?v=20260729-live-pan"></script>
+  <script src="locations.js?v=20260729-nav-only"></script>
+  <script src="paths.js?v=20260729-nav-only"></script>
+  <script src="navigation.js?v=20260729-nav-only"></script>
+  <script src="script.js?v=20260729-nav-only"></script>
 </body>
 </html>
 
