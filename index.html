@@ -8,7 +8,8 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
-  <link rel="stylesheet" href="style.css?v=20260729-sheet-scroll">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,1,0">
+  <link rel="stylesheet" href="style.css?v=20260729-recent-rail">
 </head>
 <body>
   <header class="app-header">
@@ -51,7 +52,8 @@
           <h2>Locations</h2>
           <span id="resultCount">0</span>
         </div>
-        <div id="locationResults" class="location-list"></div>
+        <div id="recentLocations" class="recent-locations" hidden></div>
+        <div id="locationResults" class="location-list" aria-label="Location results"></div>
       </section>
 
       <section id="selectedLocation" class="details-panel" aria-live="polite">
@@ -147,10 +149,10 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260729-sheet-scroll"></script>
-  <script src="paths.js?v=20260729-sheet-scroll"></script>
-  <script src="navigation.js?v=20260729-sheet-scroll"></script>
-  <script src="script.js?v=20260729-sheet-scroll"></script>
+  <script src="locations.js?v=20260729-recent-rail"></script>
+  <script src="paths.js?v=20260729-recent-rail"></script>
+  <script src="navigation.js?v=20260729-recent-rail"></script>
+  <script src="script.js?v=20260729-recent-rail"></script>
 </body>
 </html>
 

@@ -2,6 +2,7 @@ const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
 const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
+const recentLocationsContainer = document.querySelector("#recentLocations");
 const resultCount = document.querySelector("#resultCount");
 const selectedLocation = document.querySelector("#selectedLocation");
 const filterButtons = document.querySelectorAll(".filter-button");
@@ -44,6 +45,20 @@ const googleFeedbackEntries = {
   contact: "entry.932342083"
 };
 const jcsuCenter = [35.2435, -80.8565];
+const layerIconNames = {
+  "Academic Buildings": "school",
+  "Campus Services": "business_center",
+  "Dining and Student Life": "restaurant",
+  "Housing": "home",
+  "Former / Inactive Housing": "domain_disabled",
+  "Athletics": "sports_basketball",
+  "Parking and Transportation": "local_parking",
+  "Landmarks": "account_balance"
+};
+
+const recentLocationsStorageKey = "jcsu-recent-locations";
+const maxRecentLocations = 8;
+
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
   "Campus Services": { label: "Services", color: "#a93636" },
@@ -184,6 +199,77 @@ function hideLocationStatus() {
     mapLocationStatus.classList.remove("is-error");
   }
 }
+function getLocationIcon(location) {
+  return layerIconNames[location.layer] || "place";
+}
+
+function getRecentLocationIndexes() {
+  try {
+    const savedIndexes = JSON.parse(localStorage.getItem(recentLocationsStorageKey) || "[]");
+    return savedIndexes.filter((index) => Number.isInteger(index) && locations[index]);
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveRecentLocation(location) {
+  try {
+    const recentIndexes = getRecentLocationIndexes().filter((index) => index !== location.index);
+    recentIndexes.unshift(location.index);
+    localStorage.setItem(recentLocationsStorageKey, JSON.stringify(recentIndexes.slice(0, maxRecentLocations)));
+  } catch (error) {
+    // Recent locations are helpful, but navigation should still work without browser storage.
+  }
+}
+
+function renderRecentLocations() {
+  if (!recentLocationsContainer) {
+    return;
+  }
+
+  const recentLocations = getRecentLocationIndexes().map((index) => locations[index]);
+
+  if (recentLocations.length === 0) {
+    recentLocationsContainer.hidden = true;
+    recentLocationsContainer.innerHTML = "";
+    return;
+  }
+
+  recentLocationsContainer.hidden = false;
+  recentLocationsContainer.innerHTML = `
+    <div class="rail-heading">
+      <h3>Recently Viewed</h3>
+    </div>
+    <div class="recent-location-rail" aria-label="Recently viewed locations"></div>
+  `;
+
+  const rail = recentLocationsContainer.querySelector(".recent-location-rail");
+
+  recentLocations.forEach((location) => {
+    const button = document.createElement("button");
+    button.className = "recent-location-button";
+    button.type = "button";
+    button.innerHTML = `
+      <span class="material-symbols-outlined location-icon" aria-hidden="true">${getLocationIcon(location)}</span>
+      <strong>${location.name}</strong>
+      <span>${location.category}</span>
+    `;
+
+    button.addEventListener("click", () => {
+      activeLocationName = location.name;
+      activeLocationIndex = location.index;
+      saveRecentLocation(location);
+      renderSelectedLocation(location);
+      focusMapOnLocation(location);
+      renderLocations(getFilteredLocations());
+      renderNavigationMarkers(getFilteredLocations());
+      expandMobilePanel();
+    });
+
+    rail.appendChild(button);
+  });
+}
+
 function getSearchText(location) {
   return [
     location.name,
@@ -197,6 +283,7 @@ function getSearchText(location) {
 function renderLocations(list) {
   resultsContainer.innerHTML = "";
   resultCount.textContent = list.length;
+  renderRecentLocations();
 
   if (list.length === 0) {
     resultsContainer.innerHTML = '<p class="empty-state">No locations found. Try a building name, office, food spot, or dorm.</p>';
@@ -208,6 +295,7 @@ function renderLocations(list) {
     button.className = "location-button";
     button.type = "button";
     button.innerHTML = `
+      <span class="material-symbols-outlined location-icon" aria-hidden="true">${getLocationIcon(location)}</span>
       <strong>${location.name}</strong>
       <span>${location.category}</span>
     `;
@@ -219,6 +307,7 @@ function renderLocations(list) {
     button.addEventListener("click", () => {
       activeLocationName = location.name;
       activeLocationIndex = location.index;
+      saveRecentLocation(location);
       renderSelectedLocation(location);
       focusMapOnLocation(location);
       renderLocations(getFilteredLocations());
