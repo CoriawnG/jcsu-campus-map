@@ -669,10 +669,10 @@ textarea:focus,
     bottom: 0;
     left: 0;
     z-index: 900;
-    display: grid;
-    grid-template-rows: auto auto minmax(220px, 1fr) auto;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    height: min(74vh, 680px);
+    height: min(78vh, 720px);
     max-height: none;
     padding: 0 12px 12px;
     overflow-y: auto;
@@ -710,7 +710,7 @@ textarea:focus,
 
   .sidebar.sheet-half {
     pointer-events: auto;
-    transform: translateY(38vh);
+    transform: translateY(34vh);
   }
 
   .sidebar.sheet-full {
@@ -754,6 +754,7 @@ textarea:focus,
   .details-panel,
   .directions-panel {
     box-shadow: none;
+    flex: 0 0 auto;
   }
 
   .search-panel,
@@ -761,12 +762,13 @@ textarea:focus,
     padding: 12px;
   }
 
-  .location-list {
-    max-height: 320px;
+  .directions-panel {
+    overflow: visible;
   }
 
-  .sidebar.sheet-half .location-list {
-    max-height: 220px;
+  .location-list {
+    max-height: none;
+    overflow: visible;
   }
 
   .sidebar.sheet-collapsed .search-panel,
