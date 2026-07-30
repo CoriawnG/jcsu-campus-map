@@ -92,6 +92,8 @@ let panelDragStartY = 0;
 let panelDragStartTranslate = 0;
 let panelDragLatestTranslate = 0;
 let panelDragMoved = false;
+let lastRouteSignature = "";
+let shouldFitRouteToMap = true;
 
 
 function openFeedbackModal() {
@@ -539,6 +541,14 @@ function estimateWalkingMinutes(start, end) {
   return Math.max(1, Math.round((campusPathEstimate / 3) * 60));
 }
 
+function getRouteSignature(start, end) {
+  const startKey = start.name === "Current Location"
+    ? "Current Location"
+    : `${start.name}:${Number(start.lat).toFixed(5)},${Number(start.lng).toFixed(5)}`;
+  const endKey = `${end.name}:${Number(end.lat).toFixed(5)},${Number(end.lng).toFixed(5)}`;
+  return `${startKey}->${endKey}`;
+}
+
 function renderDirectionsPreview() {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
@@ -591,6 +601,11 @@ function renderDirectionsPreview() {
     return;
   }
 
+  const routeSignature = getRouteSignature(start, end);
+  const shouldFitThisRoute = shouldFitRouteToMap || routeSignature !== lastRouteSignature;
+  lastRouteSignature = routeSignature;
+  shouldFitRouteToMap = false;
+
   const directionSteps = buildDirectionSteps(route.steps);
   const visibleSteps = directionSteps.slice(0, 8);
   const extraStepCount = Math.max(0, directionSteps.length - visibleSteps.length);
@@ -614,7 +629,7 @@ function renderDirectionsPreview() {
     </ol>
   `;
 
-  drawNavigationRoute(route, start, end);
+  drawNavigationRoute(route, start, end, { fitBounds: shouldFitThisRoute });
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
@@ -852,7 +867,7 @@ function showCurrentLocationMarker(options = {}) {
   }
 }
 
-function drawNavigationRoute(route, start, end) {
+function drawNavigationRoute(route, start, end, options = {}) {
   initializeNavigationMap();
 
   if (!navigationRouteLayer || !window.L || !route?.path?.length) {
@@ -889,7 +904,9 @@ function drawNavigationRoute(route, start, end) {
     fillOpacity: 1
   }).bindPopup(`<strong>Destination</strong>${end.name}`).addTo(navigationRouteLayer);
 
-  navigationMap.fitBounds(routeLine.getBounds(), { padding: [32, 32] });
+  if (options.fitBounds !== false) {
+    navigationMap.fitBounds(routeLine.getBounds(), { padding: [32, 32] });
+  }
 }
 
 function clearRoute() {
@@ -897,6 +914,8 @@ function clearRoute() {
   fromLocationSelect.value = "";
   toLocationSelect.value = "";
   directionsOutput.textContent = "Choose a starting point and destination.";
+  lastRouteSignature = "";
+  shouldFitRouteToMap = true;
   hideLocationStatus();
 
   if (navigationRouteLayer) {
@@ -1095,6 +1114,7 @@ function recenterOnCurrentLocation() {
     return;
   }
 
+  shouldFitRouteToMap = false;
   showCurrentLocationMarker({ centerMap: true });
   switchMapView("navigationMapView");
 }
