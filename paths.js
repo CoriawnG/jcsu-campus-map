@@ -5015,5 +5015,18 @@ window.pathSegments = [
                                 "lng":  -80.8591386
                             }
                         ]
+    },
+    {
+        "name":  "Brayboy to Irwin Belk Connector",
+        "coordinates":  [
+                            {
+                                "lat":  35.2424841,
+                                "lng":  -80.853906
+                            },
+                            {
+                                "lat":  35.2424269,
+                                "lng":  -80.8539019
+                            }
+                        ]
     }
 ];
