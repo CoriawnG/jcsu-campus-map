@@ -5030,23 +5030,19 @@ window.pathSegments = [
                         ]
     },
     {
-        "name":  "Campus Police to The Block Crosswalk",
+        "name":  "Campus Police Street Crossing",
         "coordinates":  [
-                            {
-                                "lat":  35.2435826,
-                                "lng":  -80.8556083
-                            },
-                            {
-                                "lat":  35.2435902,
-                                "lng":  -80.8562942
-                            },
                             {
                                 "lat":  35.243445,
                                 "lng":  -80.8563613
                             },
                             {
-                                "lat":  35.2433377,
-                                "lng":  -80.8563559
+                                "lat":  35.2435115,
+                                "lng":  -80.8554742
+                            },
+                            {
+                                "lat":  35.2433315,
+                                "lng":  -80.8556823
                             }
                         ]
     }
