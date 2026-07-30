@@ -964,3 +964,11 @@ textarea:focus,
     padding: 18px 12px;
   }
 }
+
+@media (min-width: 861px) {
+  .sidebar {
+    overflow-y: auto;
+    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
