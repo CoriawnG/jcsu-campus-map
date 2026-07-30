@@ -5186,5 +5186,18 @@ window.pathSegments = [
         "lng": -80.8559497
       }
     ]
+  },
+  {
+    "name": "Crossing the road",
+    "coordinates": [
+      {
+        "lat": 35.2433181,
+        "lng": -80.855948
+      },
+      {
+        "lat": 35.2433006,
+        "lng": -80.8556958
+      }
+    ]
   }
 ];
