@@ -1083,34 +1083,57 @@ textarea:focus,
 
 @media (min-width: 861px) {
   .app-shell {
-    align-items: start;
-    height: auto;
-    min-height: calc(100vh - 92px);
+    align-items: stretch;
+    height: calc(100vh - 92px);
+    min-height: 620px;
   }
 
   .sidebar {
-    display: flex;
-    flex-direction: column;
-    overflow: visible;
+    display: grid;
+    grid-template-rows: auto minmax(260px, 1fr) auto;
+    min-height: 0;
+    overflow: hidden;
     padding-right: 0;
   }
 
-  .results-panel,
-  .recent-locations,
-  .location-list,
-  .directions-panel {
+  .results-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
+  }
+
+  .recent-locations {
+    flex: 0 0 auto;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .recent-location-rail {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .results-panel .panel-heading {
+    flex: 0 0 auto;
   }
 
   .location-list {
-    flex: none;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: 180px;
+    max-height: min(32vh, 320px);
+    overflow-y: auto;
+  }
+
+  .directions-panel {
+    max-height: min(34vh, 340px);
+    overflow-y: auto;
   }
 
   .map-panel {
-    position: sticky;
-    top: 18px;
-    height: calc(100vh - 128px);
+    position: relative;
+    top: auto;
+    height: 100%;
   }
 }
