@@ -1080,3 +1080,37 @@ textarea:focus,
     overflow-y: auto;
   }
 }
+
+@media (min-width: 861px) {
+  .app-shell {
+    align-items: start;
+    height: auto;
+    min-height: calc(100vh - 92px);
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .results-panel,
+  .recent-locations,
+  .location-list,
+  .directions-panel {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .location-list {
+    flex: none;
+    min-height: 0;
+  }
+
+  .map-panel {
+    position: sticky;
+    top: 18px;
+    height: calc(100vh - 128px);
+  }
+}
