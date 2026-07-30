@@ -972,3 +972,76 @@ textarea:focus,
     -webkit-overflow-scrolling: touch;
   }
 }
+
+@media (min-width: 861px) {
+  .results-panel {
+    gap: 12px;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .recent-locations {
+    order: 0;
+    overflow: visible;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .recent-location-rail {
+    display: grid;
+    gap: 8px;
+    overflow: visible;
+    padding: 8px;
+    scroll-snap-type: none;
+  }
+
+  .recent-location-button {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    min-height: 0;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .recent-location-button .location-icon {
+    grid-row: 1 / span 2;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .recent-location-button strong {
+    font-size: 0.92rem;
+  }
+
+  .recent-location-button span:not(.location-icon) {
+    margin-top: 2px;
+  }
+
+  .results-panel .panel-heading {
+    order: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    box-shadow: var(--shadow);
+  }
+
+  .location-list {
+    order: 2;
+    overflow-y: visible;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 0;
+    border-radius: 0 0 8px 8px;
+    box-shadow: var(--shadow);
+  }
+}
