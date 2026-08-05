@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-icon-controls";
+const CACHE_NAME = "jcsu-campus-map-v20260805-directions-page-contacts";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-icon-map-controls",
-  "./locations.js?v=20260805-icon-map-controls",
-  "./paths.js?v=20260805-icon-map-controls",
-  "./navigation.js?v=20260805-icon-map-controls",
-  "./script.js?v=20260805-icon-map-controls",
+  "./style.css?v=20260805-directions-page-contacts",
+  "./locations.js?v=20260805-directions-page-contacts",
+  "./paths.js?v=20260805-directions-page-contacts",
+  "./navigation.js?v=20260805-directions-page-contacts",
+  "./script.js?v=20260805-directions-page-contacts",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

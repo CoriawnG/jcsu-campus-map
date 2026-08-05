@@ -1837,3 +1837,94 @@ textarea:focus,
     justify-content: center;
   }
 }
+
+/* Separate directions view and contact actions */
+.directions-panel {
+  display: none;
+}
+
+.sidebar.directions-detail-active {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.sidebar.directions-detail-active .search-panel,
+.sidebar.directions-detail-active .results-panel,
+.sidebar.directions-detail-active .details-panel {
+  display: none;
+}
+
+.sidebar.directions-detail-active .directions-panel {
+  display: block;
+  min-height: 0;
+  overflow: auto;
+}
+
+.directions-heading {
+  align-items: center;
+}
+
+.detail-contact-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+
+.contact-call-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.contact-call-row:hover,
+.contact-call-row:focus-visible {
+  border-color: rgba(0, 47, 108, 0.32);
+  box-shadow: 0 8px 18px rgba(0, 47, 108, 0.12);
+  outline: none;
+}
+
+.contact-call-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  color: var(--jcsu-blue);
+  border-radius: 999px;
+  background: rgba(0, 47, 108, 0.1);
+}
+
+.contact-call-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.contact-call-copy strong,
+.contact-call-copy span {
+  overflow-wrap: anywhere;
+}
+
+.contact-call-copy span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 860px) {
+  .sidebar.directions-detail-active {
+    height: min(76vh, 620px);
+  }
+
+  .sidebar.directions-detail-active.sheet-full {
+    height: min(82vh, 680px);
+  }
+
+  .sidebar.directions-detail-active .directions-panel {
+    padding-bottom: 28px;
+  }
+}

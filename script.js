@@ -17,6 +17,7 @@ const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
 const toggleLiveTrackingMapButton = document.querySelector("#toggleLiveTrackingMap");
 const recenterLocationMapButton = document.querySelector("#recenterLocationMap");
 const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel");
+const closeDirectionsPanelButton = document.querySelector("#closeDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
 const directionsOutput = document.querySelector("#directionsOutput");
@@ -74,6 +75,32 @@ const routePreferenceLabels = {
   accessible: "Accessible route",
   "avoid-roads": "Avoid roads",
   "main-sidewalks": "Main sidewalks"
+};
+
+const locationContacts = {
+  "Henry J. Biddle Hall": [
+    { label: "Admissions", phone: "704.378.1010", description: "First floor admissions support" },
+    { label: "Financial Aid", phone: "704.378.1035", description: "Second floor financial aid questions" },
+    { label: "Student Accounts", phone: "704.378.1145", description: "Third floor billing and student account questions" }
+  ],
+  "Administrative Cottage #4 (Campus Police)": [
+    { label: "Campus Police", phone: "704.378.1003", description: "Campus safety, security, and emergency support" }
+  ],
+  "Administrative Cottage #3 (Counseling Center)": [
+    { label: "Counseling Services", phone: "704.378.1044", description: "Counseling appointments and student support" }
+  ],
+  "JCSU Health Center": [
+    { label: "Health Center", phone: "704.378.1075", description: "Student health services and wellness support" }
+  ],
+  "Wilbert Greenfield Residence Hall": [
+    { label: "Greenfield Residence Hall", phone: "704.378.1231", description: "Residence hall contact" }
+  ],
+  "James B. Duke Memorial Hall": [
+    { label: "Honors College Residence Hall", phone: "704.378.1253", description: "Residence hall contact" }
+  ],
+  "New Residence Hall": [
+    { label: "New Residence Hall", phone: "704.378.6819", description: "Residence hall contact" }
+  ]
 };
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
@@ -556,11 +583,27 @@ function collapseMobilePanel() {
 }
 
 function openDirectionsPanel() {
-  if (window.matchMedia("(max-width: 860px)").matches) {
-    setMobilePanelState("half");
+  sidebar.classList.add("directions-detail-active");
+  sidebar.classList.remove("location-detail-active");
+  setMobilePanelState("full");
+
+  setTimeout(() => {
+    if (navigationMap) {
+      navigationMap.invalidateSize();
+    }
+  }, 0);
+}
+
+function closeDirectionsPanel() {
+  sidebar.classList.remove("directions-detail-active");
+
+  if (activeLocationIndex >= 0) {
+    sidebar.classList.add("location-detail-active");
   } else {
-    setMobilePanelState("full");
+    sidebar.classList.remove("location-detail-active");
   }
+
+  setMobilePanelState("full");
 }
 function isMobilePanelEnabled() {
   return window.matchMedia("(max-width: 860px)").matches;
@@ -648,19 +691,50 @@ function focusMapOnLocation(location) {
 }
 
 function showSearchPanel() {
-  sidebar.classList.remove("location-detail-active");
+  sidebar.classList.remove("location-detail-active", "directions-detail-active");
   activeLocationName = "";
   activeLocationIndex = -1;
   renderLocations(getFilteredLocations());
   renderNavigationMarkers(getFilteredLocations());
 }
 
+function getPhoneHref(phone) {
+  const digits = String(phone).replace(/\D/g, "");
+  const tenDigitNumber = digits.length > 10 ? digits.slice(-10) : digits;
+  return `tel:+1${tenDigitNumber}`;
+}
+
+function getLocationContactMarkup(location) {
+  const contacts = locationContacts[location.name] || [];
+
+  if (!contacts.length) {
+    return "";
+  }
+
+  const contactRows = contacts.map((contact) => `
+    <a class="contact-call-row" href="${getPhoneHref(contact.phone)}" aria-label="Call ${contact.label} at ${contact.phone}">
+      <span class="material-symbols-outlined contact-call-icon" aria-hidden="true">call</span>
+      <span class="contact-call-copy">
+        <strong>Call ${contact.label}</strong>
+        <span>${contact.description} &middot; ${contact.phone}</span>
+      </span>
+    </a>
+  `).join("");
+
+  return `
+    <div class="detail-contact-list" aria-label="Phone contacts for ${location.name}">
+      ${contactRows}
+    </div>
+  `;
+}
 function renderSelectedLocation(location) {
   const isFavorite = isFavoriteLocation(location);
   const savedPersonalPlaces = getPersonalPlaceIndexes();
   const isHomeDorm = savedPersonalPlaces.homeDorm === location.index;
   const isMainClass = savedPersonalPlaces.mainClass === location.index;
+  const contactMarkup = getLocationContactMarkup(location);
 
+  sidebar.classList.remove("directions-detail-active");
   sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
     <div class="details-heading-row">
@@ -671,6 +745,7 @@ function renderSelectedLocation(location) {
       <button id="closeLocationDetails" class="icon-button" type="button" aria-label="Back to search">x</button>
     </div>
     <p>${location.description}</p>
+    ${contactMarkup}
     <div class="detail-meta">
       <span class="tag">${location.layer}</span>
       <span class="tag">${location.category}</span>
@@ -686,8 +761,8 @@ function renderSelectedLocation(location) {
       </div>
     </div>
     <div class="location-actions">
-      <button class="secondary-button" type="button" data-route-action="start">Set as Start</button>
-      <button class="primary-button" type="button" data-route-action="destination">Set as Destination</button>
+      <button class="primary-button wide-action" type="button" data-route-action="destination">Get Directions</button>
+      <button class="secondary-button" type="button" data-route-action="start">Use as Start</button>
       <button class="secondary-button" type="button" data-personal-action="homeDorm">
         <span class="material-symbols-outlined" aria-hidden="true">home</span>
         ${isHomeDorm ? "Home Dorm Saved" : "Set Home Dorm"}
@@ -710,7 +785,7 @@ function renderSelectedLocation(location) {
   });
 
   selectedLocation.querySelector('[data-route-action="destination"]').addEventListener("click", () => {
-    setRouteEndpoint("destination", location);
+    setRouteEndpoint("destination", location, { openDirections: true });
   });
 
   selectedLocation.querySelectorAll("[data-personal-action]").forEach((button) => {
@@ -794,6 +869,7 @@ function renderDirectionsPreview() {
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
 
+  openDirectionsPanel();
   if (!start || !end) {
     directionsOutput.textContent = "Choose a starting point and destination.";
     hideLocationStatus();
@@ -883,9 +959,7 @@ function renderDirectionsPreview() {
 
   if (isCurrentLocationStart) {
     showCurrentLocationMarker({ centerMap: !isLiveTracking });
-    collapseMobilePanel();
   } else {
-    halfOpenMobilePanel();
     focusMapOnLocation(end);
   }
 }
@@ -966,7 +1040,7 @@ function cleanPathName(pathName) {
     .trim();
 }
 
-function setRouteEndpoint(type, location) {
+function setRouteEndpoint(type, location, options = {}) {
   const value = String(location.index);
 
   if (type === "start") {
@@ -979,6 +1053,8 @@ function setRouteEndpoint(type, location) {
 
   if (fromLocationSelect.value && toLocationSelect.value) {
     renderDirectionsPreview();
+  } else if (options.openDirections) {
+    openDirectionsPanel();
   } else {
     expandMobilePanel();
   }
@@ -1409,6 +1485,10 @@ if (recenterLocationMapButton) {
 
 if (openDirectionsPanelButton) {
   openDirectionsPanelButton.addEventListener("click", openDirectionsPanel);
+}
+
+if (closeDirectionsPanelButton) {
+  closeDirectionsPanelButton.addEventListener("click", closeDirectionsPanel);
 }
 
 
