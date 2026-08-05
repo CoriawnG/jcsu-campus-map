@@ -11,6 +11,8 @@ const filterButtons = document.querySelectorAll(".filter-button");
 const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
 const routePreferenceSelect = document.querySelector("#routePreference");
+const campusLocationSuggestions = document.querySelector("#campusLocationSuggestions");
+const directionQuickPicks = document.querySelector("#directionQuickPicks");
 const useMyLocationButton = document.querySelector("#useMyLocation");
 const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
 const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
@@ -163,7 +165,7 @@ function routeToSafetyLocation(locationName) {
   closeSafetyModal();
   activeLocationName = location.name;
   activeLocationIndex = location.index;
-  toLocationSelect.value = String(location.index);
+  toLocationSelect.value = getLocationInputValue(location);
   saveRecentLocation(location);
   renderSelectedLocation(location);
   renderLocations(getFilteredLocations());
@@ -486,6 +488,92 @@ function renderLocationRail(container, title, railLabel, list) {
   });
 }
 
+function getLocationInputValue(location) {
+  const duplicateNameCount = locations.filter((item) => item.name === location.name).length;
+  return duplicateNameCount > 1
+    ? `${location.name} - ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
+    : location.name;
+}
+
+function normalizeRouteInput(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getDirectionQuickPickItems() {
+  const savedPlaces = getPersonalPlaceIndexes();
+  const favoriteIndexes = getFavoriteLocationIndexes();
+  const items = [];
+  const usedIndexes = new Set();
+
+  const addItem = (label, icon, location) => {
+    if (!location || usedIndexes.has(location.index)) {
+      return;
+    }
+
+    usedIndexes.add(location.index);
+    items.push({ label, icon, location });
+  };
+
+  addItem("Home Dorm", "home", locations[savedPlaces.homeDorm]);
+  addItem("Main Class", "school", locations[savedPlaces.mainClass]);
+  favoriteIndexes.forEach((index) => addItem("Favorite", "star", locations[index]));
+
+  return items;
+}
+
+function renderDirectionQuickPicks() {
+  if (!directionQuickPicks) {
+    return;
+  }
+
+  const quickPickItems = getDirectionQuickPickItems();
+
+  if (!quickPickItems.length) {
+    directionQuickPicks.hidden = true;
+    directionQuickPicks.innerHTML = "";
+    return;
+  }
+
+  directionQuickPicks.hidden = false;
+  directionQuickPicks.innerHTML = `
+    <div class="rail-heading compact-rail-heading">
+      <h3>Quick Picks</h3>
+    </div>
+    <div class="direction-quick-pick-list" aria-label="Saved route shortcuts"></div>
+  `;
+
+  const list = directionQuickPicks.querySelector(".direction-quick-pick-list");
+
+  quickPickItems.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "direction-quick-pick-row";
+    row.innerHTML = `
+      <span class="material-symbols-outlined location-icon" aria-hidden="true">${item.icon}</span>
+      <span class="direction-quick-pick-copy">
+        <strong>${item.location.name}</strong>
+        <span>${item.label}</span>
+      </span>
+      <span class="direction-quick-pick-actions">
+        <button class="secondary-button" type="button" data-route-pick="start">From</button>
+        <button class="secondary-button" type="button" data-route-pick="destination">To</button>
+      </span>
+    `;
+
+    row.querySelector('[data-route-pick="start"]').addEventListener("click", () => {
+      setRouteEndpoint("start", item.location, { openDirections: true });
+    });
+
+    row.querySelector('[data-route-pick="destination"]').addEventListener("click", () => {
+      setRouteEndpoint("destination", item.location, { openDirections: true });
+    });
+
+    list.appendChild(row);
+  });
+}
 function renderFavoriteLocations() {
   renderLocationRail(
     favoriteLocationsContainer,
@@ -583,6 +671,7 @@ function collapseMobilePanel() {
 }
 
 function openDirectionsPanel() {
+  renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
   sidebar.classList.remove("location-detail-active");
   setMobilePanelState("full");
@@ -793,6 +882,7 @@ function renderSelectedLocation(location) {
       savePersonalPlace(button.dataset.personalAction, location);
       renderSelectedLocation(location);
       renderLocations(getFilteredLocations());
+      renderDirectionQuickPicks();
     });
   });
 
@@ -800,6 +890,7 @@ function renderSelectedLocation(location) {
     toggleFavoriteLocation(location);
     renderSelectedLocation(location);
     renderLocations(getFilteredLocations());
+    renderDirectionQuickPicks();
   });
 }
 
@@ -811,24 +902,68 @@ function getFilteredLocations() {
   return locations.filter((location) => layerMatches(location) && queryMatches(location));
 }
 
+function getLocationAliases(location) {
+  const ignoredKeywords = new Set([
+    "and", "the", "hall", "building", "campus", "student", "students", "academic", "classrooms",
+    "parking", "public", "faculty", "staff", "dorm", "housing", "support", "office", "offices"
+  ]);
+
+  return location.keywords
+    .filter((keyword) => keyword.length >= 2 && keyword.length <= 8)
+    .filter((keyword) => /[a-zA-Z]/.test(keyword))
+    .filter((keyword) => !ignoredKeywords.has(keyword.toLowerCase()))
+    .slice(0, 4);
+}
+
 function renderLocationOptions() {
+  if (!campusLocationSuggestions) {
+    return;
+  }
+
+  campusLocationSuggestions.innerHTML = "";
+
+  if (currentPosition) {
+    const currentOption = document.createElement("option");
+    currentOption.value = "Current Location";
+    currentOption.label = "Use your saved GPS position";
+    campusLocationSuggestions.appendChild(currentOption);
+  }
+
   const sortedLocations = [...locations].sort((a, b) => a.name.localeCompare(b.name));
+  const usedValues = new Set();
 
   sortedLocations.forEach((location) => {
-    const fromOption = document.createElement("option");
-    fromOption.value = String(location.index);
-    fromOption.textContent = location.name;
-    fromLocationSelect.appendChild(fromOption);
+    const value = getLocationInputValue(location);
+    const option = document.createElement("option");
+    option.value = value;
+    option.label = location.category;
+    campusLocationSuggestions.appendChild(option);
+    usedValues.add(normalizeRouteInput(value));
 
-    const toOption = document.createElement("option");
-    toOption.value = String(location.index);
-    toOption.textContent = location.name;
-    toLocationSelect.appendChild(toOption);
+    getLocationAliases(location).forEach((alias) => {
+      const aliasKey = normalizeRouteInput(alias);
+
+      if (usedValues.has(aliasKey)) {
+        return;
+      }
+
+      const aliasOption = document.createElement("option");
+      aliasOption.value = alias.toUpperCase() === alias ? alias : alias.toUpperCase();
+      aliasOption.label = location.name;
+      campusLocationSuggestions.appendChild(aliasOption);
+      usedValues.add(aliasKey);
+    });
   });
 }
 
+function isCurrentLocationInput(value) {
+  return normalizeRouteInput(value) === "current location";
+}
+
 function getLocationBySelectValue(value) {
-  if (value === "current-location") {
+  const cleanValue = String(value || "").trim();
+
+  if (isCurrentLocationInput(cleanValue)) {
     return {
       name: "Current Location",
       lat: currentPosition?.lat,
@@ -836,7 +971,16 @@ function getLocationBySelectValue(value) {
     };
   }
 
-  return locations.find((location) => location.index === Number(value));
+  const normalizedValue = normalizeRouteInput(cleanValue);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  return locations.find((location) => normalizeRouteInput(getLocationInputValue(location)) === normalizedValue)
+    || locations.find((location) => normalizeRouteInput(location.name) === normalizedValue)
+    || locations.find((location) => location.keywords.some((keyword) => normalizeRouteInput(keyword) === normalizedValue))
+    || locations.find((location) => getSearchText(location).includes(normalizedValue));
 }
 
 function estimateWalkingMinutes(start, end) {
@@ -865,13 +1009,13 @@ function getRouteSignature(start, end) {
 function renderDirectionsPreview() {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
-  const isCurrentLocationStart = fromLocationSelect.value === "current-location";
+  const isCurrentLocationStart = isCurrentLocationInput(fromLocationSelect.value);
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
 
   openDirectionsPanel();
   if (!start || !end) {
-    directionsOutput.textContent = "Choose a starting point and destination.";
+    directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
     hideLocationStatus();
     return;
   }
@@ -1041,7 +1185,7 @@ function cleanPathName(pathName) {
 }
 
 function setRouteEndpoint(type, location, options = {}) {
-  const value = String(location.index);
+  const value = getLocationInputValue(location);
 
   if (type === "start") {
     fromLocationSelect.value = value;
@@ -1357,14 +1501,8 @@ function saveCurrentPosition(position) {
     accuracy: position.coords.accuracy
   };
 
-  if (!fromLocationSelect.querySelector('option[value="current-location"]')) {
-    const option = document.createElement("option");
-    option.value = "current-location";
-    option.textContent = "Current Location";
-    fromLocationSelect.prepend(option);
-  }
-
-  fromLocationSelect.value = "current-location";
+  renderLocationOptions();
+  fromLocationSelect.value = "Current Location";
 }
 
 function updateCurrentLocation(position, mode) {
@@ -1542,11 +1680,21 @@ document.addEventListener("keydown", (event) => {
   }
 });
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);
+
+[fromLocationSelect, toLocationSelect].forEach((field) => {
+  field.addEventListener("change", () => {
+    shouldFitRouteToMap = true;
+
+    if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
+      renderDirectionsPreview();
+    }
+  });
+});
 if (routePreferenceSelect) {
   routePreferenceSelect.addEventListener("change", () => {
     shouldFitRouteToMap = true;
 
-    if (fromLocationSelect.value && toLocationSelect.value) {
+    if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
       renderDirectionsPreview();
     }
   });

@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-live-tracking-contrast";
+const CACHE_NAME = "jcsu-campus-map-v20260805-searchable-directions";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-live-tracking-contrast",
-  "./locations.js?v=20260805-live-tracking-contrast",
-  "./paths.js?v=20260805-live-tracking-contrast",
-  "./navigation.js?v=20260805-live-tracking-contrast",
-  "./script.js?v=20260805-live-tracking-contrast",
+  "./style.css?v=20260805-searchable-directions",
+  "./locations.js?v=20260805-searchable-directions",
+  "./paths.js?v=20260805-searchable-directions",
+  "./navigation.js?v=20260805-searchable-directions",
+  "./script.js?v=20260805-searchable-directions",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

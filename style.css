@@ -1928,3 +1928,84 @@ textarea:focus,
     padding-bottom: 28px;
   }
 }
+/* Searchable route fields and saved-place quick picks */
+.directions-form input[type="text"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--panel-soft);
+  border: 1px solid rgba(0, 45, 86, 0.18);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.directions-form input[type="text"]:focus {
+  border-color: var(--gold);
+  outline: 3px solid rgba(255, 207, 1, 0.28);
+}
+
+.direction-quick-picks {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.direction-quick-pick-list {
+  display: grid;
+  gap: 8px;
+}
+
+.direction-quick-pick-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.direction-quick-pick-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.direction-quick-pick-copy strong,
+.direction-quick-pick-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.direction-quick-pick-copy span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.direction-quick-pick-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.direction-quick-pick-actions .secondary-button {
+  min-height: 34px;
+  padding: 7px 9px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 460px) {
+  .direction-quick-pick-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .direction-quick-pick-actions {
+    grid-column: 1 / -1;
+  }
+
+  .direction-quick-pick-actions .secondary-button {
+    flex: 1;
+  }
+}
