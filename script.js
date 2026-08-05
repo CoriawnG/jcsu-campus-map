@@ -1327,7 +1327,11 @@ function setLiveTrackingButtons() {
 
   if (toggleLiveTrackingMapButton) {
     setMapButtonContent(toggleLiveTrackingMapButton, isLiveTracking ? "stop_circle" : "near_me", label);
-    toggleLiveTrackingMapButton.classList.toggle("primary-map-action", isLiveTracking);
+    toggleLiveTrackingMapButton.classList.toggle("primary-map-action", false);
+    toggleLiveTrackingMapButton.classList.toggle("live-tracking-active", isLiveTracking);
+    toggleLiveTrackingMapButton.style.color = isLiveTracking ? "var(--jcsu-blue)" : "";
+    toggleLiveTrackingMapButton.style.background = isLiveTracking ? "var(--jcsu-gold)" : "";
+    toggleLiveTrackingMapButton.style.borderColor = isLiveTracking ? "rgba(255, 207, 1, 0.95)" : "";
   }
 }
 
