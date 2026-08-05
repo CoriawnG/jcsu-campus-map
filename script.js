@@ -2,6 +2,7 @@ const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
 const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
+const favoriteLocationsContainer = document.querySelector("#favoriteLocations");
 const recentLocationsContainer = document.querySelector("#recentLocations");
 const resultCount = document.querySelector("#resultCount");
 const selectedLocation = document.querySelector("#selectedLocation");
@@ -56,6 +57,7 @@ const layerIconNames = {
   "Landmarks": "account_balance"
 };
 
+const favoriteLocationsStorageKey = "jcsu-favorite-locations";
 const recentLocationsStorageKey = "jcsu-recent-locations";
 const maxRecentLocations = 8;
 
@@ -224,30 +226,65 @@ function saveRecentLocation(location) {
   }
 }
 
-function renderRecentLocations() {
-  if (!recentLocationsContainer) {
+function getFavoriteLocationIndexes() {
+  try {
+    const savedIndexes = JSON.parse(localStorage.getItem(favoriteLocationsStorageKey) || "[]");
+    return savedIndexes.filter((index) => Number.isInteger(index) && locations[index]);
+  } catch (error) {
+    return [];
+  }
+}
+
+function isFavoriteLocation(location) {
+  return getFavoriteLocationIndexes().includes(location.index);
+}
+
+function toggleFavoriteLocation(location) {
+  try {
+    const favoriteIndexes = getFavoriteLocationIndexes();
+    const nextIndexes = favoriteIndexes.includes(location.index)
+      ? favoriteIndexes.filter((index) => index !== location.index)
+      : [location.index, ...favoriteIndexes];
+
+    localStorage.setItem(favoriteLocationsStorageKey, JSON.stringify(nextIndexes));
+  } catch (error) {
+    // Favorites are saved locally when possible, but the map still works without storage.
+  }
+}
+
+function selectLocation(location) {
+  activeLocationName = location.name;
+  activeLocationIndex = location.index;
+  saveRecentLocation(location);
+  renderSelectedLocation(location);
+  focusMapOnLocation(location);
+  renderLocations(getFilteredLocations());
+  renderNavigationMarkers(getFilteredLocations());
+  expandMobilePanel();
+}
+
+function renderLocationRail(container, title, railLabel, list) {
+  if (!container) {
     return;
   }
 
-  const recentLocations = getRecentLocationIndexes().map((index) => locations[index]);
-
-  if (recentLocations.length === 0) {
-    recentLocationsContainer.hidden = true;
-    recentLocationsContainer.innerHTML = "";
+  if (list.length === 0) {
+    container.hidden = true;
+    container.innerHTML = "";
     return;
   }
 
-  recentLocationsContainer.hidden = false;
-  recentLocationsContainer.innerHTML = `
+  container.hidden = false;
+  container.innerHTML = `
     <div class="rail-heading">
-      <h3>Recently Viewed</h3>
+      <h3>${title}</h3>
     </div>
-    <div class="recent-location-rail" aria-label="Recently viewed locations"></div>
+    <div class="recent-location-rail" aria-label="${railLabel}"></div>
   `;
 
-  const rail = recentLocationsContainer.querySelector(".recent-location-rail");
+  const rail = container.querySelector(".recent-location-rail");
 
-  recentLocations.forEach((location) => {
+  list.forEach((location) => {
     const button = document.createElement("button");
     button.className = "recent-location-button";
     button.type = "button";
@@ -257,19 +294,27 @@ function renderRecentLocations() {
       <span>${location.category}</span>
     `;
 
-    button.addEventListener("click", () => {
-      activeLocationName = location.name;
-      activeLocationIndex = location.index;
-      saveRecentLocation(location);
-      renderSelectedLocation(location);
-      focusMapOnLocation(location);
-      renderLocations(getFilteredLocations());
-      renderNavigationMarkers(getFilteredLocations());
-      expandMobilePanel();
-    });
+    button.addEventListener("click", () => selectLocation(location));
 
     rail.appendChild(button);
   });
+}
+
+function renderFavoriteLocations() {
+  renderLocationRail(
+    favoriteLocationsContainer,
+    "Favorites",
+    "Favorite locations",
+    getFavoriteLocationIndexes().map((index) => locations[index])
+  );
+}
+function renderRecentLocations() {
+  if (!recentLocationsContainer) {
+    return;
+  }
+
+  const recentLocations = getRecentLocationIndexes().map((index) => locations[index]);
+  renderLocationRail(recentLocationsContainer, "Recently Viewed", "Recently viewed locations", recentLocations);
 }
 
 function getSearchText(location) {
@@ -285,6 +330,7 @@ function getSearchText(location) {
 function renderLocations(list) {
   resultsContainer.innerHTML = "";
   resultCount.textContent = list.length;
+  renderFavoriteLocations();
   renderRecentLocations();
 
   if (list.length === 0) {
@@ -306,16 +352,7 @@ function renderLocations(list) {
       button.classList.add("is-active");
     }
 
-    button.addEventListener("click", () => {
-      activeLocationName = location.name;
-      activeLocationIndex = location.index;
-      saveRecentLocation(location);
-      renderSelectedLocation(location);
-      focusMapOnLocation(location);
-      renderLocations(getFilteredLocations());
-      renderNavigationMarkers(getFilteredLocations());
-      expandMobilePanel();
-    });
+    button.addEventListener("click", () => selectLocation(location));
 
     resultsContainer.appendChild(button);
   });
@@ -459,6 +496,8 @@ function showSearchPanel() {
 }
 
 function renderSelectedLocation(location) {
+  const isFavorite = isFavoriteLocation(location);
+
   sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
     <div class="details-heading-row">
@@ -473,9 +512,23 @@ function renderSelectedLocation(location) {
       <span class="tag">${location.layer}</span>
       <span class="tag">${location.category}</span>
     </div>
+    <div class="detail-quick-info">
+      <div>
+        <span class="material-symbols-outlined" aria-hidden="true">${getLocationIcon(location)}</span>
+        <span>${location.category}</span>
+      </div>
+      <div>
+        <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
+        <span>${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</span>
+      </div>
+    </div>
     <div class="location-actions">
       <button class="secondary-button" type="button" data-route-action="start">Set as Start</button>
       <button class="primary-button" type="button" data-route-action="destination">Set as Destination</button>
+      <button class="secondary-button wide-action" type="button" data-favorite-action>
+        <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
+        ${isFavorite ? "Remove Favorite" : "Add Favorite"}
+      </button>
     </div>
   `;
 
@@ -487,6 +540,12 @@ function renderSelectedLocation(location) {
 
   selectedLocation.querySelector('[data-route-action="destination"]').addEventListener("click", () => {
     setRouteEndpoint("destination", location);
+  });
+
+  selectedLocation.querySelector("[data-favorite-action]").addEventListener("click", () => {
+    toggleFavoriteLocation(location);
+    renderSelectedLocation(location);
+    renderLocations(getFilteredLocations());
   });
 }
 
@@ -618,8 +677,11 @@ function renderDirectionsPreview() {
 
   directionsOutput.innerHTML = `
     <strong>${start.name} to ${end.name}</strong>
-    <div class="route-summary">
-      ${route.distanceText} &middot; about ${route.minutes} minute${route.minutes === 1 ? "" : "s"} &middot; ${route.graphEdgeCount} path segment${route.graphEdgeCount === 1 ? "" : "s"}
+    <div class="route-summary">Campus walking route</div>
+    <div class="route-metrics" aria-label="Route estimate">
+      <span><strong>${route.minutes}</strong> min walk</span>
+      <span>${route.distanceText}</span>
+      <span>${route.graphEdgeCount} path segment${route.graphEdgeCount === 1 ? "" : "s"}</span>
     </div>
     <ol class="route-steps">
       <li>Start at ${start.name}.</li>
@@ -811,14 +873,7 @@ function renderNavigationMarkers(list) {
       ${location.layer}
     `);
 
-    marker.on("click", () => {
-      activeLocationName = location.name;
-      activeLocationIndex = location.index;
-      renderSelectedLocation(location);
-      renderLocations(getFilteredLocations());
-      renderNavigationMarkers(getFilteredLocations());
-      expandMobilePanel();
-    });
+    marker.on("click", () => selectLocation(location));
 
     marker.addTo(navigationMarkerLayer);
   });
@@ -1219,4 +1274,3 @@ renderLocations(locations);
 initializeNavigationMap();
 switchMapView("navigationMapView");
 setMobilePanelState("full");
-
