@@ -329,6 +329,11 @@ input[type="search"]:focus {
 .directions-form .primary-button + .secondary-button {
   margin-top: -2px;
 }
+.route-preference-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
 
 select {
   width: 100%;

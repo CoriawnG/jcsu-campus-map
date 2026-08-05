@@ -9,6 +9,7 @@ const selectedLocation = document.querySelector("#selectedLocation");
 const filterButtons = document.querySelectorAll(".filter-button");
 const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
+const routePreferenceSelect = document.querySelector("#routePreference");
 const useMyLocationButton = document.querySelector("#useMyLocation");
 const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
 const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
@@ -61,6 +62,12 @@ const favoriteLocationsStorageKey = "jcsu-favorite-locations";
 const recentLocationsStorageKey = "jcsu-recent-locations";
 const maxRecentLocations = 8;
 
+const routePreferenceLabels = {
+  fastest: "Fastest route",
+  accessible: "Accessible route",
+  "avoid-roads": "Avoid roads",
+  "main-sidewalks": "Main sidewalks"
+};
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
   "Campus Services": { label: "Services", color: "#a93636" },
@@ -612,6 +619,8 @@ function renderDirectionsPreview() {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
   const isCurrentLocationStart = fromLocationSelect.value === "current-location";
+  const routePreference = routePreferenceSelect?.value || "fastest";
+  const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
 
   if (!start || !end) {
     directionsOutput.textContent = "Choose a starting point and destination.";
@@ -644,7 +653,7 @@ function renderDirectionsPreview() {
     return;
   }
 
-  const route = window.CampusNavigation.findRoute(start, end);
+  const route = window.CampusNavigation.findRoute(start, end, { preference: routePreference });
 
   if (!route.ok) {
     directionsOutput.innerHTML = `
@@ -677,11 +686,12 @@ function renderDirectionsPreview() {
 
   directionsOutput.innerHTML = `
     <strong>${start.name} to ${end.name}</strong>
-    <div class="route-summary">Campus walking route</div>
+    <div class="route-summary">${routePreferenceLabel}</div>
     <div class="route-metrics" aria-label="Route estimate">
       <span><strong>${route.minutes}</strong> min walk</span>
       <span>${route.distanceText}</span>
       <span>${route.graphEdgeCount} path segment${route.graphEdgeCount === 1 ? "" : "s"}</span>
+      <span>${route.preferenceNote}</span>
     </div>
     <ol class="route-steps">
       <li>Start at ${start.name}.</li>
@@ -1239,6 +1249,15 @@ document.addEventListener("keydown", (event) => {
   }
 });
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);
+if (routePreferenceSelect) {
+  routePreferenceSelect.addEventListener("change", () => {
+    shouldFitRouteToMap = true;
+
+    if (fromLocationSelect.value && toLocationSelect.value) {
+      renderDirectionsPreview();
+    }
+  });
+}
 clearRouteButton.addEventListener("click", clearRoute);
 mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);
 mobilePanelToggle.addEventListener("pointermove", updatePanelDrag);

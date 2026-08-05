@@ -78,7 +78,74 @@
     return { node: nearest, distance: nearestDistance };
   }
 
-  function dijkstra(graph, startId, endId) {
+  function getRoutePreference(preference) {
+    const preferences = {
+      fastest: {
+        label: "Fastest route",
+        note: "Shortest available campus path",
+        multipliers: {}
+      },
+      accessible: {
+        label: "Accessible route",
+        note: "Avoids stairs and rougher paths when possible",
+        multipliers: {
+          stairs: 12,
+          crossing: 2.5,
+          parking: 1.8
+        }
+      },
+      "avoid-roads": {
+        label: "Avoid roads",
+        note: "Penalizes street crossings when possible",
+        multipliers: {
+          crossing: 8,
+          parking: 1.5
+        }
+      },
+      "main-sidewalks": {
+        label: "Main sidewalks",
+        note: "Prefers named sidewalks and campus walkways",
+        multipliers: {
+          shortcut: 1.6,
+          parking: 2,
+          crossing: 2
+        }
+      }
+    };
+
+    return preferences[preference] || preferences.fastest;
+  }
+
+  function classifySegment(segmentName) {
+    const name = String(segmentName || "").toLowerCase();
+
+    return {
+      stairs: name.includes("stairs") || name.includes("steps"),
+      crossing: name.includes("cross") || name.includes("street") || name.includes("road"),
+      parking: name.includes("parking"),
+      mainSidewalk: name.includes("main sidewalk") || name.includes("main walkway") || name.includes("walkway"),
+      shortcut: name.includes("shortcut") || name.includes("through") || name.includes("cut")
+    };
+  }
+
+  function getEdgeWeight(edge, preference) {
+    const segment = classifySegment(edge.segmentName);
+    let multiplier = 1;
+
+    Object.entries(preference.multipliers).forEach(([type, value]) => {
+      if (segment[type]) {
+        multiplier = Math.max(multiplier, value);
+      }
+    });
+
+    if (preference.label === "Main sidewalks" && segment.mainSidewalk) {
+      multiplier *= 0.88;
+    }
+
+    return edge.distance * multiplier;
+  }
+
+  function dijkstra(graph, startId, endId, preference) {
     const distances = new Map();
     const previous = new Map();
     const unvisited = new Set(graph.nodes.keys());
@@ -117,7 +184,7 @@
           return;
         }
 
-        const nextDistance = currentDistance + edge.distance;
+        const nextDistance = currentDistance + getEdgeWeight(edge, preference);
 
         if (nextDistance < distances.get(edge.to)) {
           distances.set(edge.to, nextDistance);
@@ -202,7 +269,7 @@
   function buildNavigation(pathSegments) {
     const graph = createGraph(pathSegments || []);
 
-    function findRoute(start, end) {
+    function findRoute(start, end, options = {}) {
       if (!start?.lat || !start?.lng || !end?.lat || !end?.lng) {
         return { ok: false, message: "Start or destination is missing coordinates." };
       }
@@ -218,7 +285,8 @@
         return { ok: false, message: "Could not connect the start or destination to the sidewalk network." };
       }
 
-      const route = dijkstra(graph, startNearest.node.id, endNearest.node.id);
+      const preference = getRoutePreference(options.preference);
+      const route = dijkstra(graph, startNearest.node.id, endNearest.node.id, preference);
 
       if (!route) {
         return {
@@ -243,7 +311,9 @@
         distanceText: formatDistance(totalDistance),
         minutes: estimateMinutes(totalDistance),
         graphNodeCount: graph.nodes.size,
-        graphEdgeCount: route.edgeSteps.length
+        graphEdgeCount: route.edgeSteps.length,
+        preferenceLabel: preference.label,
+        preferenceNote: preference.note
       };
     }
 
