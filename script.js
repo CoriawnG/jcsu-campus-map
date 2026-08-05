@@ -2,6 +2,7 @@ const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
 const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
+const personalLocationsContainer = document.querySelector("#personalLocations");
 const favoriteLocationsContainer = document.querySelector("#favoriteLocations");
 const recentLocationsContainer = document.querySelector("#recentLocations");
 const resultCount = document.querySelector("#resultCount");
@@ -58,6 +59,7 @@ const layerIconNames = {
   "Landmarks": "account_balance"
 };
 
+const personalPlacesStorageKey = "jcsu-personal-places";
 const favoriteLocationsStorageKey = "jcsu-favorite-locations";
 const recentLocationsStorageKey = "jcsu-recent-locations";
 const maxRecentLocations = 8;
@@ -239,6 +241,75 @@ function getLocationIcon(location) {
   return layerIconNames[location.layer] || "place";
 }
 
+function getPersonalPlaceIndexes() {
+  try {
+    const savedPlaces = JSON.parse(localStorage.getItem(personalPlacesStorageKey) || "{}");
+
+    return {
+      homeDorm: Number.isInteger(savedPlaces.homeDorm) && locations[savedPlaces.homeDorm] ? savedPlaces.homeDorm : null,
+      mainClass: Number.isInteger(savedPlaces.mainClass) && locations[savedPlaces.mainClass] ? savedPlaces.mainClass : null
+    };
+  } catch (error) {
+    return { homeDorm: null, mainClass: null };
+  }
+}
+
+function savePersonalPlace(type, location) {
+  try {
+    const savedPlaces = getPersonalPlaceIndexes();
+    savedPlaces[type] = location.index;
+    localStorage.setItem(personalPlacesStorageKey, JSON.stringify(savedPlaces));
+  } catch (error) {
+    // Personal shortcuts are local conveniences; routing still works if storage is blocked.
+  }
+}
+
+function renderPersonalLocations() {
+  if (!personalLocationsContainer) {
+    return;
+  }
+
+  const savedPlaces = getPersonalPlaceIndexes();
+  const personalPlaces = [
+    savedPlaces.homeDorm !== null
+      ? { label: "Home Dorm", icon: "home", location: locations[savedPlaces.homeDorm] }
+      : null,
+    savedPlaces.mainClass !== null
+      ? { label: "Main Class Building", icon: "school", location: locations[savedPlaces.mainClass] }
+      : null
+  ].filter(Boolean);
+
+  if (personalPlaces.length === 0) {
+    personalLocationsContainer.hidden = true;
+    personalLocationsContainer.innerHTML = "";
+    return;
+  }
+
+  personalLocationsContainer.hidden = false;
+  personalLocationsContainer.innerHTML = `
+    <div class="rail-heading">
+      <h3>My Places</h3>
+    </div>
+    <div class="recent-location-rail" aria-label="Saved personal places"></div>
+  `;
+
+  const rail = personalLocationsContainer.querySelector(".recent-location-rail");
+
+  personalPlaces.forEach((place) => {
+    const button = document.createElement("button");
+    button.className = "recent-location-button personal-location-button";
+    button.type = "button";
+    button.innerHTML = `
+      <span class="material-symbols-outlined location-icon" aria-hidden="true">${place.icon}</span>
+      <strong>${place.location.name}</strong>
+      <span>${place.label}</span>
+    `;
+
+    button.addEventListener("click", () => selectLocation(place.location));
+
+    rail.appendChild(button);
+  });
+}
 function getRecentLocationIndexes() {
   try {
     const savedIndexes = JSON.parse(localStorage.getItem(recentLocationsStorageKey) || "[]");
@@ -362,6 +433,7 @@ function getSearchText(location) {
 function renderLocations(list) {
   resultsContainer.innerHTML = "";
   resultCount.textContent = list.length;
+  renderPersonalLocations();
   renderFavoriteLocations();
   renderRecentLocations();
 
@@ -529,6 +601,9 @@ function showSearchPanel() {
 
 function renderSelectedLocation(location) {
   const isFavorite = isFavoriteLocation(location);
+  const savedPersonalPlaces = getPersonalPlaceIndexes();
+  const isHomeDorm = savedPersonalPlaces.homeDorm === location.index;
+  const isMainClass = savedPersonalPlaces.mainClass === location.index;
 
   sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
@@ -557,6 +632,14 @@ function renderSelectedLocation(location) {
     <div class="location-actions">
       <button class="secondary-button" type="button" data-route-action="start">Set as Start</button>
       <button class="primary-button" type="button" data-route-action="destination">Set as Destination</button>
+      <button class="secondary-button" type="button" data-personal-action="homeDorm">
+        <span class="material-symbols-outlined" aria-hidden="true">home</span>
+        ${isHomeDorm ? "Home Dorm Saved" : "Set Home Dorm"}
+      </button>
+      <button class="secondary-button" type="button" data-personal-action="mainClass">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        ${isMainClass ? "Main Class Saved" : "Set Main Class"}
+      </button>
       <button class="secondary-button wide-action" type="button" data-favorite-action>
         <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
         ${isFavorite ? "Remove Favorite" : "Add Favorite"}
@@ -572,6 +655,14 @@ function renderSelectedLocation(location) {
 
   selectedLocation.querySelector('[data-route-action="destination"]').addEventListener("click", () => {
     setRouteEndpoint("destination", location);
+  });
+
+  selectedLocation.querySelectorAll("[data-personal-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      savePersonalPlace(button.dataset.personalAction, location);
+      renderSelectedLocation(location);
+      renderLocations(getFilteredLocations());
+    });
   });
 
   selectedLocation.querySelector("[data-favorite-action]").addEventListener("click", () => {
