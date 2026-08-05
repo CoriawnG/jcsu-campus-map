@@ -1758,3 +1758,82 @@ textarea:focus,
     border-radius: 12px;
   }
 }
+
+/* Icon-first map controls */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header-actions .safety-button,
+.header-actions .feedback-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.header-actions .material-symbols-outlined {
+  font-size: 1.15rem;
+}
+
+.map-floating-actions {
+  flex-direction: column;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  max-width: none;
+}
+
+.map-icon-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.map-icon-button .material-symbols-outlined {
+  font-size: 1.55rem;
+}
+
+.map-icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.map-status {
+  max-width: min(320px, calc(100vw - 28px));
+  border-radius: 10px;
+  text-align: left;
+}
+
+@media (max-width: 860px) {
+  .map-floating-actions {
+    top: 84px;
+    right: 12px;
+  }
+
+  .map-icon-button {
+    width: 46px;
+    height: 46px;
+    min-height: 46px;
+  }
+
+  .header-actions .safety-button span:last-child,
+  .header-actions .feedback-button span:last-child {
+    display: none;
+  }
+
+  .header-actions .safety-button,
+  .header-actions .feedback-button {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+}

@@ -263,6 +263,18 @@ function submitFeedback(event) {
   feedbackStatus.textContent = "Opening the Google feedback form in a new tab.";
 }
 
+function setMapButtonContent(button, iconName, label) {
+  if (!button) {
+    return;
+  }
+
+  button.setAttribute("aria-label", label);
+  button.title = label;
+  button.innerHTML = `
+    <span class="material-symbols-outlined" aria-hidden="true">${iconName}</span>
+    <span class="visually-hidden">${label}</span>
+  `;
+}
 function setLocationStatus(message, options = {}) {
   directionsOutput.innerHTML = message;
 
@@ -1219,12 +1231,14 @@ function getLocationErrorMessage(error) {
 }
 
 function setLocationButtonsLoading(isLoading) {
+  const label = isLoading ? "Setting location" : "Set My Location";
+
   useMyLocationButton.disabled = isLoading;
   useMyLocationButton.textContent = isLoading ? "Setting location..." : "Set My Location";
 
   if (useMyLocationMapButton) {
     useMyLocationMapButton.disabled = isLoading;
-    useMyLocationMapButton.textContent = isLoading ? "Setting location..." : "Set My Location";
+    setMapButtonContent(useMyLocationMapButton, isLoading ? "progress_activity" : "gps_fixed", label);
   }
 }
 
@@ -1236,7 +1250,7 @@ function setLiveTrackingButtons() {
   }
 
   if (toggleLiveTrackingMapButton) {
-    toggleLiveTrackingMapButton.textContent = label;
+    setMapButtonContent(toggleLiveTrackingMapButton, isLiveTracking ? "stop_circle" : "near_me", label);
     toggleLiveTrackingMapButton.classList.toggle("primary-map-action", isLiveTracking);
   }
 }

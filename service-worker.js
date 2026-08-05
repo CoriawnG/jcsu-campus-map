@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-real-logo";
+const CACHE_NAME = "jcsu-campus-map-v20260805-icon-controls";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-real-bull-logo",
-  "./locations.js?v=20260805-real-bull-logo",
-  "./paths.js?v=20260805-real-bull-logo",
-  "./navigation.js?v=20260805-real-bull-logo",
-  "./script.js?v=20260805-real-bull-logo",
+  "./style.css?v=20260805-icon-map-controls",
+  "./locations.js?v=20260805-icon-map-controls",
+  "./paths.js?v=20260805-icon-map-controls",
+  "./navigation.js?v=20260805-icon-map-controls",
+  "./script.js?v=20260805-icon-map-controls",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
