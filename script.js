@@ -26,6 +26,11 @@ const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
 const sidebar = document.querySelector(".sidebar");
 const mobilePanelToggle = document.querySelector("#mobilePanelToggle");
+const safetyButton = document.querySelector("#safetyButton");
+const openSafetyPanelMapButton = document.querySelector("#openSafetyPanelMap");
+const safetyModal = document.querySelector("#safetyModal");
+const closeSafetyButton = document.querySelector("#closeSafety");
+const safetyRouteButtons = document.querySelectorAll("[data-safety-route]");
 const feedbackButton = document.querySelector("#feedbackButton");
 const feedbackModal = document.querySelector("#feedbackModal");
 const closeFeedbackButton = document.querySelector("#closeFeedback");
@@ -107,6 +112,45 @@ let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
 
+function openSafetyModal() {
+  safetyModal.hidden = false;
+  document.body.classList.add("modal-open");
+  closeSafetyButton.focus();
+}
+
+function closeSafetyModal() {
+  safetyModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function routeToSafetyLocation(locationName) {
+  const location = locations.find((item) => item.name === locationName);
+
+  if (!location) {
+    closeSafetyModal();
+    setLocationStatus(`Safety location unavailable: ${locationName}`, { isError: true });
+    expandMobilePanel();
+    return;
+  }
+
+  closeSafetyModal();
+  activeLocationName = location.name;
+  activeLocationIndex = location.index;
+  toLocationSelect.value = String(location.index);
+  saveRecentLocation(location);
+  renderSelectedLocation(location);
+  renderLocations(getFilteredLocations());
+  renderNavigationMarkers(getFilteredLocations());
+  focusMapOnLocation(location);
+
+  if (fromLocationSelect.value) {
+    shouldFitRouteToMap = true;
+    renderDirectionsPreview();
+  } else {
+    directionsOutput.innerHTML = `<strong>Destination set:</strong> ${location.name}. Choose a starting point or tap Set My Location.`;
+    openDirectionsPanel();
+  }
+}
 function openFeedbackModal(options = {}) {
   const selectedLocationName = activeLocationName || "";
   const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "";
@@ -1353,6 +1397,32 @@ if (openDirectionsPanelButton) {
   openDirectionsPanelButton.addEventListener("click", openDirectionsPanel);
 }
 
+
+if (safetyButton) {
+  safetyButton.addEventListener("click", openSafetyModal);
+}
+
+if (openSafetyPanelMapButton) {
+  openSafetyPanelMapButton.addEventListener("click", openSafetyModal);
+}
+
+if (closeSafetyButton) {
+  closeSafetyButton.addEventListener("click", closeSafetyModal);
+}
+
+if (safetyModal) {
+  safetyModal.addEventListener("click", (event) => {
+    if (event.target === safetyModal) {
+      closeSafetyModal();
+    }
+  });
+}
+
+safetyRouteButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    routeToSafetyLocation(button.dataset.safetyRoute);
+  });
+});
 feedbackButton.addEventListener("click", openFeedbackModal);
 closeFeedbackButton.addEventListener("click", closeFeedbackModal);
 copyFeedbackButton.addEventListener("click", copyFeedbackText);
@@ -1367,6 +1437,10 @@ feedbackModal.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !feedbackModal.hidden) {
     closeFeedbackModal();
+  }
+
+  if (event.key === "Escape" && safetyModal && !safetyModal.hidden) {
+    closeSafetyModal();
   }
 });
 getDirectionsButton.addEventListener("click", renderDirectionsPreview);

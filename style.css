@@ -575,6 +575,7 @@ select:focus {
   gap: 10px;
 }
 
+.safety-button,
 .feedback-button {
   flex: 0 0 auto;
   min-height: 40px;
@@ -587,8 +588,52 @@ select:focus {
   font-weight: 700;
 }
 
+.safety-button:hover,
 .feedback-button:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.safety-button {
+  color: #13213a;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.safety-map-action {
+  color: #ffffff;
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.safety-content {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.safety-warning {
+  margin: 0;
+  padding: 12px;
+  color: #6f2020;
+  background: #fff3f3;
+  border: 1px solid #efc2c2;
+  border-radius: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.safety-actions,
+.safety-route-list {
+  display: grid;
+  gap: 10px;
+}
+
+.safety-call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
 }
 
 .feedback-modal {
@@ -691,6 +736,7 @@ textarea:focus,
     gap: 8px;
   }
 
+  .safety-button,
   .feedback-button {
     min-height: 36px;
     padding: 8px 10px;
