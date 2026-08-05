@@ -2973,3 +2973,67 @@ body.is-offline .app-shell {
     font-size: 1.05rem;
   }
 }
+
+/* Route issue reporter */
+.route-issue-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.route-issue-panel h4,
+.route-issue-panel p {
+  margin: 0;
+}
+
+.route-issue-panel h4 {
+  color: var(--blue);
+  font-size: 0.95rem;
+}
+
+.route-issue-panel p {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.route-issue-options {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.route-issue-chip {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 8px 11px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.54);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.route-issue-chip:focus-visible {
+  outline: 3px solid rgba(0, 45, 86, 0.24);
+  outline-offset: 2px;
+}
+
+.route-report-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.route-report-button .material-symbols-outlined {
+  font-size: 1.1rem;
+}

@@ -494,13 +494,30 @@ function openFeedbackModal(options = {}) {
   feedbackMessage.focus();
 }
 
-function openRouteIssueReporter(route, routePreferenceLabel) {
+function getRouteIssueStepSummary(route) {
+  if (!route?.steps?.length) {
+    return "No step data available";
+  }
+
+  const uniqueNames = [];
+
+  route.steps.forEach((step) => {
+    if (step.name && uniqueNames[uniqueNames.length - 1] !== step.name) {
+      uniqueNames.push(step.name);
+    }
+  });
+
+  return uniqueNames.slice(0, 8).join(" -> ") || "Unnamed campus paths";
+}
+
+function openRouteIssueReporter(route, routePreferenceLabel, issueType = "") {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
   const selectedLocationName = activeLocationName || end?.name || "";
   const routeSummary = route
-    ? `${routePreferenceLabel}; ${route.distanceText}; about ${route.minutes} minute${route.minutes === 1 ? "" : "s"}`
+    ? `${routePreferenceLabel}; ${route.distanceText}; about ${route.minutes} minute${route.minutes === 1 ? "" : "s"}; ${route.graphEdgeCount} path segments`
     : routePreferenceLabel;
+  const stepSummary = getRouteIssueStepSummary(route);
 
   openFeedbackModal({
     type: "Route issue",
@@ -509,9 +526,12 @@ function openRouteIssueReporter(route, routePreferenceLabel) {
     routeDestination: end?.name || "",
     status: "Route details added. Describe what needs fixing, then submit.",
     message: [
+      `Issue type: ${issueType || "Describe the route problem"}`,
       `Route preference: ${routeSummary}`,
-      "Issue type: ",
-      "What should be fixed: "
+      `Route path shown: ${stepSummary}`,
+      "",
+      "What should be fixed: ",
+      "Where does the problem happen: "
     ].join("\n")
   });
 }
@@ -1551,11 +1571,31 @@ function renderDirectionsPreview() {
         </ol>
       </details>
 
-      <div class="route-preview-actions">
-        <button id="reportRouteIssue" class="secondary-button route-report-button" type="button">Report Route Issue</button>
-      </div>
+      <section class="route-issue-panel" aria-label="Report a route problem">
+        <div>
+          <h4>See a route problem?</h4>
+          <p>Report it with this route already attached.</p>
+        </div>
+        <div class="route-issue-options">
+          <button class="route-issue-chip" type="button" data-route-issue="Route is too long">Too Long</button>
+          <button class="route-issue-chip" type="button" data-route-issue="Missing sidewalk or connection">Missing Sidewalk</button>
+          <button class="route-issue-chip" type="button" data-route-issue="Crosses the wrong area">Wrong Area</button>
+          <button class="route-issue-chip" type="button" data-route-issue="Blocked or inaccessible path">Blocked Path</button>
+          <button class="route-issue-chip" type="button" data-route-issue="Directions are unclear">Unclear Steps</button>
+        </div>
+        <button id="reportRouteIssue" class="secondary-button route-report-button" type="button">
+          <span class="material-symbols-outlined" aria-hidden="true">feedback</span>
+          Describe Another Issue
+        </button>
+      </section>
     </article>
   `;
+
+  directionsOutput.querySelectorAll("[data-route-issue]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openRouteIssueReporter(route, routePreferenceLabel, button.dataset.routeIssue);
+    });
+  });
 
   directionsOutput.querySelector("#reportRouteIssue").addEventListener("click", () => {
     openRouteIssueReporter(route, routePreferenceLabel);
