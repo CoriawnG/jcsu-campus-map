@@ -2072,3 +2072,335 @@ body {
     overscroll-behavior: contain;
   }
 }
+/* Animated app intro */
+.app-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 28px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 207, 1, 0.16), transparent 26%),
+    linear-gradient(160deg, #001a36 0%, var(--blue) 58%, #0f3f70 100%);
+  overflow: hidden;
+}
+
+.app-intro::before {
+  content: "";
+  position: absolute;
+  inset: auto -18% -22% -18%;
+  height: 46%;
+  background: linear-gradient(100deg, var(--gold), #ffe37a);
+  transform: skewY(-8deg);
+  opacity: 0.96;
+}
+
+.app-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+  pointer-events: none;
+}
+
+.intro-map-grid {
+  position: absolute;
+  inset: -20%;
+  opacity: 0.22;
+  background:
+    linear-gradient(35deg, transparent 0 46%, rgba(255, 255, 255, 0.22) 47% 49%, transparent 50% 100%),
+    linear-gradient(120deg, transparent 0 44%, rgba(255, 255, 255, 0.16) 45% 47%, transparent 48% 100%),
+    linear-gradient(0deg, transparent 0 48%, rgba(255, 207, 1, 0.18) 49% 50%, transparent 51% 100%),
+    linear-gradient(90deg, transparent 0 48%, rgba(255, 255, 255, 0.12) 49% 50%, transparent 51% 100%);
+  background-size: 210px 150px, 190px 180px, 84px 84px, 84px 84px;
+  transform: rotate(-8deg) scale(1.08);
+  animation: introMapDrift 2600ms ease both;
+}
+
+.intro-route-map {
+  position: absolute;
+  z-index: 1;
+  width: min(420px, 96vw);
+  height: min(420px, 96vw);
+  opacity: 0.95;
+}
+
+.intro-route-shadow,
+.intro-route-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.intro-route-shadow {
+  stroke: rgba(0, 0, 0, 0.24);
+  stroke-width: 17;
+  transform: translate(3px, 5px);
+}
+
+.intro-route-line {
+  stroke: var(--gold);
+  stroke-width: 10;
+  stroke-dasharray: 530;
+  stroke-dashoffset: 530;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.25));
+  animation: introRouteDraw 1400ms cubic-bezier(0.2, 0.8, 0.2, 1) 240ms forwards;
+}
+
+.intro-route-start,
+.intro-route-stop {
+  fill: #ffffff;
+  stroke: var(--gold);
+  stroke-width: 5;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.22));
+}
+
+.intro-route-start {
+  animation: introPointIn 420ms ease 180ms both;
+}
+
+.intro-route-stop {
+  animation: introPointIn 520ms ease 1280ms both;
+}
+
+.intro-pin,
+.intro-mark-wrap,
+.intro-copy,
+.intro-progress {
+  position: relative;
+  z-index: 2;
+}
+
+.intro-pin {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: -8px;
+  color: var(--blue);
+  background: var(--gold);
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
+  animation: introPinDrop 780ms cubic-bezier(0.2, 0.9, 0.2, 1.25) 1120ms both;
+}
+
+.intro-pin .material-symbols-outlined {
+  font-size: 1.85rem;
+}
+
+.intro-mark-wrap {
+  display: grid;
+  place-items: center;
+  width: 138px;
+  height: 138px;
+  border: 3px solid rgba(255, 207, 1, 0.98);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.3);
+  animation: introLogoRise 900ms ease 1380ms both;
+}
+
+.intro-mark {
+  width: 108px;
+  height: 108px;
+  object-fit: contain;
+  animation: introLogoPulse 1350ms ease-in-out 1450ms both;
+}
+
+.intro-copy {
+  text-align: center;
+}
+
+.intro-copy p,
+.intro-copy h2 {
+  margin: 0;
+}
+
+.intro-copy p {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  animation: introTextIn 520ms ease 1620ms both;
+}
+
+.intro-copy h2 {
+  margin-top: 5px;
+  font-size: clamp(1.65rem, 6vw, 2.7rem);
+  line-height: 1;
+  animation: introTextIn 560ms ease 1760ms both;
+}
+
+.intro-progress {
+  width: min(230px, 62vw);
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  animation: introTextIn 420ms ease 1880ms both;
+}
+
+.intro-progress::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold);
+  transform-origin: left center;
+  animation: introProgress 900ms ease 1880ms both;
+}
+
+.app-intro.is-dismissing {
+  pointer-events: none;
+  animation: introFadeOut 560ms ease forwards;
+}
+
+body.intro-running .app-header,
+body.intro-running .app-shell {
+  filter: blur(7px);
+  transform: scale(1.012);
+}
+
+.app-header,
+.app-shell {
+  transition: filter 560ms ease, transform 560ms ease;
+}
+
+@keyframes introMapDrift {
+  from {
+    transform: rotate(-8deg) translateY(18px) scale(1.12);
+  }
+
+  to {
+    transform: rotate(-8deg) translateY(0) scale(1.08);
+  }
+}
+
+@keyframes introRouteDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes introPointIn {
+  from {
+    opacity: 0;
+    transform: scale(0.45);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes introPinDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-38px) scale(0.72);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes introLogoRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes introLogoPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  55% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes introTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes introProgress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes introFadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (max-width: 460px) {
+  .intro-mark-wrap {
+    width: 124px;
+    height: 124px;
+  }
+
+  .intro-mark {
+    width: 98px;
+    height: 98px;
+  }
+
+  .intro-pin {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-map-grid,
+  .intro-route-line,
+  .intro-route-start,
+  .intro-route-stop,
+  .intro-pin,
+  .intro-mark-wrap,
+  .intro-mark,
+  .intro-copy p,
+  .intro-copy h2,
+  .intro-progress,
+  .intro-progress::after,
+  .app-intro.is-dismissing {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+
+  body.intro-running .app-header,
+  body.intro-running .app-shell {
+    filter: none;
+    transform: none;
+  }
+}

@@ -1,5 +1,6 @@
 const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
+const appIntro = document.querySelector("#appIntro");
 const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
 const personalLocationsContainer = document.querySelector("#personalLocations");
@@ -139,7 +140,55 @@ let panelDragMoved = false;
 let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
+const introSeenStorageKey = "jcsu-intro-seen";
+let introDismissTimer = null;
 
+function dismissAppIntro() {
+  if (!appIntro || appIntro.hidden || appIntro.classList.contains("is-dismissing")) {
+    return;
+  }
+
+  try {
+    sessionStorage.setItem(introSeenStorageKey, "true");
+  } catch (error) {
+    // The intro still works if session storage is unavailable.
+  }
+
+  appIntro.classList.add("is-dismissing");
+  document.body.classList.remove("intro-running");
+
+  window.setTimeout(() => {
+    appIntro.hidden = true;
+  }, 560);
+}
+
+function initializeAppIntro() {
+  if (!appIntro) {
+    return;
+  }
+
+  let hasSeenIntro = false;
+
+  try {
+    hasSeenIntro = sessionStorage.getItem(introSeenStorageKey) === "true";
+  } catch (error) {
+    hasSeenIntro = false;
+  }
+
+  if (hasSeenIntro) {
+    appIntro.hidden = true;
+    return;
+  }
+
+  document.body.classList.add("intro-running");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  introDismissTimer = window.setTimeout(dismissAppIntro, prefersReducedMotion ? 600 : 2850);
+
+  appIntro.addEventListener("click", () => {
+    window.clearTimeout(introDismissTimer);
+    dismissAppIntro();
+  }, { once: true });
+}
 function openSafetyModal() {
   safetyModal.hidden = false;
   document.body.classList.add("modal-open");
@@ -1763,3 +1812,5 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+initializeAppIntro();
