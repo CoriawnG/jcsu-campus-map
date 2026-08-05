@@ -29,6 +29,10 @@ const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
 const sidebar = document.querySelector(".sidebar");
 const mobilePanelToggle = document.querySelector("#mobilePanelToggle");
+const helpButton = document.querySelector("#helpButton");
+const helpModal = document.querySelector("#helpModal");
+const closeHelpButton = document.querySelector("#closeHelp");
+const finishHelpButton = document.querySelector("#finishHelp");
 const safetyButton = document.querySelector("#safetyButton");
 const openSafetyPanelMapButton = document.querySelector("#openSafetyPanelMap");
 const safetyModal = document.querySelector("#safetyModal");
@@ -70,6 +74,7 @@ const layerIconNames = {
 const personalPlacesStorageKey = "jcsu-personal-places";
 const favoriteLocationsStorageKey = "jcsu-favorite-locations";
 const recentLocationsStorageKey = "jcsu-recent-locations";
+const helpSeenStorageKey = "jcsu-help-seen";
 const maxRecentLocations = 8;
 
 const routePreferenceLabels = {
@@ -202,6 +207,53 @@ function initializeAppIntro() {
       playAppIntro();
     }
   });
+}
+
+function hasSeenHelp() {
+  try {
+    return localStorage.getItem(helpSeenStorageKey) === "true";
+  } catch (error) {
+    return false;
+  }
+}
+
+function markHelpSeen() {
+  try {
+    localStorage.setItem(helpSeenStorageKey, "true");
+  } catch (error) {
+    // Help can still close if storage is blocked.
+  }
+}
+
+function openHelpModal(options = {}) {
+  if (!helpModal) {
+    return;
+  }
+
+  helpModal.hidden = false;
+  document.body.classList.add("modal-open");
+
+  if (options.markSeen !== false) {
+    markHelpSeen();
+  }
+
+  closeHelpButton?.focus();
+}
+
+function closeHelpModal() {
+  if (!helpModal) {
+    return;
+  }
+
+  helpModal.hidden = true;
+  document.body.classList.remove("modal-open");
+  markHelpSeen();
+}
+
+function showFirstTimeHelp() {
+  if (!hasSeenHelp()) {
+    openHelpModal();
+  }
 }
 function openSafetyModal() {
   safetyModal.hidden = false;
@@ -1688,6 +1740,25 @@ if (closeDirectionsPanelButton) {
 }
 
 
+if (helpButton) {
+  helpButton.addEventListener("click", () => openHelpModal({ markSeen: false }));
+}
+
+if (closeHelpButton) {
+  closeHelpButton.addEventListener("click", closeHelpModal);
+}
+
+if (finishHelpButton) {
+  finishHelpButton.addEventListener("click", closeHelpModal);
+}
+
+if (helpModal) {
+  helpModal.addEventListener("click", (event) => {
+    if (event.target === helpModal) {
+      closeHelpModal();
+    }
+  });
+}
 if (safetyButton) {
   safetyButton.addEventListener("click", openSafetyModal);
 }
@@ -1725,6 +1796,10 @@ feedbackModal.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && helpModal && !helpModal.hidden) {
+    closeHelpModal();
+  }
+
   if (event.key === "Escape" && !feedbackModal.hidden) {
     closeFeedbackModal();
   }

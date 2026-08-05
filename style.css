@@ -2404,3 +2404,82 @@ body.intro-running .app-shell {
     transform: none;
   }
 }
+/* First-time help sheet */
+.help-dialog {
+  width: min(560px, 100%);
+}
+
+.help-content {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.help-step {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.help-step > .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.55);
+  border-radius: 999px;
+  font-size: 1.45rem;
+}
+
+.help-step h3,
+.help-step p {
+  margin: 0;
+}
+
+.help-step h3 {
+  color: var(--blue);
+  font-size: 0.98rem;
+}
+
+.help-step p {
+  margin-top: 3px;
+  color: var(--muted);
+  line-height: 1.42;
+}
+
+.help-content .primary-button {
+  margin-top: 4px;
+}
+
+.header-actions .help-button span:last-child {
+  display: inline;
+}
+
+@media (max-width: 860px) {
+  .help-dialog {
+    max-height: 86vh;
+    border-radius: 14px 14px 8px 8px;
+  }
+
+  .help-step {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .help-step > .material-symbols-outlined {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+
+  .header-actions .help-button span:last-child {
+    display: none;
+  }
+}
