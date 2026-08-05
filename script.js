@@ -141,6 +141,8 @@ let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
 let introDismissTimer = null;
+let introHiddenAt = 0;
+const introReplayDelayMs = 900;
 
 function dismissAppIntro() {
   if (!appIntro || appIntro.hidden || appIntro.classList.contains("is-dismissing")) {
@@ -155,19 +157,51 @@ function dismissAppIntro() {
   }, 560);
 }
 
+function playAppIntro() {
+  if (!appIntro) {
+    return;
+  }
+
+  window.clearTimeout(introDismissTimer);
+  appIntro.hidden = false;
+  appIntro.classList.remove("is-dismissing");
+  appIntro.style.animation = "none";
+  appIntro.offsetHeight;
+  appIntro.style.animation = "";
+  document.body.classList.add("intro-running");
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  introDismissTimer = window.setTimeout(dismissAppIntro, prefersReducedMotion ? 600 : 2850);
+}
+
 function initializeAppIntro() {
   if (!appIntro) {
     return;
   }
 
-  document.body.classList.add("intro-running");
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  introDismissTimer = window.setTimeout(dismissAppIntro, prefersReducedMotion ? 600 : 2850);
-
+  playAppIntro();
   appIntro.addEventListener("click", () => {
     window.clearTimeout(introDismissTimer);
     dismissAppIntro();
-  }, { once: true });
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      introHiddenAt = Date.now();
+      window.clearTimeout(introDismissTimer);
+      return;
+    }
+
+    if (Date.now() - introHiddenAt >= introReplayDelayMs) {
+      playAppIntro();
+    }
+  });
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      playAppIntro();
+    }
+  });
 }
 function openSafetyModal() {
   safetyModal.hidden = false;
