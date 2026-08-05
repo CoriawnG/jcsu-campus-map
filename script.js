@@ -1313,21 +1313,67 @@ function renderDirectionsPreview() {
     : "";
 
   directionsOutput.innerHTML = `
-    <strong>${start.name} to ${end.name}</strong>
-    <div class="route-summary">${routePreferenceLabel}</div>
-    <div class="route-metrics" aria-label="Route estimate">
-      <span><strong>${route.minutes}</strong> min walk</span>
-      <span>${route.distanceText}</span>
-      <span>${route.graphEdgeCount} path segment${route.graphEdgeCount === 1 ? "" : "s"}</span>
-      <span>${route.preferenceNote}</span>
-    </div>
-    <ol class="route-steps">
-      <li>Start at ${start.name}.</li>
-      ${stepsMarkup}
-      ${extraMarkup}
-      <li>Arrive at ${end.name}.</li>
-    </ol>
-    <button id="reportRouteIssue" class="secondary-button route-report-button" type="button">Report Route Issue</button>
+    <article class="route-preview-card" aria-label="Route preview">
+      <div class="route-preview-header">
+        <div>
+          <p class="eyebrow">Route Preview</p>
+          <h3>${start.name} to ${end.name}</h3>
+        </div>
+        <span class="route-mode-badge">Walk</span>
+      </div>
+
+      <div class="route-endpoints" aria-label="Route endpoints">
+        <div class="route-endpoint-row">
+          <span class="material-symbols-outlined start-dot" aria-hidden="true">radio_button_checked</span>
+          <div>
+            <strong>Start</strong>
+            <span>${start.name}</span>
+          </div>
+        </div>
+        <div class="route-endpoint-row">
+          <span class="material-symbols-outlined destination-dot" aria-hidden="true">location_on</span>
+          <div>
+            <strong>Destination</strong>
+            <span>${end.name}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="route-metric-grid" aria-label="Route estimate">
+        <div class="route-metric-card primary-route-metric">
+          <span>Estimated Time</span>
+          <strong>${route.minutes} min</strong>
+        </div>
+        <div class="route-metric-card">
+          <span>Distance</span>
+          <strong>${route.distanceText}</strong>
+        </div>
+        <div class="route-metric-card">
+          <span>Route Type</span>
+          <strong>${routePreferenceLabel}</strong>
+        </div>
+        <div class="route-metric-card">
+          <span>Path Segments</span>
+          <strong>${route.graphEdgeCount}</strong>
+        </div>
+      </div>
+
+      <p class="route-preference-card">${route.preferenceNote}</p>
+
+      <details class="route-step-details" open>
+        <summary>Step-by-step directions</summary>
+        <ol class="route-steps">
+          <li>Start at ${start.name}.</li>
+          ${stepsMarkup}
+          ${extraMarkup}
+          <li>Arrive at ${end.name}.</li>
+        </ol>
+      </details>
+
+      <div class="route-preview-actions">
+        <button id="reportRouteIssue" class="secondary-button route-report-button" type="button">Report Route Issue</button>
+      </div>
+    </article>
   `;
 
   directionsOutput.querySelector("#reportRouteIssue").addEventListener("click", () => {
