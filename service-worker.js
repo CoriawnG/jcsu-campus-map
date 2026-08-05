@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-route-preview-cards";
+const CACHE_NAME = "jcsu-campus-map-v20260805-better-emergency-mode";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-route-preview-cards",
-  "./locations.js?v=20260805-route-preview-cards",
-  "./paths.js?v=20260805-route-preview-cards",
-  "./navigation.js?v=20260805-route-preview-cards",
-  "./script.js?v=20260805-route-preview-cards",
+  "./style.css?v=20260805-better-emergency-mode",
+  "./locations.js?v=20260805-better-emergency-mode",
+  "./paths.js?v=20260805-better-emergency-mode",
+  "./navigation.js?v=20260805-better-emergency-mode",
+  "./script.js?v=20260805-better-emergency-mode",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

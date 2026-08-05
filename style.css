@@ -2743,3 +2743,120 @@ body.intro-running .app-shell {
     grid-template-columns: 1fr;
   }
 }
+/* Better emergency mode */
+.safety-dialog {
+  width: min(560px, 100%);
+}
+
+.safety-priority-card,
+.safety-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.safety-priority-card {
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  color: #ffffff;
+  background: var(--red);
+  border: 1px solid rgba(169, 54, 54, 0.8);
+}
+
+.safety-priority-card > .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--red);
+  background: #ffffff;
+  border-radius: 999px;
+  font-size: 1.55rem;
+}
+
+.safety-priority-card h3,
+.safety-priority-card p {
+  margin: 0;
+}
+
+.safety-priority-card p {
+  margin-top: 3px;
+  line-height: 1.42;
+}
+
+.safety-priority-card .safety-call-button {
+  grid-column: 1 / -1;
+  color: var(--red);
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.safety-section {
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.safety-section h3 {
+  margin: 0;
+  color: var(--blue);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.safety-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.safety-actions .safety-call-button,
+.safety-route-list .secondary-button {
+  gap: 8px;
+}
+
+.safety-actions .safety-call-button {
+  display: grid;
+  justify-items: center;
+  min-height: 86px;
+  padding: 10px 8px;
+  line-height: 1.2;
+}
+
+.safety-actions .material-symbols-outlined {
+  font-size: 1.45rem;
+}
+
+.safety-actions small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.safety-route-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.safety-route-list .secondary-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 44px;
+  text-align: left;
+}
+
+.safety-route-list .material-symbols-outlined {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .safety-actions,
+  .safety-route-list {
+    grid-template-columns: 1fr;
+  }
+
+  .safety-actions .safety-call-button {
+    display: flex;
+    justify-content: flex-start;
+    min-height: 48px;
+    text-align: left;
+  }
+}

@@ -38,6 +38,7 @@ const openSafetyPanelMapButton = document.querySelector("#openSafetyPanelMap");
 const safetyModal = document.querySelector("#safetyModal");
 const closeSafetyButton = document.querySelector("#closeSafety");
 const safetyRouteButtons = document.querySelectorAll("[data-safety-route]");
+const safetyNearestButtons = document.querySelectorAll("[data-safety-nearest]");
 const feedbackButton = document.querySelector("#feedbackButton");
 const feedbackModal = document.querySelector("#feedbackModal");
 const closeFeedbackButton = document.querySelector("#closeFeedback");
@@ -307,6 +308,48 @@ function closeSafetyModal() {
   document.body.classList.remove("modal-open");
 }
 
+function getDistanceBetweenPoints(pointA, pointB) {
+  const milesPerDegreeLat = 69;
+  const milesPerDegreeLng = 69 * Math.cos((pointA.lat * Math.PI) / 180);
+  const latMiles = (pointB.lat - pointA.lat) * milesPerDegreeLat;
+  const lngMiles = (pointB.lng - pointA.lng) * milesPerDegreeLng;
+  return Math.sqrt(latMiles ** 2 + lngMiles ** 2);
+}
+
+function getNearestSafetyLocation(type) {
+  const origin = currentPosition || { lat: jcsuCenter[0], lng: jcsuCenter[1] };
+  const candidates = locations.filter((location) => {
+    if (type === "entrance") {
+      return location.name.toLowerCase().includes("entrance");
+    }
+
+    if (type === "parking") {
+      return location.layer === "Parking and Transportation" && location.name.toLowerCase().includes("parking");
+    }
+
+    return false;
+  });
+
+  return candidates.reduce((nearest, location) => {
+    if (!nearest) {
+      return location;
+    }
+
+    return getDistanceBetweenPoints(origin, location) < getDistanceBetweenPoints(origin, nearest) ? location : nearest;
+  }, null);
+}
+
+function routeToNearestSafetyLocation(type) {
+  const location = getNearestSafetyLocation(type);
+
+  if (!location) {
+    setLocationStatus("Nearest safety location is unavailable right now.", { isError: true });
+    closeSafetyModal();
+    return;
+  }
+
+  routeToSafetyLocation(location.name);
+}
 function routeToSafetyLocation(locationName) {
   const location = locations.find((item) => item.name === locationName);
 
@@ -1950,6 +1993,12 @@ if (safetyModal) {
 safetyRouteButtons.forEach((button) => {
   button.addEventListener("click", () => {
     routeToSafetyLocation(button.dataset.safetyRoute);
+  });
+});
+
+safetyNearestButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    routeToNearestSafetyLocation(button.dataset.safetyNearest);
   });
 });
 feedbackButton.addEventListener("click", openFeedbackModal);

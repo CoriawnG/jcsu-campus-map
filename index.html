@@ -14,7 +14,7 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,1,0">
-  <link rel="stylesheet" href="style.css?v=20260805-route-preview-cards">
+  <link rel="stylesheet" href="style.css?v=20260805-better-emergency-mode">
 </head>
 <body>
   <div id="appIntro" class="app-intro" role="status" aria-label="Opening JCSU Campus Navigation">
@@ -208,19 +208,34 @@
       </div>
 
       <div class="safety-content">
-        <p class="safety-warning">For immediate danger or a life-threatening emergency, call 911 first.</p>
-        <div class="safety-actions">
+        <section class="safety-priority-card">
+          <span class="material-symbols-outlined" aria-hidden="true">emergency_home</span>
+          <div>
+            <h3>Immediate Emergency</h3>
+            <p>For immediate danger or a life-threatening emergency, call 911 first.</p>
+          </div>
           <a class="primary-button safety-call-button" href="tel:911">Call 911</a>
-          <a class="secondary-button safety-call-button" href="tel:+17043781003">Campus Police 704.378.1003</a>
-          <a class="secondary-button safety-call-button" href="tel:+17043781044">Counseling 704.378.1044</a>
-          <a class="secondary-button safety-call-button" href="tel:+17043781075">Health Center 704.378.1075</a>
-        </div>
+        </section>
 
-        <div class="safety-route-list" aria-label="Safety route shortcuts">
-          <button class="secondary-button" type="button" data-safety-route="Administrative Cottage #4 (Campus Police)">Route to Campus Police</button>
-          <button class="secondary-button" type="button" data-safety-route="Administrative Cottage #3 (Counseling Center)">Route to Counseling Center</button>
-          <button class="secondary-button" type="button" data-safety-route="JCSU Health Center">Route to Health Center</button>
-        </div>
+        <section class="safety-section">
+          <h3>Call Campus Help</h3>
+          <div class="safety-actions">
+            <a class="secondary-button safety-call-button" href="tel:+17043781003"><span class="material-symbols-outlined" aria-hidden="true">local_police</span><span>Campus Police<br><small>704.378.1003</small></span></a>
+            <a class="secondary-button safety-call-button" href="tel:+17043781044"><span class="material-symbols-outlined" aria-hidden="true">psychology</span><span>Counseling<br><small>704.378.1044</small></span></a>
+            <a class="secondary-button safety-call-button" href="tel:+17043781075"><span class="material-symbols-outlined" aria-hidden="true">medical_services</span><span>Health Center<br><small>704.378.1075</small></span></a>
+          </div>
+        </section>
+
+        <section class="safety-section">
+          <h3>Route to Safety</h3>
+          <div class="safety-route-list" aria-label="Safety route shortcuts">
+            <button class="secondary-button" type="button" data-safety-route="Administrative Cottage #4 (Campus Police)"><span class="material-symbols-outlined" aria-hidden="true">local_police</span>Campus Police</button>
+            <button class="secondary-button" type="button" data-safety-route="Administrative Cottage #3 (Counseling Center)"><span class="material-symbols-outlined" aria-hidden="true">psychology</span>Counseling Center</button>
+            <button class="secondary-button" type="button" data-safety-route="JCSU Health Center"><span class="material-symbols-outlined" aria-hidden="true">medical_services</span>Health Center</button>
+            <button class="secondary-button" type="button" data-safety-nearest="entrance"><span class="material-symbols-outlined" aria-hidden="true">door_open</span>Nearest Entrance</button>
+            <button class="secondary-button" type="button" data-safety-nearest="parking"><span class="material-symbols-outlined" aria-hidden="true">local_parking</span>Nearest Parking</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -269,9 +284,9 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260805-route-preview-cards"></script>
-  <script src="paths.js?v=20260805-route-preview-cards"></script>
-  <script src="navigation.js?v=20260805-route-preview-cards"></script>
-  <script src="script.js?v=20260805-route-preview-cards"></script>
+  <script src="locations.js?v=20260805-better-emergency-mode"></script>
+  <script src="paths.js?v=20260805-better-emergency-mode"></script>
+  <script src="navigation.js?v=20260805-better-emergency-mode"></script>
+  <script src="script.js?v=20260805-better-emergency-mode"></script>
 </body>
 </html>
