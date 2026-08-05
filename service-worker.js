@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-replay-intro-on-open";
+const CACHE_NAME = "jcsu-campus-map-v20260805-new-app-logo";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-replay-intro-on-open",
-  "./locations.js?v=20260805-replay-intro-on-open",
-  "./paths.js?v=20260805-replay-intro-on-open",
-  "./navigation.js?v=20260805-replay-intro-on-open",
-  "./script.js?v=20260805-replay-intro-on-open",
+  "./style.css?v=20260805-new-app-logo",
+  "./locations.js?v=20260805-new-app-logo",
+  "./paths.js?v=20260805-new-app-logo",
+  "./navigation.js?v=20260805-new-app-logo",
+  "./script.js?v=20260805-new-app-logo",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
