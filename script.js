@@ -1489,8 +1489,39 @@ initializeNavigationMap();
 switchMapView("navigationMapView");
 setMobilePanelState("full");
 if ("serviceWorker" in navigator) {
+  let refreshingForUpdate = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshingForUpdate) {
+      return;
+    }
+
+    refreshingForUpdate = true;
+    window.location.reload();
+  });
+
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {
+    navigator.serviceWorker.register("./service-worker.js").then((registration) => {
+      registration.update();
+
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      registration.addEventListener("updatefound", () => {
+        const nextWorker = registration.installing;
+
+        if (!nextWorker) {
+          return;
+        }
+
+        nextWorker.addEventListener("statechange", () => {
+          if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
+            nextWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    }).catch(() => {
       // The app still works in browsers that block service worker registration.
     });
   });

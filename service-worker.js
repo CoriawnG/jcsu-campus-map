@@ -1,15 +1,16 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-redesign";
+const CACHE_NAME = "jcsu-campus-map-v20260805-logo-update";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-jcsu-redesign",
-  "./locations.js?v=20260805-jcsu-redesign",
-  "./paths.js?v=20260805-jcsu-redesign",
-  "./navigation.js?v=20260805-jcsu-redesign",
-  "./script.js?v=20260805-jcsu-redesign",
+  "./style.css?v=20260805-logo-pwa-update",
+  "./locations.js?v=20260805-logo-pwa-update",
+  "./paths.js?v=20260805-logo-pwa-update",
+  "./navigation.js?v=20260805-logo-pwa-update",
+  "./script.js?v=20260805-logo-pwa-update",
   "./manifest.json",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/golden-bull-mark.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -57,4 +58,9 @@ self.addEventListener("fetch", (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });

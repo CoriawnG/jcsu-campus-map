@@ -1730,3 +1730,31 @@ textarea:focus,
     border-color: rgba(0, 45, 86, 0.13);
   }
 }
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border: 2px solid rgba(255, 207, 1, 0.92);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+@media (max-width: 860px) {
+  .brand-lockup {
+    gap: 9px;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+}
