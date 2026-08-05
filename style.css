@@ -420,6 +420,10 @@ select:focus {
 .route-steps li {
   margin-top: 7px;
 }
+.route-report-button {
+  width: 100%;
+  margin-top: 12px;
+}
 
 .map-panel {
   position: relative;

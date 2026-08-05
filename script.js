@@ -105,17 +105,42 @@ let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
 
-function openFeedbackModal() {
+function openFeedbackModal(options = {}) {
   const selectedLocationName = activeLocationName || "";
   const start = getLocationBySelectValue(fromLocationSelect.value)?.name || "";
   const end = getLocationBySelectValue(toLocationSelect.value)?.name || "";
 
-  feedbackLocation.value = selectedLocationName;
-  feedbackRouteStart.value = start;
-  feedbackRouteDestination.value = end;
+  feedbackType.value = options.type || "Suggestion";
+  feedbackLocation.value = options.location ?? selectedLocationName;
+  feedbackRouteStart.value = options.routeStart ?? start;
+  feedbackRouteDestination.value = options.routeDestination ?? end;
+  feedbackMessage.value = options.message || "";
+  feedbackStatus.textContent = options.status || "Submitting opens the Google feedback form.";
   feedbackModal.hidden = false;
   document.body.classList.add("modal-open");
   feedbackMessage.focus();
+}
+
+function openRouteIssueReporter(route, routePreferenceLabel) {
+  const start = getLocationBySelectValue(fromLocationSelect.value);
+  const end = getLocationBySelectValue(toLocationSelect.value);
+  const selectedLocationName = activeLocationName || end?.name || "";
+  const routeSummary = route
+    ? `${routePreferenceLabel}; ${route.distanceText}; about ${route.minutes} minute${route.minutes === 1 ? "" : "s"}`
+    : routePreferenceLabel;
+
+  openFeedbackModal({
+    type: "Route issue",
+    location: selectedLocationName,
+    routeStart: start?.name || "",
+    routeDestination: end?.name || "",
+    status: "Route details added. Describe what needs fixing, then submit.",
+    message: [
+      `Route preference: ${routeSummary}`,
+      "Issue type: ",
+      "What should be fixed: "
+    ].join("\n")
+  });
 }
 
 function closeFeedbackModal() {
@@ -699,7 +724,12 @@ function renderDirectionsPreview() {
       ${extraMarkup}
       <li>Arrive at ${end.name}.</li>
     </ol>
+    <button id="reportRouteIssue" class="secondary-button route-report-button" type="button">Report Route Issue</button>
   `;
+
+  directionsOutput.querySelector("#reportRouteIssue").addEventListener("click", () => {
+    openRouteIssueReporter(route, routePreferenceLabel);
+  });
 
   drawNavigationRoute(route, start, end, { fitBounds: shouldFitThisRoute });
   switchMapView("navigationMapView");
