@@ -1,16 +1,17 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-intro-every-open";
+const CACHE_NAME = "jcsu-campus-map-v20260805-transparent-intro-logo";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-intro-every-open",
-  "./locations.js?v=20260805-intro-every-open",
-  "./paths.js?v=20260805-intro-every-open",
-  "./navigation.js?v=20260805-intro-every-open",
-  "./script.js?v=20260805-intro-every-open",
+  "./style.css?v=20260805-transparent-intro-logo",
+  "./locations.js?v=20260805-transparent-intro-logo",
+  "./paths.js?v=20260805-transparent-intro-logo",
+  "./navigation.js?v=20260805-transparent-intro-logo",
+  "./script.js?v=20260805-transparent-intro-logo",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/golden-bull-logo.png"
+  "./icons/golden-bull-logo.png",
+  "./icons/golden-bull-logo-transparent.png"
 ];
 
 self.addEventListener("install", (event) => {
