@@ -109,6 +109,47 @@ const locationContacts = {
     { label: "New Residence Hall", phone: "704.378.6819", description: "Residence hall contact" }
   ]
 };
+const locationDetailProfiles = {
+  "Henry J. Biddle Hall": {
+    highlights: ["Admissions", "Financial Aid", "Student Accounts", "Housing Support", "Campus Pantry"],
+    floors: [
+      { label: "Basement", items: ["Housing Support", "Campus Pantry"] },
+      { label: "First Floor", items: ["Office of Admissions"] },
+      { label: "Second Floor", items: ["Financial Aid"] },
+      { label: "Third Floor", items: ["Student Accounts"] }
+    ],
+    notes: ["Use this building for admissions, aid, account questions, housing help, and student pantry support."]
+  },
+  "Mary Joyce Taylor Crisp Memorial Student Union": {
+    highlights: ["Grimes Lounge", "Lorraine's", "Bull Pen", "Pizza Hut", "Bookstore"],
+    floors: [
+      { label: "Top Floor", items: ["Grimes Lounge"] },
+      { label: "Middle Floor", items: ["Lorraine's soul food buffet"] },
+      { label: "Bottom Floor", items: ["Bull Pen", "Pizza Hut", "Bookstore"] }
+    ],
+    notes: ["Student life hub for food, gathering, lounge space, and bookstore access."]
+  },
+  "Irwin Belk Complex": {
+    highlights: ["Football", "Track", "Athletics", "Classes", "Health and Human Performance spaces"],
+    notes: ["This is both an athletics facility and an academic/class meeting location."]
+  },
+  "Administrative Cottage #4 (Campus Police)": {
+    highlights: ["Campus Police", "Safety support", "Emergency response"],
+    notes: ["Use this location for campus safety support and public safety questions."]
+  },
+  "JCSU Health Center": {
+    highlights: ["Student health services", "Wellness support"],
+    notes: ["Health services are listed as located inside the Mary Joyce Taylor Crisp Memorial Student Union."]
+  },
+  "Administrative Cottage #3 (Counseling Center)": {
+    highlights: ["Counseling appointments", "Student support"],
+    notes: ["Use this location for counseling services and student support needs."]
+  },
+  "Student Athlete Achievement Center": {
+    highlights: ["Student-athlete academic support", "Advising", "Study support", "Athletics support"],
+    notes: ["Useful for student-athletes looking for academic and athletic department support."]
+  }
+};
 const layerStyles = {
   "Academic Buildings": { label: "Academic", color: "#1c4f9c" },
   "Campus Services": { label: "Services", color: "#a93636" },
@@ -907,6 +948,67 @@ function getPhoneHref(phone) {
   return `tel:+1${tenDigitNumber}`;
 }
 
+function getLocationDetailProfile(location) {
+  return locationDetailProfiles[location.name] || {};
+}
+
+function getDetailListMarkup(items) {
+  if (!items?.length) {
+    return "";
+  }
+
+  return `
+    <ul class="detail-chip-list">
+      ${items.map((item) => `<li>${item}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function getHighlightsMarkup(profile) {
+  if (!profile.highlights?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section">
+      <h3>Inside This Location</h3>
+      ${getDetailListMarkup(profile.highlights)}
+    </section>
+  `;
+}
+
+function getFloorNotesMarkup(profile) {
+  if (!profile.floors?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section">
+      <h3>Floor / Office Notes</h3>
+      <div class="detail-floor-list">
+        ${profile.floors.map((floor) => `
+          <div class="detail-floor-row">
+            <strong>${floor.label}</strong>
+            <span>${floor.items.join(", ")}</span>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function getDetailNotesMarkup(profile) {
+  if (!profile.notes?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-note-section">
+      <h3>Notes</h3>
+      ${profile.notes.map((note) => `<p>${note}</p>`).join("")}
+    </section>
+  `;
+}
 function getLocationContactMarkup(location) {
   const contacts = locationContacts[location.name] || [];
 
@@ -925,16 +1027,24 @@ function getLocationContactMarkup(location) {
   `).join("");
 
   return `
-    <div class="detail-contact-list" aria-label="Phone contacts for ${location.name}">
-      ${contactRows}
-    </div>
+    <section class="detail-section detail-contact-section">
+      <h3>Phone Contacts</h3>
+      <div class="detail-contact-list" aria-label="Phone contacts for ${location.name}">
+        ${contactRows}
+      </div>
+    </section>
   `;
 }
+
 function renderSelectedLocation(location) {
   const isFavorite = isFavoriteLocation(location);
   const savedPersonalPlaces = getPersonalPlaceIndexes();
   const isHomeDorm = savedPersonalPlaces.homeDorm === location.index;
   const isMainClass = savedPersonalPlaces.mainClass === location.index;
+  const profile = getLocationDetailProfile(location);
+  const highlightsMarkup = getHighlightsMarkup(profile);
+  const floorNotesMarkup = getFloorNotesMarkup(profile);
+  const detailNotesMarkup = getDetailNotesMarkup(profile);
   const contactMarkup = getLocationContactMarkup(location);
 
   sidebar.classList.remove("directions-detail-active");
@@ -947,38 +1057,50 @@ function renderSelectedLocation(location) {
       </div>
       <button id="closeLocationDetails" class="icon-button" type="button" aria-label="Back to search">x</button>
     </div>
-    <p>${location.description}</p>
-    ${contactMarkup}
     <div class="detail-meta">
       <span class="tag">${location.layer}</span>
       <span class="tag">${location.category}</span>
     </div>
-    <div class="detail-quick-info">
-      <div>
-        <span class="material-symbols-outlined" aria-hidden="true">${getLocationIcon(location)}</span>
-        <span>${location.category}</span>
+    <section class="detail-section detail-about-section">
+      <h3>About</h3>
+      <p>${location.description}</p>
+    </section>
+    ${highlightsMarkup}
+    ${floorNotesMarkup}
+    ${contactMarkup}
+    ${detailNotesMarkup}
+    <section class="detail-section detail-location-section">
+      <h3>Map Info</h3>
+      <div class="detail-quick-info">
+        <div>
+          <span class="material-symbols-outlined" aria-hidden="true">${getLocationIcon(location)}</span>
+          <span>${location.category}</span>
+        </div>
+        <div>
+          <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
+          <span>${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</span>
+        </div>
       </div>
-      <div>
-        <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
-        <span>${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}</span>
+    </section>
+    <section class="detail-section detail-actions-section">
+      <h3>Actions</h3>
+      <div class="location-actions">
+        <button class="primary-button wide-action" type="button" data-route-action="destination">Get Directions</button>
+        <button class="secondary-button" type="button" data-route-action="start">Use as Start</button>
+        <button class="secondary-button" type="button" data-personal-action="homeDorm">
+          <span class="material-symbols-outlined" aria-hidden="true">home</span>
+          ${isHomeDorm ? "Home Dorm Saved" : "Set Home Dorm"}
+        </button>
+        <button class="secondary-button" type="button" data-personal-action="mainClass">
+          <span class="material-symbols-outlined" aria-hidden="true">school</span>
+          ${isMainClass ? "Main Class Saved" : "Set Main Class"}
+        </button>
+        <button class="secondary-button wide-action" type="button" data-favorite-action>
+          <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
+          ${isFavorite ? "Remove Favorite" : "Add Favorite"}
+        </button>
       </div>
-    </div>
-    <div class="location-actions">
-      <button class="primary-button wide-action" type="button" data-route-action="destination">Get Directions</button>
-      <button class="secondary-button" type="button" data-route-action="start">Use as Start</button>
-      <button class="secondary-button" type="button" data-personal-action="homeDorm">
-        <span class="material-symbols-outlined" aria-hidden="true">home</span>
-        ${isHomeDorm ? "Home Dorm Saved" : "Set Home Dorm"}
-      </button>
-      <button class="secondary-button" type="button" data-personal-action="mainClass">
-        <span class="material-symbols-outlined" aria-hidden="true">school</span>
-        ${isMainClass ? "Main Class Saved" : "Set Main Class"}
-      </button>
-      <button class="secondary-button wide-action" type="button" data-favorite-action>
-        <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
-        ${isFavorite ? "Remove Favorite" : "Add Favorite"}
-      </button>
-    </div>
+    </section>
   `;
 
   selectedLocation.querySelector("#closeLocationDetails").addEventListener("click", showSearchPanel);
