@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-searchable-directions";
+const CACHE_NAME = "jcsu-campus-map-v20260805-remove-pinpoint-button";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-searchable-directions",
-  "./locations.js?v=20260805-searchable-directions",
-  "./paths.js?v=20260805-searchable-directions",
-  "./navigation.js?v=20260805-searchable-directions",
-  "./script.js?v=20260805-searchable-directions",
+  "./style.css?v=20260805-remove-pinpoint-button",
+  "./locations.js?v=20260805-remove-pinpoint-button",
+  "./paths.js?v=20260805-remove-pinpoint-button",
+  "./navigation.js?v=20260805-remove-pinpoint-button",
+  "./script.js?v=20260805-remove-pinpoint-button",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

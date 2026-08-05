@@ -14,7 +14,6 @@ const routePreferenceSelect = document.querySelector("#routePreference");
 const campusLocationSuggestions = document.querySelector("#campusLocationSuggestions");
 const directionQuickPicks = document.querySelector("#directionQuickPicks");
 const useMyLocationButton = document.querySelector("#useMyLocation");
-const useMyLocationMapButton = document.querySelector("#useMyLocationMap");
 const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
 const toggleLiveTrackingMapButton = document.querySelector("#toggleLiveTrackingMap");
 const recenterLocationMapButton = document.querySelector("#recenterLocationMap");
@@ -1455,11 +1454,6 @@ function setLocationButtonsLoading(isLoading) {
 
   useMyLocationButton.disabled = isLoading;
   useMyLocationButton.textContent = isLoading ? "Setting location..." : "Set My Location";
-
-  if (useMyLocationMapButton) {
-    useMyLocationMapButton.disabled = isLoading;
-    setMapButtonContent(useMyLocationMapButton, isLoading ? "progress_activity" : "gps_fixed", label);
-  }
 }
 
 function setLiveTrackingButtons() {
@@ -1609,9 +1603,6 @@ function toggleLiveTracking() {
 }
 useMyLocationButton.addEventListener("click", requestCurrentLocation);
 
-if (useMyLocationMapButton) {
-  useMyLocationMapButton.addEventListener("click", requestCurrentLocation);
-}
 
 if (toggleLiveTrackingButton) {
   toggleLiveTrackingButton.addEventListener("click", toggleLiveTracking);
