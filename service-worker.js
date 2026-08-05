@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-remove-pinpoint-button";
+const CACHE_NAME = "jcsu-campus-map-v20260805-lock-app-viewport";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-remove-pinpoint-button",
-  "./locations.js?v=20260805-remove-pinpoint-button",
-  "./paths.js?v=20260805-remove-pinpoint-button",
-  "./navigation.js?v=20260805-remove-pinpoint-button",
-  "./script.js?v=20260805-remove-pinpoint-button",
+  "./style.css?v=20260805-lock-app-viewport",
+  "./locations.js?v=20260805-lock-app-viewport",
+  "./paths.js?v=20260805-lock-app-viewport",
+  "./navigation.js?v=20260805-lock-app-viewport",
+  "./script.js?v=20260805-lock-app-viewport",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
