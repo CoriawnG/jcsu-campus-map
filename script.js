@@ -112,7 +112,25 @@ const locationContacts = {
   ]
 };
 const locationDetailProfiles = {
+  "Band and Music Hall": {
+    aliases: ["Music Building", "Band Building"],
+    highlights: ["Music classes", "Band rehearsal", "Performance preparation"],
+    notes: ["Use this location for music, band, rehearsal, and arts-related academic activity."],
+    arrivalTip: "Look for the academic building marker near the north side of campus."
+  },
+  "Dorothy Cowser Yancy Technology Center": {
+    aliases: ["Yancy Tech", "DCYTC", "Technology Center"],
+    highlights: ["Computer labs", "Technology classrooms", "Digital learning spaces"],
+    notes: ["Helpful for technology-focused classes, computer access, and digital coursework."],
+    arrivalTip: "Use this building when searching for tech, computer lab, or Yancy."
+  },
+  "George E. Davis Hall": {
+    aliases: ["Davis Hall"],
+    highlights: ["Classrooms", "Student support", "Technology functions"],
+    notes: ["Academic building connected to classroom and student support functions."]
+  },
   "Henry J. Biddle Hall": {
+    aliases: ["Biddle", "Admissions Building"],
     highlights: ["Admissions", "Financial Aid", "Student Accounts", "Housing Support", "Campus Pantry"],
     floors: [
       { label: "Basement", items: ["Housing Support", "Campus Pantry"] },
@@ -120,36 +138,107 @@ const locationDetailProfiles = {
       { label: "Second Floor", items: ["Financial Aid"] },
       { label: "Third Floor", items: ["Student Accounts"] }
     ],
-    notes: ["Use this building for admissions, aid, account questions, housing help, and student pantry support."]
+    notes: ["Use this building for admissions, aid, account questions, housing help, and student pantry support."],
+    arrivalTip: "If you are visiting an office, check the floor note first so you know where to go after entering."
   },
   "Mary Joyce Taylor Crisp Memorial Student Union": {
+    aliases: ["Student Union", "Crisp Union", "MJTCMSU"],
     highlights: ["Grimes Lounge", "Lorraine's", "Bull Pen", "Pizza Hut", "Bookstore"],
     floors: [
       { label: "Top Floor", items: ["Grimes Lounge"] },
       { label: "Middle Floor", items: ["Lorraine's soul food buffet"] },
       { label: "Bottom Floor", items: ["Bull Pen", "Pizza Hut", "Bookstore"] }
     ],
-    notes: ["Student life hub for food, gathering, lounge space, and bookstore access."]
+    notes: ["Student life hub for food, gathering, lounge space, and bookstore access."],
+    arrivalTip: "Pizza Hut is inside the Bull Pen on the bottom floor."
   },
   "Irwin Belk Complex": {
+    aliases: ["IBC", "Belk Complex"],
     highlights: ["Football", "Track", "Athletics", "Classes", "Health and Human Performance spaces"],
-    notes: ["This is both an athletics facility and an academic/class meeting location."]
+    notes: ["This is both an athletics facility and an academic/class meeting location."],
+    arrivalTip: "Use IBC in search if you want the shorter nickname."
   },
   "Administrative Cottage #4 (Campus Police)": {
+    aliases: ["Campus Police", "Police Cottage"],
     highlights: ["Campus Police", "Safety support", "Emergency response"],
-    notes: ["Use this location for campus safety support and public safety questions."]
+    notes: ["Use this location for campus safety support and public safety questions."],
+    arrivalTip: "For emergencies, call first. Directions are useful after you are safe."
   },
   "JCSU Health Center": {
+    aliases: ["Health Center"],
     highlights: ["Student health services", "Wellness support"],
     notes: ["Health services are listed as located inside the Mary Joyce Taylor Crisp Memorial Student Union."]
   },
   "Administrative Cottage #3 (Counseling Center)": {
+    aliases: ["Counseling Center"],
     highlights: ["Counseling appointments", "Student support"],
     notes: ["Use this location for counseling services and student support needs."]
   },
   "Student Athlete Achievement Center": {
+    aliases: ["SAAC", "Student Athlete Center"],
     highlights: ["Student-athlete academic support", "Advising", "Study support", "Athletics support"],
-    notes: ["Useful for student-athletes looking for academic and athletic department support."]
+    notes: ["Useful for student-athletes looking for academic and athletic department support."],
+    arrivalTip: "SAAC is a common nickname students may use in search."
+  },
+  "James B. Duke Memorial Library": {
+    aliases: ["Library", "Duke Library"],
+    highlights: ["Study space", "Research help", "Printing", "Archives", "Group study"],
+    notes: ["Best stop for studying, research, printing, technology access, and academic resources."]
+  },
+  "New Science Center (STEM)": {
+    aliases: ["STEM", "Science Center", "New Science"],
+    highlights: ["Science classrooms", "Teaching labs", "Faculty offices", "STEM learning"],
+    notes: ["Use this for biology, chemistry, lab, and STEM-related academic activity."]
+  },
+  "Old Science Building": {
+    aliases: ["Old Science"],
+    highlights: ["Former science space", "Campus reference point"],
+    notes: ["Current use should be verified before relying on this as an active academic destination."]
+  },
+  "Metropolitan College": {
+    aliases: ["Metro College", "Albright Hall"],
+    highlights: ["Metropolitan College", "Adult degree support", "Evening or online programs", "Student support"],
+    notes: ["This replaces the old Robert L. Albright Hall label in the app."]
+  },
+  "Jack S. Brayboy Gymnasium": {
+    aliases: ["Brayboy Gym", "JBG"],
+    highlights: ["Basketball", "Indoor athletics", "Events", "Physical education"],
+    notes: ["Indoor athletics and event facility used by students and athletics."]
+  },
+  "Jack S. Brayboy HealthPlex": {
+    aliases: ["HealthPlex", "Brayboy HealthPlex"],
+    highlights: ["Fitness", "Wellness", "Exercise", "Recreation"],
+    notes: ["Useful for workout, wellness, and recreation-related searches."]
+  },
+  "Wilbert Greenfield Residence Hall": {
+    aliases: ["Greenfield", "Greenfield Hall"],
+    highlights: ["Freshman female housing", "Residence Life", "Dorm navigation"],
+    notes: ["Listed in the app as an active freshman female residence hall."]
+  },
+  "Myers Hall": {
+    aliases: ["Myers"],
+    highlights: ["Freshman male housing", "Residence Life", "Dorm navigation"],
+    notes: ["Listed in the app as an active freshman male residence hall."]
+  },
+  "New Residence Hall": {
+    aliases: ["New Res", "NRH"],
+    highlights: ["Suite-style housing", "Residence Life", "Student living"],
+    notes: ["Useful for students navigating to suite-style residence housing."]
+  },
+  "James B. Duke Memorial Hall": {
+    aliases: ["Duke Hall", "Honors Dorm"],
+    highlights: ["Residence hall", "Honors housing", "Campus living"],
+    notes: ["Residence hall connected to student housing and campus living."]
+  },
+  "Mosaic Village": {
+    aliases: ["Mosaic"],
+    highlights: ["Student apartments", "Mixed-use housing", "Campus living"],
+    notes: ["Student apartment and mixed-use housing complex."]
+  },
+  "The Block": {
+    aliases: ["Block"],
+    highlights: ["Student hangout", "Meeting spot", "Campus reference point"],
+    notes: ["Student-known campus area used as a common meeting place and navigation reference."]
   }
 };
 const layerStyles = {
@@ -801,12 +890,16 @@ function renderRecentLocations() {
 }
 
 function getSearchText(location) {
+  const profile = getLocationDetailProfile(location);
+
   return [
     location.name,
     location.layer,
     location.category,
     location.description,
-    ...location.keywords
+    ...location.keywords,
+    ...(profile.aliases || []),
+    ...(profile.highlights || [])
   ].join(" ").toLowerCase();
 }
 
@@ -1018,6 +1111,19 @@ function getDetailListMarkup(items) {
   `;
 }
 
+function getAliasMarkup(profile) {
+  if (!profile.aliases?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-alias-section">
+      <h3>Also Known As</h3>
+      ${getDetailListMarkup(profile.aliases)}
+    </section>
+  `;
+}
+
 function getHighlightsMarkup(profile) {
   if (!profile.highlights?.length) {
     return "";
@@ -1063,6 +1169,20 @@ function getDetailNotesMarkup(profile) {
     </section>
   `;
 }
+
+function getArrivalTipMarkup(profile) {
+  if (!profile.arrivalTip) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-arrival-section">
+      <h3>Arrival Tip</h3>
+      <p>${profile.arrivalTip}</p>
+    </section>
+  `;
+}
+
 function getLocationContactMarkup(location) {
   const contacts = locationContacts[location.name] || [];
 
@@ -1096,9 +1216,11 @@ function renderSelectedLocation(location) {
   const isHomeDorm = savedPersonalPlaces.homeDorm === location.index;
   const isMainClass = savedPersonalPlaces.mainClass === location.index;
   const profile = getLocationDetailProfile(location);
+  const aliasMarkup = getAliasMarkup(profile);
   const highlightsMarkup = getHighlightsMarkup(profile);
   const floorNotesMarkup = getFloorNotesMarkup(profile);
   const detailNotesMarkup = getDetailNotesMarkup(profile);
+  const arrivalTipMarkup = getArrivalTipMarkup(profile);
   const contactMarkup = getLocationContactMarkup(location);
 
   sidebar.classList.remove("directions-detail-active");
@@ -1119,10 +1241,12 @@ function renderSelectedLocation(location) {
       <h3>About</h3>
       <p>${location.description}</p>
     </section>
+    ${aliasMarkup}
     ${highlightsMarkup}
     ${floorNotesMarkup}
     ${contactMarkup}
     ${detailNotesMarkup}
+    ${arrivalTipMarkup}
     <section class="detail-section detail-location-section">
       <h3>Map Info</h3>
       <div class="detail-quick-info">
@@ -1198,11 +1322,14 @@ function getLocationAliases(location) {
     "parking", "public", "faculty", "staff", "dorm", "housing", "support", "office", "offices"
   ]);
 
-  return location.keywords
+  const profile = getLocationDetailProfile(location);
+  const profileAliases = profile.aliases || [];
+  const keywordAliases = location.keywords
     .filter((keyword) => keyword.length >= 2 && keyword.length <= 8)
     .filter((keyword) => /[a-zA-Z]/.test(keyword))
-    .filter((keyword) => !ignoredKeywords.has(keyword.toLowerCase()))
-    .slice(0, 4);
+    .filter((keyword) => !ignoredKeywords.has(keyword.toLowerCase()));
+
+  return [...profileAliases, ...keywordAliases].slice(0, 5);
 }
 
 function renderLocationOptions() {

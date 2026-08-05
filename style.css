@@ -2924,3 +2924,52 @@ body.is-offline .app-shell {
     height: calc(100dvh - 142px);
   }
 }
+/* Richer building detail pages */
+.detail-alias-section .detail-chip-list li {
+  color: var(--blue);
+  border-color: rgba(255, 207, 1, 0.56);
+  background: linear-gradient(135deg, #ffffff 0%, var(--gold-soft) 100%);
+}
+
+.detail-arrival-section {
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  border-color: rgba(0, 45, 86, 0.16);
+  background: #ffffff;
+}
+
+.detail-arrival-section::before {
+  content: "flag";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #ffffff;
+  background: var(--blue);
+  border-radius: 999px;
+  font-family: "Material Symbols Outlined";
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.detail-arrival-section h3,
+.detail-arrival-section p {
+  grid-column: 2;
+}
+
+.detail-arrival-section h3 {
+  align-self: end;
+}
+
+@media (max-width: 460px) {
+  .detail-arrival-section {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .detail-arrival-section::before {
+    width: 30px;
+    height: 30px;
+    font-size: 1.05rem;
+  }
+}
