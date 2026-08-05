@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-pwa";
+const CACHE_NAME = "jcsu-campus-map-v20260805-redesign";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-pwa-install",
-  "./locations.js?v=20260805-pwa-install",
-  "./paths.js?v=20260805-pwa-install",
-  "./navigation.js?v=20260805-pwa-install",
-  "./script.js?v=20260805-pwa-install",
+  "./style.css?v=20260805-jcsu-redesign",
+  "./locations.js?v=20260805-jcsu-redesign",
+  "./paths.js?v=20260805-jcsu-redesign",
+  "./navigation.js?v=20260805-jcsu-redesign",
+  "./script.js?v=20260805-jcsu-redesign",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"
