@@ -2196,18 +2196,18 @@ body {
 .intro-mark-wrap {
   display: grid;
   place-items: center;
-  width: 138px;
-  height: 138px;
+  width: 146px;
+  height: 146px;
   border: 3px solid rgba(255, 207, 1, 0.98);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.97);
+  background: #ffffff;
   box-shadow: 0 22px 50px rgba(0, 0, 0, 0.3);
   animation: introLogoRise 900ms ease 1380ms both;
 }
 
 .intro-mark {
-  width: 108px;
-  height: 108px;
+  width: 132px;
+  height: 132px;
   object-fit: contain;
   animation: introLogoPulse 1350ms ease-in-out 1450ms both;
 }
@@ -2366,13 +2366,13 @@ body.intro-running .app-shell {
 
 @media (max-width: 460px) {
   .intro-mark-wrap {
-    width: 124px;
-    height: 124px;
+    width: 136px;
+    height: 136px;
   }
 
   .intro-mark {
-    width: 98px;
-    height: 98px;
+    width: 122px;
+    height: 122px;
   }
 
   .intro-pin {

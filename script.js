@@ -140,18 +140,11 @@ let panelDragMoved = false;
 let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
-const introSeenStorageKey = "jcsu-intro-seen";
 let introDismissTimer = null;
 
 function dismissAppIntro() {
   if (!appIntro || appIntro.hidden || appIntro.classList.contains("is-dismissing")) {
     return;
-  }
-
-  try {
-    sessionStorage.setItem(introSeenStorageKey, "true");
-  } catch (error) {
-    // The intro still works if session storage is unavailable.
   }
 
   appIntro.classList.add("is-dismissing");
@@ -164,19 +157,6 @@ function dismissAppIntro() {
 
 function initializeAppIntro() {
   if (!appIntro) {
-    return;
-  }
-
-  let hasSeenIntro = false;
-
-  try {
-    hasSeenIntro = sessionStorage.getItem(introSeenStorageKey) === "true";
-  } catch (error) {
-    hasSeenIntro = false;
-  }
-
-  if (hasSeenIntro) {
-    appIntro.hidden = true;
     return;
   }
 
