@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260805-better-emergency-mode";
+const CACHE_NAME = "jcsu-campus-map-v20260805-offline-message";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260805-better-emergency-mode",
-  "./locations.js?v=20260805-better-emergency-mode",
-  "./paths.js?v=20260805-better-emergency-mode",
-  "./navigation.js?v=20260805-better-emergency-mode",
-  "./script.js?v=20260805-better-emergency-mode",
+  "./style.css?v=20260805-offline-message",
+  "./locations.js?v=20260805-offline-message",
+  "./paths.js?v=20260805-offline-message",
+  "./navigation.js?v=20260805-offline-message",
+  "./script.js?v=20260805-offline-message",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

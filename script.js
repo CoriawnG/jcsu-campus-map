@@ -1,6 +1,7 @@
 const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
 const appIntro = document.querySelector("#appIntro");
+const offlineBanner = document.querySelector("#offlineBanner");
 const searchInput = document.querySelector("#locationSearch");
 const resultsContainer = document.querySelector("#locationResults");
 const personalLocationsContainer = document.querySelector("#personalLocations");
@@ -191,6 +192,16 @@ let introDismissTimer = null;
 let introHiddenAt = 0;
 const introReplayDelayMs = 900;
 
+
+function updateOfflineBanner() {
+  if (!offlineBanner) {
+    return;
+  }
+
+  const isOffline = navigator.onLine === false;
+  offlineBanner.hidden = !isOffline;
+  document.body.classList.toggle("is-offline", isOffline);
+}
 function dismissAppIntro() {
   if (!appIntro || appIntro.hidden || appIntro.classList.contains("is-dismissing")) {
     return;
@@ -2119,4 +2130,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
 initializeAppIntro();
