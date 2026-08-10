@@ -1282,7 +1282,7 @@ function getPersonalActionMarkup(location, isHomeDorm, isMainClass) {
   if (canSaveAsHomeDorm(location) || isHomeDorm) {
     actions.push(`
       <button class="secondary-button" type="button" data-personal-action="homeDorm" data-personal-mode="${isHomeDorm ? "remove" : "save"}">
-        <span class="material-symbols-outlined" aria-hidden="true">${isHomeDorm ? "home_off" : "home"}</span>
+        <span class="material-symbols-outlined" aria-hidden="true">home</span>
         ${isHomeDorm ? "Remove Home Dorm" : "Set Home Dorm"}
       </button>
     `);

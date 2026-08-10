@@ -3060,11 +3060,8 @@ body.is-offline .app-shell {
 
 .personal-location-button {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px;
-  gap: 6px;
-  align-items: start;
-  padding: 8px;
+  display: block;
+  padding: 10px 28px 10px 10px;
   cursor: default;
 }
 
@@ -3092,12 +3089,17 @@ body.is-offline .app-shell {
 }
 
 .personal-location-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   color: var(--muted);
-  background: rgba(0, 45, 86, 0.06);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 45, 86, 0.1);
   border-radius: 999px;
 }
 
