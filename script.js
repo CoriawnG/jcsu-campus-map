@@ -657,6 +657,28 @@ function getPersonalPlaceIndexes() {
   }
 }
 
+const mainClassLocationNames = new Set([
+  "Band and Music Hall",
+  "Dorothy Cowser Yancy Technology Center",
+  "George E. Davis Hall",
+  "Henry Lawrence McCrorey Memorial Hall",
+  "Irwin Belk Complex",
+  "Lionel H. Newsom Humanities Hall",
+  "Metropolitan College",
+  "New Science Center (STEM)",
+  "Old Science Building",
+  "Rufus R. Perry Hall",
+  "William F. Johnson & James W. Seabrook Hall"
+]);
+
+function canSaveAsHomeDorm(location) {
+  return location.layer === "Housing";
+}
+
+function canSaveAsMainClass(location) {
+  return mainClassLocationNames.has(location.name);
+}
+
 function savePersonalPlace(type, location) {
   try {
     const savedPlaces = getPersonalPlaceIndexes();
@@ -664,6 +686,16 @@ function savePersonalPlace(type, location) {
     localStorage.setItem(personalPlacesStorageKey, JSON.stringify(savedPlaces));
   } catch (error) {
     // Personal shortcuts are local conveniences; routing still works if storage is blocked.
+  }
+}
+
+function removePersonalPlace(type) {
+  try {
+    const savedPlaces = getPersonalPlaceIndexes();
+    savedPlaces[type] = null;
+    localStorage.setItem(personalPlacesStorageKey, JSON.stringify(savedPlaces));
+  } catch (error) {
+    // Removing a shortcut is optional; routing still works if storage is blocked.
   }
 }
 
@@ -675,10 +707,10 @@ function renderPersonalLocations() {
   const savedPlaces = getPersonalPlaceIndexes();
   const personalPlaces = [
     savedPlaces.homeDorm !== null
-      ? { label: "Home Dorm", icon: "home", location: locations[savedPlaces.homeDorm] }
+      ? { type: "homeDorm", label: "Home Dorm", icon: "home", location: locations[savedPlaces.homeDorm] }
       : null,
     savedPlaces.mainClass !== null
-      ? { label: "Main Class Building", icon: "school", location: locations[savedPlaces.mainClass] }
+      ? { type: "mainClass", label: "Main Class Building", icon: "school", location: locations[savedPlaces.mainClass] }
       : null
   ].filter(Boolean);
 
@@ -699,18 +731,32 @@ function renderPersonalLocations() {
   const rail = personalLocationsContainer.querySelector(".recent-location-rail");
 
   personalPlaces.forEach((place) => {
-    const button = document.createElement("button");
-    button.className = "recent-location-button personal-location-button";
-    button.type = "button";
-    button.innerHTML = `
-      <span class="material-symbols-outlined location-icon" aria-hidden="true">${place.icon}</span>
-      <strong>${place.location.name}</strong>
-      <span>${place.label}</span>
+    const card = document.createElement("div");
+    card.className = "recent-location-button personal-location-button";
+    card.innerHTML = `
+      <button class="personal-location-select" type="button" aria-label="Open ${place.location.name}">
+        <span class="material-symbols-outlined location-icon" aria-hidden="true">${place.icon}</span>
+        <span class="personal-location-copy">
+          <strong>${place.location.name}</strong>
+          <span>${place.label}</span>
+        </span>
+      </button>
+      <button class="personal-location-remove" type="button" data-remove-personal="${place.type}" aria-label="Remove ${place.label}">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
     `;
 
-    button.addEventListener("click", () => selectLocation(place.location));
+    card.querySelector(".personal-location-select").addEventListener("click", () => selectLocation(place.location));
+    card.querySelector("[data-remove-personal]").addEventListener("click", () => {
+      removePersonalPlace(place.type);
+      renderPersonalLocations();
+      renderDirectionQuickPicks();
+      if (activeLocationIndex === place.location.index) {
+        renderSelectedLocation(place.location);
+      }
+    });
 
-    rail.appendChild(button);
+    rail.appendChild(card);
   });
 }
 function getRecentLocationIndexes() {
@@ -1230,6 +1276,29 @@ function getLocationContactMarkup(location) {
   `;
 }
 
+function getPersonalActionMarkup(location, isHomeDorm, isMainClass) {
+  const actions = [];
+
+  if (canSaveAsHomeDorm(location) || isHomeDorm) {
+    actions.push(`
+      <button class="secondary-button" type="button" data-personal-action="homeDorm" data-personal-mode="${isHomeDorm ? "remove" : "save"}">
+        <span class="material-symbols-outlined" aria-hidden="true">${isHomeDorm ? "home_off" : "home"}</span>
+        ${isHomeDorm ? "Remove Home Dorm" : "Set Home Dorm"}
+      </button>
+    `);
+  }
+
+  if (canSaveAsMainClass(location) || isMainClass) {
+    actions.push(`
+      <button class="secondary-button" type="button" data-personal-action="mainClass" data-personal-mode="${isMainClass ? "remove" : "save"}">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        ${isMainClass ? "Remove Main Class" : "Set Main Class"}
+      </button>
+    `);
+  }
+
+  return actions.join("");
+}
 function renderSelectedLocation(location) {
   const isFavorite = isFavoriteLocation(location);
   const savedPersonalPlaces = getPersonalPlaceIndexes();
@@ -1242,6 +1311,7 @@ function renderSelectedLocation(location) {
   const detailNotesMarkup = getDetailNotesMarkup(profile);
   const arrivalTipMarkup = getArrivalTipMarkup(profile);
   const contactMarkup = getLocationContactMarkup(location);
+  const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
   sidebar.classList.remove("directions-detail-active");
   sidebar.classList.add("location-detail-active");
@@ -1285,14 +1355,7 @@ function renderSelectedLocation(location) {
       <div class="location-actions">
         <button class="primary-button wide-action" type="button" data-route-action="destination">Get Directions</button>
         <button class="secondary-button" type="button" data-route-action="start">Use as Start</button>
-        <button class="secondary-button" type="button" data-personal-action="homeDorm">
-          <span class="material-symbols-outlined" aria-hidden="true">home</span>
-          ${isHomeDorm ? "Home Dorm Saved" : "Set Home Dorm"}
-        </button>
-        <button class="secondary-button" type="button" data-personal-action="mainClass">
-          <span class="material-symbols-outlined" aria-hidden="true">school</span>
-          ${isMainClass ? "Main Class Saved" : "Set Main Class"}
-        </button>
+        ${personalActionsMarkup}
         <button class="secondary-button wide-action" type="button" data-favorite-action>
           <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
           ${isFavorite ? "Remove Favorite" : "Add Favorite"}
@@ -1313,7 +1376,12 @@ function renderSelectedLocation(location) {
 
   selectedLocation.querySelectorAll("[data-personal-action]").forEach((button) => {
     button.addEventListener("click", () => {
-      savePersonalPlace(button.dataset.personalAction, location);
+      if (button.dataset.personalMode === "remove") {
+        removePersonalPlace(button.dataset.personalAction);
+      } else {
+        savePersonalPlace(button.dataset.personalAction, location);
+      }
+
       renderSelectedLocation(location);
       renderLocations(getFilteredLocations());
       renderDirectionQuickPicks();
@@ -1707,6 +1775,16 @@ function setRouteEndpoint(type, location, options = {}) {
   }
 }
 
+function refreshNavigationMapLayout() {
+  if (!navigationMap) {
+    return;
+  }
+
+  setTimeout(() => {
+    navigationMap.invalidateSize();
+  }, 80);
+}
+
 function initializeNavigationMap() {
   if (navigationMap || !window.L) {
     return;
@@ -1724,6 +1802,7 @@ function initializeNavigationMap() {
   currentLocationLayer = L.layerGroup().addTo(navigationMap);
   addNavigationLegend();
   renderNavigationMarkers(getFilteredLocations());
+  refreshNavigationMapLayout();
 }
 
 function getLayerStyle(layer) {
@@ -2253,6 +2332,8 @@ locations.forEach((location, index) => {
   location.index = index;
 });
 
+window.addEventListener("resize", refreshNavigationMapLayout);
+window.addEventListener("orientationchange", refreshNavigationMapLayout);
 renderLocationOptions();
 renderLocations(locations);
 initializeNavigationMap();

@@ -21,7 +21,8 @@ body {
   color: var(--text);
   background: var(--bg);
   font-family: Arial, Helvetica, sans-serif;
-}
+}
+
 body.modal-open {
   overflow: hidden;
 }
@@ -754,7 +755,9 @@ textarea:focus,
   }
   body {
     overflow: hidden;
-  }
+  }
+
+
 
   .app-header {
     position: relative;
@@ -3036,4 +3039,97 @@ body.is-offline .app-shell {
 
 .route-report-button .material-symbols-outlined {
   font-size: 1.1rem;
+}
+
+
+/* Saved places and map alignment cleanup */
+.map-panel,
+.map-view,
+.navigation-map,
+.leaflet-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.direction-quick-pick-row .location-icon {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.personal-location-button {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 6px;
+  align-items: start;
+  padding: 8px;
+  cursor: default;
+}
+
+.personal-location-select,
+.personal-location-remove {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.personal-location-select {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: center;
+}
+
+.personal-location-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.personal-location-remove {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--muted);
+  background: rgba(0, 45, 86, 0.06);
+  border-radius: 999px;
+}
+
+.personal-location-remove:hover,
+.personal-location-remove:focus-visible {
+  color: #ffffff;
+  background: var(--red);
+}
+
+.personal-location-remove .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+@media (max-width: 860px) {
+  .map-panel {
+    position: fixed;
+    top: 72px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .map-view,
+  .navigation-map {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+
+  body.is-offline .map-panel {
+    top: 142px;
+  }
 }
