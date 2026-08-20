@@ -5199,5 +5199,18 @@ window.pathSegments = [
         "lng": -80.8556958
       }
     ]
+  },
+  {
+    "name": "Campus Police Connector",
+    "coordinates": [
+      {
+        "lat": 35.2435115,
+        "lng": -80.8554742
+      },
+      {
+        "lat": 35.2435107,
+        "lng": -80.8554661
+      }
+    ]
   }
 ];
