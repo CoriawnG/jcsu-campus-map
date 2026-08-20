@@ -1704,6 +1704,7 @@ function renderDirectionsPreview(options = {}) {
   const isCurrentLocationStart = isCurrentLocationInput(fromLocationSelect.value);
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
+  const shouldShowStepNavigator = Boolean(options.showStepNavigator);
 
   openDirectionsPanel({ preservePanelState: options.preservePanelState });
   if (!start || !end) {
@@ -1883,7 +1884,11 @@ function renderDirectionsPreview(options = {}) {
   });
 
   drawNavigationRoute(route, start, end, { fitBounds: shouldFitThisRoute });
-  renderRouteStepNavigator();
+  if (shouldShowStepNavigator) {
+    renderRouteStepNavigator();
+  } else {
+    hideRouteStepNavigator();
+  }
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
@@ -2672,9 +2677,13 @@ feedbackModal.addEventListener("click", (event) => {
 
 function handleRouteAction() {
   shouldFitRouteToMap = true;
-  const preview = renderDirectionsPreview({ preservePanelState: true });
+  const usesCurrentLocation = routeUsesCurrentLocation();
+  const preview = renderDirectionsPreview({
+    preservePanelState: true,
+    showStepNavigator: true
+  });
 
-  if (preview && routeUsesCurrentLocation()) {
+  if (preview && usesCurrentLocation) {
     startGuidedNavigation();
   } else if (preview) {
     setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");

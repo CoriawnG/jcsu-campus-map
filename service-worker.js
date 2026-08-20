@@ -1,4 +1,4 @@
-const CACHE_NAME = "jcsu-campus-map-v20260820-route-guidance-sheet";
+const CACHE_NAME = "jcsu-campus-map-v20260820-route-steps-action-only";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./locations.js?v=20260820-cafeteria-entrances",
   "./paths.js?v=20260820-campus-police-route",
   "./navigation.js?v=20260820-new-science-entrances",
-  "./script.js?v=20260820-route-guidance-sheet",
+  "./script.js?v=20260820-route-steps-action-only",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
