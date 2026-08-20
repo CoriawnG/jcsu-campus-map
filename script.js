@@ -1038,11 +1038,17 @@ function collapseMobilePanel() {
   }
 }
 
-function openDirectionsPanel() {
+function openDirectionsPanel(options = {}) {
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
   sidebar.classList.remove("location-detail-active");
-  setMobilePanelState("full");
+
+  if (options.preservePanelState && isMobilePanelEnabled()) {
+    const currentPanelState = sidebar.dataset.panelState || "full";
+    document.body.classList.toggle("directions-panel-open", currentPanelState !== "collapsed");
+  } else {
+    setMobilePanelState("full");
+  }
 
   setTimeout(() => {
     if (navigationMap) {
@@ -1511,14 +1517,14 @@ function getRouteSignature(start, end) {
   return `${startKey}->${endKey}`;
 }
 
-function renderDirectionsPreview() {
+function renderDirectionsPreview(options = {}) {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
   const isCurrentLocationStart = isCurrentLocationInput(fromLocationSelect.value);
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
 
-  openDirectionsPanel();
+  openDirectionsPanel({ preservePanelState: options.preservePanelState });
   if (!start || !end) {
     directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
     hideLocationStatus();
@@ -2093,15 +2099,21 @@ function updateCurrentLocation(position, mode) {
   setLocationStatus(message);
   const shouldCenterMap = mode !== "live" || !hasLiveTrackingCentered;
 
+  const panelStateBeforeMapRefresh = sidebar.dataset.panelState || "full";
+
   showCurrentLocationMarker({ centerMap: shouldCenterMap });
   if (mode === "live") {
     hasLiveTrackingCentered = true;
   }
   switchMapView("navigationMapView");
 
+  if (mode === "live" && isMobilePanelEnabled()) {
+    document.body.classList.toggle("directions-panel-open", panelStateBeforeMapRefresh !== "collapsed");
+  }
+
   if (toLocationSelect.value) {
-    renderDirectionsPreview();
-  } else {
+    renderDirectionsPreview({ preservePanelState: mode === "live" });
+  } else if (mode !== "live") {
     collapseMobilePanel();
   }
 }
@@ -2183,6 +2195,18 @@ function toggleLiveTracking() {
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
   );
+}
+
+function startLiveTrackingAutomatically() {
+  if (isLiveTracking) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    if (!isLiveTracking) {
+      toggleLiveTracking();
+    }
+  }, 900);
 }
 useMyLocationButton.addEventListener("click", requestCurrentLocation);
 
@@ -2382,3 +2406,4 @@ window.addEventListener("online", updateOfflineBanner);
 window.addEventListener("offline", updateOfflineBanner);
 updateOfflineBanner();
 initializeAppIntro();
+startLiveTrackingAutomatically();

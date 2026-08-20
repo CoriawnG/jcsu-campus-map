@@ -1,0 +1,771 @@
+﻿# HTML Notes For JCSU Map Project
+
+File explained:
+index.html
+
+Big idea:
+This HTML file builds the structure for the JCSU Campus Navigation app.
+It creates the intro screen, header, search panel, directions panel, map area, help modal, safety modal, feedback form, and script connections.
+
+HTML = structure
+CSS = visual design
+JavaScript = behavior and interactivity
+Leaflet = the map library
+
+============================================================
+1. Document Setup
+============================================================
+
+<!DOCTYPE html>
+
+This tells the browser to use modern HTML.
+
+<html lang="en">
+
+This starts the HTML page.
+lang="en" means the page language is English.
+
+<head>
+
+The head contains information about the page.
+Most of this does not show directly on the screen.
+
+<meta charset="UTF-8">
+
+This lets the browser understand normal text, punctuation, and symbols.
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+This helps the layout fit mobile screens and desktop screens.
+Without this, phones may render the page too zoomed out.
+
+<title>JCSU Campus Navigation</title>
+
+This is the text shown in the browser tab.
+
+============================================================
+2. Mobile App / PWA Settings
+============================================================
+
+<meta name="theme-color" content="#002d56">
+
+This sets the browser/mobile theme color.
+On phones, it can affect the top browser bar color.
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+This helps the app behave more like an installed app on Apple devices.
+
+<meta name="apple-mobile-web-app-title" content="JCSU Map">
+
+This sets the app name if someone saves it to an iPhone home screen.
+
+<link rel="manifest" href="manifest.json">
+
+This connects the web app manifest.
+The manifest contains app install information like name, icons, and display settings.
+
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+This sets the icon used when the app is saved to an Apple device home screen.
+
+============================================================
+3. Stylesheets
+============================================================
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+This loads Leaflet's CSS.
+Leaflet is the map library used to display the interactive map.
+The CSS makes Leaflet map controls and tiles display correctly.
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,1,0">
+
+This loads Google's Material Symbols icon font.
+That is why the app can show icons like search, directions, safety, and location.
+
+<link rel="stylesheet" href="style.css?v=20260810-my-places-remove-fix">
+
+This loads your app's custom CSS.
+style.css controls the page layout, colors, panels, modals, map buttons, and mobile behavior.
+
+The ?v=... part is a cache-busting version string.
+It helps force the browser to load the newest CSS instead of an older cached copy.
+
+============================================================
+4. Body
+============================================================
+
+<body>
+
+The body contains everything the user sees or interacts with.
+
+============================================================
+5. Intro Loading Screen
+============================================================
+
+<div id="appIntro" class="app-intro" role="status" aria-label="Opening JCSU Campus Navigation">
+
+This creates the opening intro screen.
+It likely appears when the app first loads.
+
+id="appIntro"
+JavaScript can find this exact intro element.
+
+class="app-intro"
+CSS styles the intro screen.
+
+role="status"
+Tells assistive technology this area gives status/loading information.
+
+aria-label="Opening JCSU Campus Navigation"
+Describes the intro to screen readers.
+
+<div class="intro-map-grid" aria-hidden="true"></div>
+
+This creates a decorative grid behind the intro.
+aria-hidden="true" means screen readers ignore it because it is visual decoration.
+
+<svg class="intro-route-map" viewBox="0 0 420 420" aria-hidden="true" focusable="false">
+
+This creates a vector graphic route animation/illustration.
+SVG is used for shapes like paths and circles.
+
+<path class="intro-route-shadow" ... />
+<path class="intro-route-line" ... />
+
+These draw the route line and shadow.
+The d="..." attribute contains the route curve coordinates.
+
+<circle class="intro-route-start" cx="64" cy="318" r="9" />
+<circle class="intro-route-stop" cx="356" cy="236" r="12" />
+
+These draw the start and ending dots on the route graphic.
+
+<div class="intro-pin" aria-hidden="true">
+  <span class="material-symbols-outlined">location_on</span>
+</div>
+
+This displays a location pin icon during the intro.
+The icon comes from Material Symbols.
+
+<div class="intro-mark-wrap">
+  <img class="intro-mark" src="icons/golden-bull-logo-transparent.png" alt="">
+</div>
+
+This shows the JCSU Golden Bull logo during the intro.
+The empty alt means it is decorative here.
+
+<div class="intro-copy">
+  <p>Johnson C. Smith University</p>
+  <h2>Campus Navigation</h2>
+</div>
+
+This is the intro text.
+
+<div class="intro-progress" aria-hidden="true"></div>
+
+This is a visual loading/progress indicator.
+
+============================================================
+6. App Header
+============================================================
+
+<header class="app-header">
+
+This is the top header of the app.
+It contains branding and action buttons.
+
+<div class="brand-lockup">
+
+This groups the logo and title together.
+
+<img class="brand-mark" src="icons/golden-bull-logo.png" alt="JCSU Golden Bull logo">
+
+This displays the Golden Bull logo.
+The alt text describes the image for screen readers.
+
+<p class="eyebrow">Johnson C. Smith University</p>
+<h1>Campus Navigation</h1>
+
+This shows the school name and main app title.
+
+============================================================
+7. Header Action Buttons
+============================================================
+
+<div class="header-actions">
+
+This groups the Help, Safety, and Feedback buttons.
+
+<button id="helpButton" class="feedback-button help-button" type="button">
+
+This opens the Help modal.
+
+<span class="material-symbols-outlined" aria-hidden="true">help</span>
+
+This displays the help icon.
+aria-hidden="true" hides the icon from screen readers because the button also has text.
+
+<button id="safetyButton" class="safety-button" type="button">
+
+This opens the Safety modal.
+
+<button id="feedbackButton" class="feedback-button" type="button">
+
+This opens the Feedback modal.
+
+Important:
+The ids helpButton, safetyButton, and feedbackButton let JavaScript add click behavior.
+
+============================================================
+8. Offline Banner
+============================================================
+
+<div id="offlineBanner" class="offline-banner" role="status" aria-live="polite" hidden>
+
+This creates a message that appears when the user is offline.
+
+hidden
+Means it starts invisible.
+JavaScript can remove hidden when the app detects no internet.
+
+aria-live="polite"
+Tells screen readers to announce changes without interrupting too aggressively.
+
+The banner warns that map tiles, live location, and feedback submissions may be limited offline.
+
+============================================================
+9. Main App Shell
+============================================================
+
+<main class="app-shell">
+
+This is the main app layout.
+It contains two major parts:
+1. The sidebar/search/directions panel
+2. The map panel
+
+============================================================
+10. Sidebar / Search And Directions Panel
+============================================================
+
+<aside class="sidebar sheet-full" aria-label="Campus location search" data-panel-state="full">
+
+This creates the sidebar.
+It contains search, filters, results, selected location details, and directions.
+
+aria-label="Campus location search"
+Describes the sidebar to screen readers.
+
+data-panel-state="full"
+A custom data attribute.
+JavaScript and CSS can use this to know whether the mobile sheet is full, partial, or collapsed.
+
+<button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-expanded="true" aria-label="Change search and directions panel size">
+
+This button changes the panel size on mobile.
+aria-expanded="true" means the panel is currently expanded.
+
+============================================================
+11. Search Panel
+============================================================
+
+<section class="search-panel">
+
+This section contains the search input and category filters.
+
+<label for="locationSearch">Find a building or place</label>
+
+This label belongs to the input with id="locationSearch".
+Clicking the label focuses the search box.
+
+<input id="locationSearch" type="search" placeholder="Search library, Biddle, cafeteria..." autocomplete="off">
+
+This is the search box.
+
+type="search"
+Tells the browser this input is for searching.
+
+placeholder
+Shows example text before the user types.
+
+autocomplete="off"
+Stops browser autofill suggestions from interfering with campus search.
+
+============================================================
+12. Filter Buttons
+============================================================
+
+<div class="filter-group" aria-label="Filter locations by category">
+
+This groups the category filter buttons.
+
+<button class="filter-button is-active" type="button" data-layer="All">All</button>
+
+This button shows all locations.
+
+class="is-active"
+Marks it as currently selected.
+
+data-layer="All"
+A custom data attribute used by JavaScript.
+When the button is clicked, JavaScript can read data-layer to know what category to show.
+
+Other filters include:
+Academic Buildings
+Campus Services
+Dining and Student Life
+Housing
+Athletics
+Parking and Transportation
+
+The visible button text is shorter, like Academic or Services.
+The data-layer value is the full category name.
+
+============================================================
+13. Results Panel
+============================================================
+
+<section class="results-panel" aria-live="polite">
+
+This section shows matching locations.
+aria-live="polite" helps screen readers know when search results change.
+
+<h2>Locations</h2>
+<span id="resultCount">0</span>
+
+resultCount starts at 0.
+JavaScript updates it based on how many locations match the search/filter.
+
+<div id="personalLocations" class="personal-locations" hidden></div>
+<div id="favoriteLocations" class="favorite-locations" hidden></div>
+<div id="recentLocations" class="recent-locations" hidden></div>
+
+These sections are hidden at first.
+JavaScript can show them if the user has saved, favorite, or recent locations.
+
+<div id="locationResults" class="location-list" aria-label="Location results"></div>
+
+This is where JavaScript inserts the actual list of campus locations.
+
+============================================================
+14. Selected Location Panel
+============================================================
+
+<section id="selectedLocation" class="details-panel" aria-live="polite">
+
+This panel shows details for the selected building/place.
+
+At first it says:
+Choose a place
+Search or select a location to see its category, layer, and notes.
+
+JavaScript replaces this content when the user selects a location.
+
+============================================================
+15. Directions Panel
+============================================================
+
+<section class="directions-panel" aria-label="Campus directions">
+
+This section contains the route form.
+
+<button id="closeDirectionsPanel" class="icon-button" type="button" aria-label="Back to location details">x</button>
+
+This closes the directions view and goes back to location details.
+
+<div id="directionQuickPicks" class="direction-quick-picks" hidden></div>
+
+This area can show quick route choices.
+It starts hidden.
+
+<label for="fromLocation">From</label>
+<input id="fromLocation" type="text" list="campusLocationSuggestions" autocomplete="off" placeholder="Type a starting point">
+
+This is the starting point input.
+The list attribute connects it to the datalist of campus suggestions.
+
+<button id="useMyLocation" class="secondary-button" type="button">Set My Location</button>
+
+This tries to use the user's current location as the starting point.
+
+<button id="toggleLiveTracking" class="secondary-button" type="button">Start Live Tracking</button>
+
+This starts or stops live location tracking.
+
+<label for="routePreference">Route Preference</label>
+<select id="routePreference">
+
+This dropdown lets the user choose route style.
+
+Options:
+fastest
+accessible
+avoid roads
+main sidewalks
+
+<label for="toLocation">To</label>
+<input id="toLocation" type="text" list="campusLocationSuggestions" autocomplete="off" placeholder="Type a destination">
+
+This is the destination input.
+
+<datalist id="campusLocationSuggestions"></datalist>
+
+This stores autocomplete suggestions for From and To.
+JavaScript fills it with campus location names.
+
+<button id="getDirections" class="primary-button" type="button">Get Directions</button>
+
+This tells JavaScript to calculate/show a route.
+
+<button id="clearRoute" class="secondary-button" type="button">Clear Route</button>
+
+This clears the current route.
+
+<div id="directionsOutput" class="directions-output">
+
+This displays direction instructions or messages.
+
+============================================================
+16. Map Panel
+============================================================
+
+<section class="map-panel" aria-label="Campus navigation map">
+
+This is the main map area.
+
+<div class="map-view is-active" id="navigationMapView" role="region" aria-label="Navigation Map">
+
+This wraps the active map view.
+role="region" gives the map area a named landmark for screen readers.
+
+<div id="navigationMap" class="navigation-map" aria-label="Custom campus navigation map"></div>
+
+This is the actual map container.
+Leaflet uses this div to draw the interactive map.
+Without this div, Leaflet would have nowhere to render the map.
+
+============================================================
+17. Floating Map Buttons
+============================================================
+
+<div class="map-floating-actions" aria-label="Navigation map actions">
+
+This holds buttons that float on top of the map.
+
+<div id="mapLocationStatus" class="map-action-button map-status" aria-live="polite" hidden></div>
+
+This can show location status messages, such as tracking or location errors.
+It starts hidden.
+
+<button id="openSafetyPanelMap" ...>
+
+This opens the Safety panel from the map.
+
+<button id="openDirectionsPanel" ...>
+
+This opens the Directions panel from the map.
+
+<button id="toggleLiveTrackingMap" ...>
+
+This starts/stops live tracking from the map.
+
+<button id="recenterLocationMap" ...>
+
+This recenters the map on the user's current location.
+
+Each button uses a Material Symbols icon plus visually hidden text.
+
+<span class="visually-hidden">Safety</span>
+
+This text may not be visible on screen, but screen readers can read it.
+That improves accessibility for icon-only buttons.
+
+============================================================
+18. Help Modal
+============================================================
+
+<div id="helpModal" class="feedback-modal help-modal" hidden>
+
+This is the Help popup.
+It starts hidden.
+JavaScript shows it when the Help button is clicked.
+
+<div class="feedback-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+
+This is the actual modal box.
+
+role="dialog"
+Tells assistive technology this is a dialog window.
+
+aria-modal="true"
+Means the user should focus on this modal while it is open.
+
+aria-labelledby="helpTitle"
+Connects the modal to the heading with id="helpTitle".
+
+<button id="closeHelp" ...>x</button>
+
+This closes the Help modal.
+
+The help content explains how to:
+Find Places
+View Details
+Get Directions
+Use Live Tracking
+Improve the Map
+
+<button id="finishHelp" class="primary-button" type="button">Start Exploring</button>
+
+This likely closes the Help modal and lets the user start using the app.
+
+============================================================
+19. Safety Modal
+============================================================
+
+<div id="safetyModal" class="feedback-modal safety-modal" hidden>
+
+This is the Safety popup.
+It starts hidden.
+
+The safety modal includes:
+Immediate emergency help
+Campus help phone numbers
+Safety route shortcuts
+
+<a class="primary-button safety-call-button" href="tel:911">Call 911</a>
+
+This is a phone link.
+On phones, tapping it starts a call to 911.
+
+Other phone links:
+Campus Police: 704.378.1003
+Counseling: 704.378.1044
+Health Center: 704.378.1075
+
+<button class="secondary-button" type="button" data-safety-route="Administrative Cottage #4 (Campus Police)">
+
+This button uses data-safety-route.
+JavaScript can read that value and route the user to that safety location.
+
+<button class="secondary-button" type="button" data-safety-nearest="entrance">
+
+This button asks JavaScript to find the nearest entrance.
+
+<button class="secondary-button" type="button" data-safety-nearest="parking">
+
+This button asks JavaScript to find the nearest parking area.
+
+============================================================
+20. Feedback Modal
+============================================================
+
+<div id="feedbackModal" class="feedback-modal" hidden>
+
+This is the Feedback popup.
+It starts hidden.
+
+<form id="feedbackForm" class="feedback-form">
+
+This creates a form for submitting feedback.
+
+<select id="feedbackType">
+
+This dropdown lets users choose feedback type.
+Options include:
+Suggestion
+Wrong location
+Missing place
+Route issue
+Mobile issue
+
+<textarea id="feedbackMessage" rows="6" placeholder="Tell us what should be changed, added, or fixed." required></textarea>
+
+This is the main feedback message box.
+required means the user must fill it out before submitting.
+
+<input id="feedbackLocation" type="text" placeholder="Example: Biddle Hall, Library, Student Union">
+
+This lets the user name the location/building related to the feedback.
+
+<input id="feedbackRouteStart" type="text" placeholder="Starting point if this is about directions">
+
+This lets the user describe where a route issue starts.
+
+<input id="feedbackRouteDestination" type="text" placeholder="Destination if this is about directions">
+
+This lets the user describe where a route issue ends.
+
+<input id="feedbackContact" type="text" placeholder="Email, phone, or name if you want follow-up">
+
+This optional field lets users provide contact info.
+
+<p id="feedbackStatus" class="feedback-status">Submitting opens the Google feedback form.</p>
+
+This shows feedback form status messages.
+
+<button class="secondary-button" id="copyFeedback" type="button">Copy</button>
+
+This copies the feedback text.
+
+<button class="primary-button" type="submit">Submit Feedback</button>
+
+This submits the form.
+JavaScript handles what happens when the form is submitted.
+
+============================================================
+21. Script Files
+============================================================
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+This loads the Leaflet JavaScript library.
+Leaflet makes the interactive map work.
+
+<script src="locations.js?v=20260810-my-places-remove-fix"></script>
+
+This loads campus location data.
+It likely contains buildings, coordinates, categories, and notes.
+
+<script src="paths.js?v=20260810-my-places-remove-fix"></script>
+
+This loads route/path data.
+It likely contains campus walkways, route points, and connections.
+
+<script src="navigation.js?v=20260810-my-places-remove-fix"></script>
+
+This loads navigation logic.
+It likely helps calculate routes between locations.
+
+<script src="script.js?v=20260810-my-places-remove-fix"></script>
+
+This loads the main app behavior.
+It likely controls search, filters, map markers, modals, buttons, live tracking, and feedback.
+
+The scripts are loaded at the bottom so the HTML exists before JavaScript tries to find elements by id.
+
+============================================================
+22. Important HTML Concepts In This Project
+============================================================
+
+id
+An id names one exact element.
+JavaScript often uses ids to find elements.
+Example:
+id="locationSearch"
+
+class
+A class is mostly for CSS styling.
+Many elements can share the same class.
+Example:
+class="primary-button"
+
+data attributes
+Custom values stored in HTML for JavaScript to read.
+Example:
+data-layer="Academic Buildings"
+data-safety-route="Administrative Cottage #4 (Campus Police)"
+
+aria attributes
+Accessibility information for screen readers.
+Example:
+aria-label
+aria-live
+aria-hidden
+aria-expanded
+aria-modal
+aria-labelledby
+
+hidden
+Makes an element invisible until JavaScript shows it.
+
+button type="button"
+Makes a button behave like a normal clickable button instead of submitting a form.
+
+form
+Groups inputs for submission.
+
+label for="..."
+Connects visible label text to an input.
+
+input
+A one-line field.
+
+textarea
+A larger text field.
+
+select and option
+A dropdown menu.
+
+datalist
+A list of autocomplete suggestions for an input.
+
+============================================================
+23. How The App Works As A Whole
+============================================================
+
+1. HTML creates empty containers and buttons.
+2. CSS styles the page so it looks like an app.
+3. Leaflet creates the interactive map inside navigationMap.
+4. locations.js provides campus places.
+5. paths.js provides route/path information.
+6. navigation.js helps calculate directions.
+7. script.js connects everything together.
+
+Example pattern:
+
+HTML creates this:
+<div id="locationResults"></div>
+
+JavaScript finds it and fills it with search results.
+
+HTML creates this:
+<button id="getDirections">Get Directions</button>
+
+JavaScript listens for a click and then calculates directions.
+
+HTML creates this:
+<div id="navigationMap"></div>
+
+Leaflet uses it to draw the map.
+
+============================================================
+24. Things To Study First
+============================================================
+
+Start by understanding these parts:
+
+1. Search input
+id="locationSearch"
+
+2. Filter buttons
+data-layer="..."
+
+3. Results list
+id="locationResults"
+
+4. Map container
+id="navigationMap"
+
+5. Directions inputs
+id="fromLocation"
+id="toLocation"
+id="getDirections"
+
+6. Modals
+id="helpModal"
+id="safetyModal"
+id="feedbackModal"
+
+If you understand those, the rest of the project will start making much more sense.
+
+============================================================
+My Notes
+============================================================
+
+Use this area to write your own notes:
+
+- 
+- 
+- 

@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260810-my-places-remove-fix";
+const CACHE_NAME = "jcsu-campus-map-v20260820-auto-live-tracking";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260810-my-places-remove-fix",
+  "./style.css?v=20260820-live-panel-sticky-fix",
   "./locations.js?v=20260810-my-places-remove-fix",
   "./paths.js?v=20260810-my-places-remove-fix",
   "./navigation.js?v=20260810-my-places-remove-fix",
-  "./script.js?v=20260810-my-places-remove-fix",
+  "./script.js?v=20260820-auto-live-tracking",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
