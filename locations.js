@@ -9,6 +9,13 @@ const categoryByLayer = {
   "Parking and Transportation": "Parking / Transportation"
 };
 
+const routeAccessPointsByLocation = {
+  "New Science Center (STEM)": [
+    { name: "New Science Center East Entrance", lat: 35.2422896, lng: -80.8571533 },
+    { name: "New Science Center West Entrance", lat: 35.2422161, lng: -80.8576124 }
+  ]
+};
+
 const locations = [
   ["Band and Music Hall", "Academic Buildings", 35.2449048, -80.8561284, "Music, band, rehearsal, and arts-related academic space.", "band music rehearsal instruments arts performance"],
   ["Dorothy Cowser Yancy Technology Center", "Academic Buildings", 35.2419873, -80.8572047, "Technology-focused academic building with classrooms, computer labs, and digital learning spaces.", "technology computer lab computers IT digital learning classrooms yancy tech dcytc technology center"],
@@ -85,5 +92,6 @@ const locations = [
   description,
   keywords: keywordText.split(" "),
   lat,
-  lng
+  lng,
+  routeAccessPoints: routeAccessPointsByLocation[name] || null
 }));

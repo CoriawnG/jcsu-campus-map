@@ -266,10 +266,22 @@
     return Math.max(1, Math.round(feet / WALKING_FEET_PER_MINUTE));
   }
 
+  function getRouteCandidates(location) {
+    const accessPoints = Array.isArray(location?.routeAccessPoints) && location.routeAccessPoints.length
+      ? location.routeAccessPoints
+      : [location];
+
+    return accessPoints.map((point) => ({
+      ...point,
+      originalName: location.name,
+      displayName: point.name || location.name
+    }));
+  }
+
   function buildNavigation(pathSegments) {
     const graph = createGraph(pathSegments || []);
 
-    function findRoute(start, end, options = {}) {
+    function findSingleRoute(start, end, preference) {
       if (!start?.lat || !start?.lng || !end?.lat || !end?.lng) {
         return { ok: false, message: "Start or destination is missing coordinates." };
       }
@@ -285,14 +297,10 @@
         return { ok: false, message: "Could not connect the start or destination to the sidewalk network." };
       }
 
-      const preference = getRoutePreference(options.preference);
       const route = dijkstra(graph, startNearest.node.id, endNearest.node.id, preference);
 
       if (!route) {
-        return {
-          ok: false,
-          message: "No connected sidewalk route was found between those two locations."
-        };
+        return null;
       }
 
       const connectorDistance = startNearest.distance + endNearest.distance;
@@ -303,6 +311,8 @@
         ok: true,
         startNearest,
         endNearest,
+        startAccessPoint: start,
+        endAccessPoint: end,
         path,
         steps: summarizeSteps(route.edgeSteps),
         distanceMeters: totalDistance,
@@ -315,6 +325,40 @@
         preferenceLabel: preference.label,
         preferenceNote: preference.note
       };
+    }
+
+    function findRoute(start, end, options = {}) {
+      if (!start?.lat || !start?.lng || !end?.lat || !end?.lng) {
+        return { ok: false, message: "Start or destination is missing coordinates." };
+      }
+
+      if (graph.nodes.size === 0) {
+        return { ok: false, message: "No sidewalk path data is loaded." };
+      }
+
+      const preference = getRoutePreference(options.preference);
+      const startCandidates = getRouteCandidates(start);
+      const endCandidates = getRouteCandidates(end);
+      let bestRoute = null;
+
+      startCandidates.forEach((startCandidate) => {
+        endCandidates.forEach((endCandidate) => {
+          const candidateRoute = findSingleRoute(startCandidate, endCandidate, preference);
+
+          if (candidateRoute && (!bestRoute || candidateRoute.distanceMeters < bestRoute.distanceMeters)) {
+            bestRoute = candidateRoute;
+          }
+        });
+      });
+
+      if (!bestRoute) {
+        return {
+          ok: false,
+          message: "No connected sidewalk route was found between those two locations."
+        };
+      }
+
+      return bestRoute;
     }
 
     return {
