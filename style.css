@@ -824,11 +824,13 @@ textarea:focus,
 
 
   .sidebar.sheet-half {
+    overflow: hidden;
     pointer-events: auto;
     transform: translateY(34vh);
   }
 
   .sidebar.sheet-full {
+    overflow-y: auto;
     pointer-events: auto;
     transform: translateY(0);
   }
@@ -879,6 +881,30 @@ textarea:focus,
 
   .directions-panel {
     overflow: visible;
+  }
+
+  .sidebar.sheet-half .search-panel,
+  .sidebar.sheet-half .results-panel,
+  .sidebar.sheet-half .details-panel,
+  .sidebar.sheet-half .directions-panel {
+    overflow: hidden;
+  }
+
+  .sidebar.sheet-half.directions-detail-active {
+    height: min(68vh, 620px);
+  }
+
+  .sidebar.sheet-half.directions-detail-active .directions-panel {
+    padding-bottom: 12px;
+  }
+
+  .sidebar.sheet-half.directions-detail-active .directions-form {
+    gap: 8px;
+  }
+
+  .sidebar.sheet-half.directions-detail-active .direction-quick-picks,
+  .sidebar.sheet-half.directions-detail-active .directions-output {
+    display: none;
   }
 
   .location-list {
@@ -2820,6 +2846,83 @@ body.intro-running .app-shell {
 
 .route-preview-actions {
   display: grid;
+}
+
+.route-step-navigator {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  left: 14px;
+  z-index: 700;
+  pointer-events: none;
+}
+
+.route-step-navigator[hidden] {
+  display: none;
+}
+
+.route-step-card {
+  display: grid;
+  gap: 10px;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 12px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 16px 34px rgba(16, 32, 51, 0.18);
+  pointer-events: auto;
+}
+
+.route-step-card.is-guiding {
+  border-color: rgba(255, 207, 1, 0.9);
+}
+
+.route-step-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.route-step-copy span {
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.route-step-copy strong {
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.route-step-copy small {
+  color: var(--muted);
+}
+
+.route-step-controls {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  gap: 8px;
+  align-items: center;
+}
+
+.route-step-control {
+  width: 38px;
+  height: 38px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.7);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.route-step-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--blue);
 }
 
 @media (max-width: 380px) {

@@ -25,6 +25,7 @@ const closeDirectionsPanelButton = document.querySelector("#closeDirectionsPanel
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
 const directionsOutput = document.querySelector("#directionsOutput");
+const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
@@ -278,8 +279,17 @@ let panelDragMoved = false;
 let sheetSwipeStartY = 0;
 let sheetSwipeStartX = 0;
 let sheetSwipeStartedAt = 0;
+let sheetSwipeStartTranslate = 0;
+let sheetSwipeLatestTranslate = 0;
+let sheetSwipeMoved = false;
 let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
+let latestRoutePreview = null;
+let latestDirectionSteps = [];
+let routeInstructionPoints = [];
+let activeRouteStepIndex = 0;
+let isGuidedNavigationActive = false;
+let routeStartManuallyChanged = false;
 
 let introDismissTimer = null;
 let introHiddenAt = 0;
@@ -1051,7 +1061,7 @@ function openDirectionsPanel(options = {}) {
     const currentPanelState = sidebar.dataset.panelState || "full";
     document.body.classList.toggle("directions-panel-open", currentPanelState !== "collapsed");
   } else {
-    setMobilePanelState("full");
+    setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
   }
 
   setTimeout(() => {
@@ -1167,6 +1177,31 @@ function startSheetSwipe(event) {
   sheetSwipeStartY = point.clientY;
   sheetSwipeStartX = point.clientX;
   sheetSwipeStartedAt = Date.now();
+  sheetSwipeStartTranslate = getCurrentPanelTranslate();
+  sheetSwipeLatestTranslate = sheetSwipeStartTranslate;
+  sheetSwipeMoved = false;
+}
+
+function moveSheetSwipe(event) {
+  if (!sheetSwipeStartedAt || !isMobilePanelEnabled() || sidebar.dataset.panelState !== "half") {
+    return;
+  }
+
+  const point = getSwipePoint(event);
+  const deltaY = point.clientY - sheetSwipeStartY;
+  const deltaX = Math.abs(point.clientX - sheetSwipeStartX);
+
+  if (Math.abs(deltaY) < 8 || Math.abs(deltaY) < deltaX) {
+    return;
+  }
+
+  event.preventDefault();
+  sheetSwipeMoved = true;
+
+  const maxTranslate = getPanelStateTranslate("collapsed");
+  sheetSwipeLatestTranslate = Math.max(0, Math.min(maxTranslate, sheetSwipeStartTranslate + deltaY));
+  sidebar.classList.add("is-dragging");
+  sidebar.style.transform = `translateY(${sheetSwipeLatestTranslate}px)`;
 }
 
 function endSheetSwipe(event) {
@@ -1180,10 +1215,16 @@ function endSheetSwipe(event) {
   const deltaX = Math.abs(point.clientX - sheetSwipeStartX);
   const elapsed = Date.now() - sheetSwipeStartedAt;
   sheetSwipeStartedAt = 0;
+  sidebar.classList.remove("is-dragging");
+  sidebar.style.transform = "";
 
-  if (deltaY < -34 && Math.abs(deltaY) > deltaX && elapsed < 900) {
+  if (sheetSwipeMoved) {
+    setMobilePanelState(getNearestPanelState(sheetSwipeLatestTranslate));
+  } else if (deltaY < -34 && Math.abs(deltaY) > deltaX && elapsed < 900) {
     setMobilePanelState("full");
   }
+
+  sheetSwipeMoved = false;
 }
 
 function focusMapOnLocation(location) {
@@ -1580,6 +1621,10 @@ function renderRouteSuggestions(field, suggestionsBox, options = {}) {
 
     button.addEventListener("click", () => {
       field.value = match.value;
+      if (field === fromLocationSelect) {
+        routeStartManuallyChanged = !isCurrentLocationInput(match.value);
+      }
+      updateRouteActionButton();
       hideRouteSuggestions(suggestionsBox);
       shouldFitRouteToMap = true;
 
@@ -1662,16 +1707,26 @@ function renderDirectionsPreview(options = {}) {
 
   openDirectionsPanel({ preservePanelState: options.preservePanelState });
   if (!start || !end) {
+    latestRoutePreview = null;
+    latestDirectionSteps = [];
+    routeInstructionPoints = [];
+    isGuidedNavigationActive = false;
+    hideRouteStepNavigator();
     directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
     hideLocationStatus();
     syncCurrentLocationMarker({ centerMap: false });
-    return;
+    return null;
   }
 
   if (start.name === end.name) {
+    latestRoutePreview = null;
+    latestDirectionSteps = [];
+    routeInstructionPoints = [];
+    isGuidedNavigationActive = false;
+    hideRouteStepNavigator();
     directionsOutput.textContent = "Your starting point and destination are the same.";
     syncCurrentLocationMarker({ centerMap: false });
-    return;
+    return null;
   }
 
   if (!window.CampusNavigation) {
@@ -1692,12 +1747,17 @@ function renderDirectionsPreview(options = {}) {
       syncCurrentLocationMarker({ centerMap: false });
       focusMapOnLocation(end);
     }
-    return;
+    return null;
   }
 
   const route = window.CampusNavigation.findRoute(start, end, { preference: routePreference });
 
   if (!route.ok) {
+    latestRoutePreview = null;
+    latestDirectionSteps = [];
+    routeInstructionPoints = [];
+    isGuidedNavigationActive = false;
+    hideRouteStepNavigator();
     directionsOutput.innerHTML = `
       <strong>Route unavailable:</strong> ${route.message}
       <br>
@@ -1709,7 +1769,7 @@ function renderDirectionsPreview(options = {}) {
       syncCurrentLocationMarker({ centerMap: false });
       focusMapOnLocation(end);
     }
-    return;
+    return null;
   }
 
   const routeSignature = getRouteSignature(start, end);
@@ -1718,6 +1778,13 @@ function renderDirectionsPreview(options = {}) {
   shouldFitRouteToMap = false;
 
   const directionSteps = buildDirectionSteps(route.steps);
+  latestRoutePreview = { route, start, end, routePreferenceLabel };
+  latestDirectionSteps = directionSteps.length
+    ? directionSteps
+    : [{ instruction: `Continue to ${end.name}`, distance: route.distanceMeters || 1 }];
+  routeInstructionPoints = buildRouteInstructionPoints(route, start, end, latestDirectionSteps.length);
+  activeRouteStepIndex = 0;
+  isGuidedNavigationActive = false;
   const visibleSteps = directionSteps.slice(0, 8);
   const extraStepCount = Math.max(0, directionSteps.length - visibleSteps.length);
   const stepsMarkup = visibleSteps
@@ -1816,6 +1883,7 @@ function renderDirectionsPreview(options = {}) {
   });
 
   drawNavigationRoute(route, start, end, { fitBounds: shouldFitThisRoute });
+  renderRouteStepNavigator();
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
@@ -1824,6 +1892,8 @@ function renderDirectionsPreview(options = {}) {
     syncCurrentLocationMarker({ centerMap: false });
     focusMapOnLocation(end);
   }
+
+  return latestRoutePreview;
 }
 
 function formatRouteDistance(meters) {
@@ -1834,6 +1904,116 @@ function formatRouteDistance(meters) {
   }
 
   return `${(feet / 5280).toFixed(2)} mi`;
+}
+
+function buildRouteInstructionPoints(route, start, end, stepCount) {
+  const points = [start, ...(route?.path || []), end].filter((point) => point?.lat && point?.lng);
+
+  if (!points.length || stepCount <= 0) {
+    return [];
+  }
+
+  return Array.from({ length: stepCount }, (_, index) => {
+    const pointIndex = Math.min(points.length - 1, Math.round((index / Math.max(1, stepCount - 1)) * (points.length - 1)));
+    return points[pointIndex];
+  });
+}
+
+function hideRouteStepNavigator() {
+  if (!routeStepNavigator) {
+    return;
+  }
+
+  routeStepNavigator.hidden = true;
+  routeStepNavigator.innerHTML = "";
+}
+
+function focusRouteStepOnMap(index) {
+  const point = routeInstructionPoints[index];
+
+  if (!navigationMap || !point) {
+    return;
+  }
+
+  navigationMap.setView([point.lat, point.lng], isGuidedNavigationActive ? 19 : 18);
+}
+
+function setActiveRouteStep(index, options = {}) {
+  if (!latestDirectionSteps.length) {
+    hideRouteStepNavigator();
+    return;
+  }
+
+  activeRouteStepIndex = Math.max(0, Math.min(index, latestDirectionSteps.length - 1));
+  renderRouteStepNavigator();
+
+  if (options.focusMap !== false) {
+    focusRouteStepOnMap(activeRouteStepIndex);
+  }
+}
+
+function renderRouteStepNavigator() {
+  if (!routeStepNavigator || !latestDirectionSteps.length) {
+    hideRouteStepNavigator();
+    return;
+  }
+
+  const step = latestDirectionSteps[activeRouteStepIndex];
+  const isLastStep = activeRouteStepIndex === latestDirectionSteps.length - 1;
+
+  routeStepNavigator.hidden = false;
+  routeStepNavigator.innerHTML = `
+    <div class="route-step-card ${isGuidedNavigationActive ? "is-guiding" : ""}">
+      <div class="route-step-copy">
+        <span>${isGuidedNavigationActive ? "Go" : "Preview"} Step ${activeRouteStepIndex + 1} of ${latestDirectionSteps.length}</span>
+        <strong>${isLastStep ? "Arrive at destination" : step.instruction}</strong>
+        <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
+      </div>
+      <div class="route-step-controls">
+        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">‹</button>
+        <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
+        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">›</button>
+      </div>
+    </div>
+  `;
+
+  const slider = routeStepNavigator.querySelector('input[type="range"]');
+  slider.addEventListener("input", () => {
+    setActiveRouteStep(Number(slider.value));
+  });
+
+  routeStepNavigator.querySelector("[data-route-step-prev]").addEventListener("click", () => {
+    setActiveRouteStep(activeRouteStepIndex - 1);
+  });
+
+  routeStepNavigator.querySelector("[data-route-step-next]").addEventListener("click", () => {
+    setActiveRouteStep(activeRouteStepIndex + 1);
+  });
+}
+
+function advanceGuidedNavigationIfNeeded() {
+  if (!isGuidedNavigationActive || !currentPosition || !routeInstructionPoints.length) {
+    return;
+  }
+
+  const nextPoint = routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
+  const distanceMeters = getDistanceBetweenPoints(currentPosition, nextPoint) * 1609.344;
+
+  if (distanceMeters < 18 && activeRouteStepIndex < latestDirectionSteps.length - 1) {
+    setActiveRouteStep(activeRouteStepIndex + 1, { focusMap: false });
+  }
+}
+
+function startGuidedNavigation() {
+  if (!latestRoutePreview || !routeUsesCurrentLocation()) {
+    return;
+  }
+
+  isGuidedNavigationActive = true;
+  setMobilePanelState("collapsed");
+  setActiveRouteStep(0, { focusMap: false });
+  showCurrentLocationMarker({ centerMap: true });
+  setLocationStatus("<strong>Navigation started.</strong><br>Follow the step card at the top of the map.");
 }
 
 function buildDirectionSteps(rawSteps) {
@@ -1907,11 +2087,14 @@ function setRouteEndpoint(type, location, options = {}) {
 
   if (type === "start") {
     fromLocationSelect.value = value;
+    routeStartManuallyChanged = true;
     directionsOutput.innerHTML = `<strong>Starting point set:</strong> ${location.name}. Choose a destination next.`;
   } else {
     toLocationSelect.value = value;
     directionsOutput.innerHTML = `<strong>Destination set:</strong> ${location.name}. Choose a starting point next.`;
   }
+
+  updateRouteActionButton();
 
   if (fromLocationSelect.value && toLocationSelect.value) {
     renderDirectionsPreview();
@@ -2096,22 +2279,34 @@ function drawNavigationRoute(route, start, end, options = {}) {
   }).bindPopup(`<strong>Destination</strong>${end.name}`).addTo(navigationRouteLayer);
 
   if (options.fitBounds !== false) {
-    navigationMap.fitBounds(routeLine.getBounds(), { padding: [32, 32] });
+    navigationMap.fitBounds(routeLine.getBounds(), {
+      paddingTopLeft: [36, 120],
+      paddingBottomRight: [36, isMobilePanelEnabled() ? 270 : 80]
+    });
   }
 }
 
 function clearRoute() {
-  stopLiveTracking();
-  fromLocationSelect.value = "";
+  routeStartManuallyChanged = false;
+  fromLocationSelect.value = currentPosition ? "Current Location" : "";
   toLocationSelect.value = "";
   directionsOutput.textContent = "Choose a starting point and destination.";
   lastRouteSignature = "";
   shouldFitRouteToMap = true;
+  latestRoutePreview = null;
+  latestDirectionSteps = [];
+  routeInstructionPoints = [];
+  activeRouteStepIndex = 0;
+  isGuidedNavigationActive = false;
+  updateRouteActionButton();
+  hideRouteStepNavigator();
   hideLocationStatus();
 
   if (navigationRouteLayer) {
     navigationRouteLayer.clearLayers();
   }
+
+  syncCurrentLocationMarker({ centerMap: false });
 }
 
 function switchMapView(targetId) {
@@ -2224,10 +2419,26 @@ function saveCurrentPosition(position) {
     lng: position.coords.longitude,
     accuracy: position.coords.accuracy
   };
+
+  renderLocationOptions();
+
+  if (!routeStartManuallyChanged && (!fromLocationSelect.value.trim() || isCurrentLocationInput(fromLocationSelect.value))) {
+    fromLocationSelect.value = "Current Location";
+  }
+
+  updateRouteActionButton();
 }
 
 function routeUsesCurrentLocation() {
   return isCurrentLocationInput(fromLocationSelect.value);
+}
+
+function updateRouteActionButton() {
+  if (!getDirectionsButton) {
+    return;
+  }
+
+  getDirectionsButton.textContent = routeUsesCurrentLocation() ? "Go" : "Steps";
 }
 
 function shouldShowLiveLocationPin() {
@@ -2268,6 +2479,11 @@ function updateCurrentLocation(position, mode) {
 
   if (mode === "live" && isMobilePanelEnabled()) {
     document.body.classList.toggle("directions-panel-open", panelStateBeforeMapRefresh !== "collapsed");
+  }
+
+  if (isGuidedNavigationActive) {
+    advanceGuidedNavigationIfNeeded();
+    return;
   }
 
   if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value) && (mode !== "live" || routeUsesCurrentLocation())) {
@@ -2454,6 +2670,18 @@ feedbackModal.addEventListener("click", (event) => {
   }
 });
 
+function handleRouteAction() {
+  shouldFitRouteToMap = true;
+  const preview = renderDirectionsPreview({ preservePanelState: true });
+
+  if (preview && routeUsesCurrentLocation()) {
+    startGuidedNavigation();
+  } else if (preview) {
+    setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
+    setActiveRouteStep(0);
+  }
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && helpModal && !helpModal.hidden) {
     closeHelpModal();
@@ -2467,7 +2695,7 @@ document.addEventListener("keydown", (event) => {
     closeSafetyModal();
   }
 });
-getDirectionsButton.addEventListener("click", renderDirectionsPreview);
+getDirectionsButton.addEventListener("click", handleRouteAction);
 
 function setupRouteSearchField(field, suggestionsBox, options = {}) {
   if (!field) {
@@ -2481,6 +2709,10 @@ function setupRouteSearchField(field, suggestionsBox, options = {}) {
 
   field.addEventListener("input", () => {
     shouldFitRouteToMap = true;
+    if (field === fromLocationSelect) {
+      routeStartManuallyChanged = !isCurrentLocationInput(field.value);
+    }
+    updateRouteActionButton();
     renderRouteSuggestions(field, suggestionsBox, options);
     syncCurrentLocationMarker({ centerMap: false });
   });
@@ -2498,6 +2730,10 @@ function setupRouteSearchField(field, suggestionsBox, options = {}) {
 
   field.addEventListener("change", () => {
     shouldFitRouteToMap = true;
+    if (field === fromLocationSelect) {
+      routeStartManuallyChanged = !isCurrentLocationInput(field.value);
+    }
+    updateRouteActionButton();
 
     if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
       renderDirectionsPreview();
@@ -2525,6 +2761,7 @@ sidebar.addEventListener("pointercancel", () => {
   sheetSwipeStartedAt = 0;
 });
 sidebar.addEventListener("touchstart", startSheetSwipe, { passive: true });
+sidebar.addEventListener("touchmove", moveSheetSwipe, { passive: false });
 sidebar.addEventListener("touchend", endSheetSwipe, { passive: true });
 mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);
 mobilePanelToggle.addEventListener("pointermove", updatePanelDrag);
@@ -2558,6 +2795,7 @@ locations.forEach((location, index) => {
 window.addEventListener("resize", refreshNavigationMapLayout);
 window.addEventListener("orientationchange", refreshNavigationMapLayout);
 renderLocationOptions();
+updateRouteActionButton();
 renderLocations(locations);
 initializeNavigationMap();
 switchMapView("navigationMapView");
