@@ -1927,20 +1927,106 @@ textarea:focus,
   }
 }
 /* Searchable route fields and saved-place quick picks */
+.route-search-field {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
 .directions-form input[type="text"] {
   width: 100%;
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 11px 14px;
   color: var(--text);
-  background: var(--panel-soft);
-  border: 1px solid rgba(0, 45, 86, 0.18);
-  border-radius: 8px;
+  background: #f2f4f7;
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 12px;
   font-size: 0.95rem;
 }
 
 .directions-form input[type="text"]:focus {
-  border-color: var(--gold);
-  outline: 3px solid rgba(255, 207, 1, 0.28);
+  background: #ffffff;
+  border-color: rgba(0, 45, 86, 0.32);
+  box-shadow: 0 10px 24px rgba(0, 45, 86, 0.12);
+  outline: none;
+}
+
+.route-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 1200;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  padding: 6px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 16px 34px rgba(16, 32, 51, 0.18);
+}
+
+.route-suggestions[hidden] {
+  display: none;
+}
+
+.route-suggestion-option {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  color: var(--text);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.route-suggestion-option:hover,
+.route-suggestion-option:focus-visible {
+  background: var(--gold-soft);
+  outline: none;
+}
+
+.route-suggestion-option .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--blue);
+  background: rgba(0, 45, 86, 0.08);
+  border-radius: 999px;
+  font-size: 1.2rem;
+}
+
+.route-suggestion-option span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.route-suggestion-option strong,
+.route-suggestion-option small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-suggestion-option small,
+.route-suggestion-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.route-suggestion-empty {
+  margin: 0;
+  padding: 10px 12px;
 }
 
 .direction-quick-picks {
