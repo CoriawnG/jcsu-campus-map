@@ -275,6 +275,9 @@ let panelDragStartY = 0;
 let panelDragStartTranslate = 0;
 let panelDragLatestTranslate = 0;
 let panelDragMoved = false;
+let sheetSwipeStartY = 0;
+let sheetSwipeStartX = 0;
+let sheetSwipeStartedAt = 0;
 let lastRouteSignature = "";
 let shouldFitRouteToMap = true;
 
@@ -1150,6 +1153,39 @@ function endPanelDrag(event) {
   }, 0);
 }
 
+function getSwipePoint(event) {
+  const touch = event.changedTouches?.[0] || event.touches?.[0];
+  return touch || event;
+}
+
+function startSheetSwipe(event) {
+  if (!isMobilePanelEnabled() || sidebar.dataset.panelState !== "half") {
+    return;
+  }
+
+  const point = getSwipePoint(event);
+  sheetSwipeStartY = point.clientY;
+  sheetSwipeStartX = point.clientX;
+  sheetSwipeStartedAt = Date.now();
+}
+
+function endSheetSwipe(event) {
+  if (!sheetSwipeStartedAt || !isMobilePanelEnabled() || sidebar.dataset.panelState !== "half") {
+    sheetSwipeStartedAt = 0;
+    return;
+  }
+
+  const point = getSwipePoint(event);
+  const deltaY = point.clientY - sheetSwipeStartY;
+  const deltaX = Math.abs(point.clientX - sheetSwipeStartX);
+  const elapsed = Date.now() - sheetSwipeStartedAt;
+  sheetSwipeStartedAt = 0;
+
+  if (deltaY < -34 && Math.abs(deltaY) > deltaX && elapsed < 900) {
+    setMobilePanelState("full");
+  }
+}
+
 function focusMapOnLocation(location) {
   focusNavigationMapOnLocation(location);
 }
@@ -1550,6 +1586,7 @@ function renderRouteSuggestions(field, suggestionsBox, options = {}) {
       if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
         renderDirectionsPreview();
       } else {
+        syncCurrentLocationMarker({ centerMap: false });
         const nextField = field === fromLocationSelect ? toLocationSelect : fromLocationSelect;
         nextField?.focus();
       }
@@ -1627,11 +1664,13 @@ function renderDirectionsPreview(options = {}) {
   if (!start || !end) {
     directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
     hideLocationStatus();
+    syncCurrentLocationMarker({ centerMap: false });
     return;
   }
 
   if (start.name === end.name) {
     directionsOutput.textContent = "Your starting point and destination are the same.";
+    syncCurrentLocationMarker({ centerMap: false });
     return;
   }
 
@@ -1648,8 +1687,9 @@ function renderDirectionsPreview(options = {}) {
     `;
 
     if (isCurrentLocationStart) {
-      showCurrentLocationMarker({ centerMap: !isLiveTracking });
+      syncCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
+      syncCurrentLocationMarker({ centerMap: false });
       focusMapOnLocation(end);
     }
     return;
@@ -1664,8 +1704,9 @@ function renderDirectionsPreview(options = {}) {
       Choose another nearby starting point or destination.
     `;
     if (isCurrentLocationStart) {
-      showCurrentLocationMarker({ centerMap: !isLiveTracking });
+      syncCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
+      syncCurrentLocationMarker({ centerMap: false });
       focusMapOnLocation(end);
     }
     return;
@@ -1778,8 +1819,9 @@ function renderDirectionsPreview(options = {}) {
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
-    showCurrentLocationMarker({ centerMap: !isLiveTracking });
+    syncCurrentLocationMarker({ centerMap: !isLiveTracking });
   } else {
+    syncCurrentLocationMarker({ centerMap: false });
     focusMapOnLocation(end);
   }
 }
@@ -2182,9 +2224,27 @@ function saveCurrentPosition(position) {
     lng: position.coords.longitude,
     accuracy: position.coords.accuracy
   };
+}
 
-  renderLocationOptions();
-  fromLocationSelect.value = "Current Location";
+function routeUsesCurrentLocation() {
+  return isCurrentLocationInput(fromLocationSelect.value);
+}
+
+function shouldShowLiveLocationPin() {
+  const hasRouteEndpoints = Boolean(getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value));
+  return !hasRouteEndpoints || routeUsesCurrentLocation();
+}
+
+function syncCurrentLocationMarker(options = {}) {
+  if (!currentLocationLayer) {
+    return;
+  }
+
+  if (shouldShowLiveLocationPin()) {
+    showCurrentLocationMarker(options);
+  } else {
+    currentLocationLayer.clearLayers();
+  }
 }
 
 function updateCurrentLocation(position, mode) {
@@ -2200,7 +2260,7 @@ function updateCurrentLocation(position, mode) {
 
   const panelStateBeforeMapRefresh = sidebar.dataset.panelState || "full";
 
-  showCurrentLocationMarker({ centerMap: shouldCenterMap });
+  syncCurrentLocationMarker({ centerMap: shouldCenterMap });
   if (mode === "live") {
     hasLiveTrackingCentered = true;
   }
@@ -2210,7 +2270,7 @@ function updateCurrentLocation(position, mode) {
     document.body.classList.toggle("directions-panel-open", panelStateBeforeMapRefresh !== "collapsed");
   }
 
-  if (toLocationSelect.value) {
+  if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value) && (mode !== "live" || routeUsesCurrentLocation())) {
     renderDirectionsPreview({ preservePanelState: mode === "live" });
   } else if (mode !== "live") {
     collapseMobilePanel();
@@ -2422,6 +2482,7 @@ function setupRouteSearchField(field, suggestionsBox, options = {}) {
   field.addEventListener("input", () => {
     shouldFitRouteToMap = true;
     renderRouteSuggestions(field, suggestionsBox, options);
+    syncCurrentLocationMarker({ centerMap: false });
   });
 
   field.addEventListener("keydown", (event) => {
@@ -2440,6 +2501,8 @@ function setupRouteSearchField(field, suggestionsBox, options = {}) {
 
     if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
       renderDirectionsPreview();
+    } else {
+      syncCurrentLocationMarker({ centerMap: false });
     }
   });
 }
@@ -2456,6 +2519,13 @@ if (routePreferenceSelect) {
   });
 }
 clearRouteButton.addEventListener("click", clearRoute);
+sidebar.addEventListener("pointerdown", startSheetSwipe);
+sidebar.addEventListener("pointerup", endSheetSwipe);
+sidebar.addEventListener("pointercancel", () => {
+  sheetSwipeStartedAt = 0;
+});
+sidebar.addEventListener("touchstart", startSheetSwipe, { passive: true });
+sidebar.addEventListener("touchend", endSheetSwipe, { passive: true });
 mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);
 mobilePanelToggle.addEventListener("pointermove", updatePanelDrag);
 mobilePanelToggle.addEventListener("pointerup", endPanelDrag);
@@ -2491,7 +2561,7 @@ renderLocationOptions();
 renderLocations(locations);
 initializeNavigationMap();
 switchMapView("navigationMapView");
-setMobilePanelState("full");
+setMobilePanelState("half");
 if ("serviceWorker" in navigator) {
   let refreshingForUpdate = false;
 
