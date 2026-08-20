@@ -1,8 +1,8 @@
-const CACHE_NAME = "jcsu-campus-map-v20260820-cafeteria-entrances";
+const CACHE_NAME = "jcsu-campus-map-v20260820-css-var-aliases";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260820-live-panel-sticky-fix",
+  "./style.css?v=20260820-css-var-aliases",
   "./locations.js?v=20260820-cafeteria-entrances",
   "./paths.js?v=20260820-campus-police-route",
   "./navigation.js?v=20260820-new-science-entrances",

@@ -1273,9 +1273,11 @@ textarea:focus,
   --muted: #5d6a79;
   --line: #d7dee8;
   --blue: #002d56;
+  --jcsu-blue: #002d56;
   --gold: #ffcf01;
   --green: #18664f;
   --red: #a93636;
+  --ink: #102033;
   --navy-soft: #0f3f70;
   --gold-soft: #fff7cc;
   --panel-soft: #f8fafc;
