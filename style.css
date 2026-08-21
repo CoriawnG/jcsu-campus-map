@@ -527,6 +527,45 @@ select:focus {
   opacity: 0.72;
 }
 
+.gps-accuracy-badge {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 650;
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.gps-accuracy-badge[hidden] {
+  display: none;
+}
+
+.gps-accuracy-badge strong,
+.gps-accuracy-badge span {
+  display: block;
+}
+
+.gps-accuracy-badge span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.gps-accuracy-badge.is-good {
+  border-color: rgba(36, 116, 91, 0.45);
+}
+
+.gps-accuracy-badge.is-usable {
+  border-color: rgba(255, 207, 1, 0.8);
+}
+
+.gps-accuracy-badge.is-weak,
+.gps-accuracy-badge.is-poor {
+  border-color: rgba(169, 54, 54, 0.5);
+}
+
 .leaflet-popup-content {
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
@@ -2925,9 +2964,88 @@ body.intro-running .app-shell {
   accent-color: var(--blue);
 }
 
+.route-admin-panel {
+  position: absolute;
+  right: 14px;
+  bottom: 76px;
+  z-index: 720;
+  display: grid;
+  gap: 9px;
+  width: min(420px, calc(100% - 28px));
+  padding: 12px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 45, 86, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 16px 34px rgba(16, 32, 51, 0.18);
+}
+
+.route-admin-panel[hidden] {
+  display: none;
+}
+
+.route-admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.route-admin-header h2 {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.route-admin-panel label {
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.route-admin-panel input,
+.route-admin-panel textarea {
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--panel-soft);
+  border: 1px solid rgba(0, 45, 86, 0.18);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.route-admin-panel textarea {
+  resize: vertical;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.82rem;
+}
+
+.route-admin-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
 @media (max-width: 380px) {
   .route-metric-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .gps-accuracy-badge {
+    right: 10px;
+    bottom: 68px;
+  }
+
+  .route-admin-panel {
+    right: 10px;
+    bottom: 126px;
+    left: 10px;
+    width: auto;
+    max-height: min(60vh, 520px);
+    overflow: auto;
   }
 }
 /* Better emergency mode */

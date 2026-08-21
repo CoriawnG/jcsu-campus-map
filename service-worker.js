@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260820-route-steps-action-only";
+const CACHE_NAME = "jcsu-campus-map-v20260821-gps-admin-routes";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260820-route-guidance-sheet",
+  "./style.css?v=20260821-gps-admin-routes",
   "./locations.js?v=20260820-cafeteria-entrances",
   "./paths.js?v=20260820-campus-police-route",
   "./navigation.js?v=20260820-new-science-entrances",
-  "./script.js?v=20260820-route-steps-action-only",
+  "./script.js?v=20260821-gps-admin-routes",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

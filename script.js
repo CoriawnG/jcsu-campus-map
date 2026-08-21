@@ -26,7 +26,17 @@ const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
 const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
+const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
+const openRouteAdminButton = document.querySelector("#openRouteAdmin");
+const routeAdminPanel = document.querySelector("#routeAdminPanel");
+const closeRouteAdminButton = document.querySelector("#closeRouteAdmin");
+const routeAdminName = document.querySelector("#routeAdminName");
+const routeAdminOutput = document.querySelector("#routeAdminOutput");
+const undoRoutePointButton = document.querySelector("#undoRoutePoint");
+const clearRouteDraftButton = document.querySelector("#clearRouteDraft");
+const copyRouteDraftButton = document.querySelector("#copyRouteDraft");
+const routeAdminStatus = document.querySelector("#routeAdminStatus");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
@@ -86,6 +96,13 @@ const routePreferenceLabels = {
   accessible: "Accessible route",
   "avoid-roads": "Avoid roads",
   "main-sidewalks": "Main sidewalks"
+};
+
+const gpsAccuracyThresholds = {
+  good: 20,
+  usable: 35,
+  weak: 65,
+  maxTrusted: 120
 };
 
 const locationContacts = {
@@ -264,6 +281,8 @@ let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
 let currentPosition = null;
+let rawCurrentPosition = null;
+let recentGpsPositions = [];
 let liveTrackingWatchId = null;
 let isLiveTracking = false;
 let hasLiveTrackingCentered = false;
@@ -290,6 +309,9 @@ let routeInstructionPoints = [];
 let activeRouteStepIndex = 0;
 let isGuidedNavigationActive = false;
 let routeStartManuallyChanged = false;
+let routeAdminEnabled = false;
+let routeAdminDraftPoints = [];
+let routeAdminDraftLayer = null;
 
 let introDismissTimer = null;
 let introHiddenAt = 0;
@@ -428,6 +450,55 @@ function getDistanceBetweenPoints(pointA, pointB) {
   const latMiles = (pointB.lat - pointA.lat) * milesPerDegreeLat;
   const lngMiles = (pointB.lng - pointA.lng) * milesPerDegreeLng;
   return Math.sqrt(latMiles ** 2 + lngMiles ** 2);
+}
+
+function getGpsAccuracyLevel(accuracy) {
+  if (!Number.isFinite(accuracy)) {
+    return { label: "Waiting for GPS", className: "is-waiting", isReliable: false };
+  }
+
+  if (accuracy <= gpsAccuracyThresholds.good) {
+    return { label: "Precise", className: "is-good", isReliable: true };
+  }
+
+  if (accuracy <= gpsAccuracyThresholds.usable) {
+    return { label: "Usable", className: "is-usable", isReliable: true };
+  }
+
+  if (accuracy <= gpsAccuracyThresholds.weak) {
+    return { label: "Weak", className: "is-weak", isReliable: false };
+  }
+
+  return { label: "Low accuracy", className: "is-poor", isReliable: false };
+}
+
+function updateGpsAccuracyBadge() {
+  if (!gpsAccuracyBadge) {
+    return;
+  }
+
+  if (!rawCurrentPosition) {
+    gpsAccuracyBadge.hidden = true;
+    gpsAccuracyBadge.textContent = "";
+    return;
+  }
+
+  const accuracy = Math.round(rawCurrentPosition.accuracy || 0);
+  const level = getGpsAccuracyLevel(accuracy);
+  gpsAccuracyBadge.hidden = false;
+  gpsAccuracyBadge.classList.remove("is-good", "is-usable", "is-weak", "is-poor", "is-waiting");
+  gpsAccuracyBadge.classList.add(level.className);
+  gpsAccuracyBadge.innerHTML = `<strong>${level.label}</strong><span>${accuracy}m GPS</span>`;
+}
+
+function getAccuracyGuidance(accuracy) {
+  const level = getGpsAccuracyLevel(accuracy);
+
+  if (level.isReliable) {
+    return "";
+  }
+
+  return "<br>For better precision, step outside or near a window and wait a few seconds.";
 }
 
 function getNearestSafetyLocation(type) {
@@ -2018,7 +2089,11 @@ function startGuidedNavigation() {
   setMobilePanelState("collapsed");
   setActiveRouteStep(0, { focusMap: false });
   showCurrentLocationMarker({ centerMap: true });
-  setLocationStatus("<strong>Navigation started.</strong><br>Follow the step card at the top of the map.");
+  const accuracy = Math.round(rawCurrentPosition?.accuracy || currentPosition?.accuracy || 0);
+  const accuracyGuidance = getAccuracyGuidance(rawCurrentPosition?.accuracy || currentPosition?.accuracy);
+  const accuracyLevel = getGpsAccuracyLevel(rawCurrentPosition?.accuracy || currentPosition?.accuracy);
+  const heading = accuracyLevel.isReliable ? "Navigation started." : "Navigation started with weak GPS.";
+  setLocationStatus(`<strong>${heading}</strong><br>Follow the step card at the top of the map. GPS accuracy: about ${accuracy} meters.${accuracyGuidance}`, { isError: !accuracyLevel.isReliable });
 }
 
 function buildDirectionSteps(rawSteps) {
@@ -2136,6 +2211,7 @@ function initializeNavigationMap() {
   navigationRouteLayer = L.layerGroup().addTo(navigationMap);
   currentLocationLayer = L.layerGroup().addTo(navigationMap);
   addNavigationLegend();
+  navigationMap.on("click", addRouteAdminPoint);
   renderNavigationMarkers(getFilteredLocations());
   refreshNavigationMapLayout();
 }
@@ -2291,6 +2367,124 @@ function drawNavigationRoute(route, start, end, options = {}) {
   }
 }
 
+function isRouteAdminRequested() {
+  try {
+    return new URLSearchParams(window.location.search).get("admin") === "routes"
+      || localStorage.getItem("jcsu-route-admin") === "true";
+  } catch {
+    return new URLSearchParams(window.location.search).get("admin") === "routes";
+  }
+}
+
+function setRouteAdminEnabled(isEnabled) {
+  routeAdminEnabled = isEnabled;
+
+  try {
+    localStorage.setItem("jcsu-route-admin", String(isEnabled));
+  } catch {
+    // Admin mode still works for the current session if storage is blocked.
+  }
+
+  if (openRouteAdminButton) {
+    openRouteAdminButton.hidden = !isEnabled;
+  }
+
+  if (!isEnabled) {
+    closeRouteAdmin();
+  }
+}
+
+function openRouteAdmin() {
+  if (!routeAdminPanel) {
+    return;
+  }
+
+  initializeNavigationMap();
+  routeAdminPanel.hidden = false;
+  routeAdminEnabled = true;
+  if (openRouteAdminButton) {
+    openRouteAdminButton.hidden = false;
+  }
+  updateRouteAdminDraft();
+}
+
+function closeRouteAdmin() {
+  if (routeAdminPanel) {
+    routeAdminPanel.hidden = true;
+  }
+}
+
+function updateRouteAdminDraft() {
+  if (!routeAdminOutput || !routeAdminStatus) {
+    return;
+  }
+
+  const name = routeAdminName?.value.trim() || "New Campus Path";
+  const segment = {
+    name,
+    coordinates: routeAdminDraftPoints.map((point) => ({
+      lat: Number(point.lat.toFixed(7)),
+      lng: Number(point.lng.toFixed(7))
+    }))
+  };
+
+  routeAdminOutput.value = routeAdminDraftPoints.length >= 2
+    ? `${JSON.stringify(segment, null, 2)},`
+    : "";
+  routeAdminStatus.textContent = `${routeAdminDraftPoints.length} point${routeAdminDraftPoints.length === 1 ? "" : "s"} selected. Add at least two points for a path segment.`;
+
+  if (!navigationMap || !window.L) {
+    return;
+  }
+
+  if (!routeAdminDraftLayer) {
+    routeAdminDraftLayer = L.layerGroup().addTo(navigationMap);
+  }
+
+  routeAdminDraftLayer.clearLayers();
+  routeAdminDraftPoints.forEach((point, index) => {
+    L.circleMarker([point.lat, point.lng], {
+      radius: 6,
+      color: "#002d56",
+      weight: 2,
+      fillColor: "#ffcf01",
+      fillOpacity: 1
+    }).bindTooltip(String(index + 1), { permanent: true, direction: "top" }).addTo(routeAdminDraftLayer);
+  });
+
+  if (routeAdminDraftPoints.length > 1) {
+    L.polyline(routeAdminDraftPoints.map((point) => [point.lat, point.lng]), {
+      color: "#002d56",
+      weight: 4,
+      dashArray: "6 6"
+    }).addTo(routeAdminDraftLayer);
+  }
+}
+
+function addRouteAdminPoint(event) {
+  if (!routeAdminEnabled || routeAdminPanel?.hidden || !event?.latlng) {
+    return;
+  }
+
+  routeAdminDraftPoints.push({ lat: event.latlng.lat, lng: event.latlng.lng });
+  updateRouteAdminDraft();
+}
+
+async function copyRouteAdminDraft() {
+  if (!routeAdminOutput?.value.trim()) {
+    routeAdminStatus.textContent = "Add at least two points before copying.";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(routeAdminOutput.value);
+    routeAdminStatus.textContent = "Route segment copied. Paste it into paths.js inside window.pathSegments.";
+  } catch {
+    routeAdminOutput.select();
+    routeAdminStatus.textContent = "Copy failed. Select the generated segment and copy it manually.";
+  }
+}
+
 function clearRoute() {
   routeStartManuallyChanged = false;
   fromLocationSelect.value = currentPosition ? "Current Location" : "";
@@ -2419,12 +2613,46 @@ function canUseCurrentLocation() {
 }
 
 function saveCurrentPosition(position) {
-  currentPosition = {
+  const nextPosition = {
     lat: position.coords.latitude,
     lng: position.coords.longitude,
     accuracy: position.coords.accuracy
   };
+  rawCurrentPosition = nextPosition;
 
+  const accuracy = Number(nextPosition.accuracy || gpsAccuracyThresholds.maxTrusted);
+  const keepExistingBetterPoint = currentPosition
+    && accuracy > gpsAccuracyThresholds.maxTrusted
+    && Number(currentPosition.accuracy || 0) < accuracy;
+
+  if (!keepExistingBetterPoint) {
+    recentGpsPositions.push(nextPosition);
+    recentGpsPositions = recentGpsPositions
+      .filter((point) => Number(point.accuracy || gpsAccuracyThresholds.maxTrusted) <= gpsAccuracyThresholds.maxTrusted)
+      .slice(-5);
+
+    if (recentGpsPositions.length) {
+      const totals = recentGpsPositions.reduce((sum, point) => {
+        const weight = 1 / Math.max(8, point.accuracy || gpsAccuracyThresholds.usable);
+        return {
+          lat: sum.lat + point.lat * weight,
+          lng: sum.lng + point.lng * weight,
+          accuracy: Math.min(sum.accuracy, point.accuracy || gpsAccuracyThresholds.maxTrusted),
+          weight: sum.weight + weight
+        };
+      }, { lat: 0, lng: 0, accuracy: gpsAccuracyThresholds.maxTrusted, weight: 0 });
+
+      currentPosition = {
+        lat: totals.lat / totals.weight,
+        lng: totals.lng / totals.weight,
+        accuracy: totals.accuracy
+      };
+    } else {
+      currentPosition = nextPosition;
+    }
+  }
+
+  updateGpsAccuracyBadge();
   renderLocationOptions();
 
   if (!routeStartManuallyChanged && (!fromLocationSelect.value.trim() || isCurrentLocationInput(fromLocationSelect.value))) {
@@ -2467,9 +2695,10 @@ function updateCurrentLocation(position, mode) {
   saveCurrentPosition(position);
 
   const accuracy = Math.round(currentPosition.accuracy || 0);
+  const accuracyGuidance = getAccuracyGuidance(rawCurrentPosition?.accuracy);
   const message = mode === "live"
-    ? `<strong>Live tracking on.</strong><br>Your pin updates as you move. Accuracy: about ${accuracy} meters.`
-    : `<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${accuracy} meters.`;
+    ? `<strong>Live tracking on.</strong><br>Your pin updates as you move. Accuracy: about ${accuracy} meters.${accuracyGuidance}`
+    : `<strong>Starting location saved.</strong><br>This pin stays fixed until you tap Set My Location again. Accuracy: about ${accuracy} meters.${accuracyGuidance}`;
 
   setLocationStatus(message);
   const shouldCenterMap = mode !== "live" || !hasLiveTrackingCentered;
@@ -2641,6 +2870,36 @@ if (openSafetyPanelMapButton) {
   openSafetyPanelMapButton.addEventListener("click", openSafetyModal);
 }
 
+if (openRouteAdminButton) {
+  openRouteAdminButton.addEventListener("click", openRouteAdmin);
+}
+
+if (closeRouteAdminButton) {
+  closeRouteAdminButton.addEventListener("click", closeRouteAdmin);
+}
+
+if (routeAdminName) {
+  routeAdminName.addEventListener("input", updateRouteAdminDraft);
+}
+
+if (undoRoutePointButton) {
+  undoRoutePointButton.addEventListener("click", () => {
+    routeAdminDraftPoints.pop();
+    updateRouteAdminDraft();
+  });
+}
+
+if (clearRouteDraftButton) {
+  clearRouteDraftButton.addEventListener("click", () => {
+    routeAdminDraftPoints = [];
+    updateRouteAdminDraft();
+  });
+}
+
+if (copyRouteDraftButton) {
+  copyRouteDraftButton.addEventListener("click", copyRouteAdminDraft);
+}
+
 if (closeSafetyButton) {
   closeSafetyButton.addEventListener("click", closeSafetyModal);
 }
@@ -2702,6 +2961,12 @@ document.addEventListener("keydown", (event) => {
 
   if (event.key === "Escape" && safetyModal && !safetyModal.hidden) {
     closeSafetyModal();
+  }
+
+  if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "r") {
+    event.preventDefault();
+    setRouteAdminEnabled(true);
+    openRouteAdmin();
   }
 });
 getDirectionsButton.addEventListener("click", handleRouteAction);
@@ -2809,6 +3074,7 @@ renderLocations(locations);
 initializeNavigationMap();
 switchMapView("navigationMapView");
 setMobilePanelState("half");
+setRouteAdminEnabled(isRouteAdminRequested());
 if ("serviceWorker" in navigator) {
   let refreshingForUpdate = false;
 
