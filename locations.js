@@ -14,6 +14,10 @@ const routeAccessPointsByLocation = {
     { name: "Cafeteria North Entrance", lat: 35.2438392, lng: -80.8561915 },
     { name: "Cafeteria South Entrance", lat: 35.2437037, lng: -80.8561923 }
   ],
+  "Dorothy Cowser Yancy Technology Center": [
+    { name: "Yancy Technology Center Main Entrance", lat: 35.2419873, lng: -80.8572047 },
+    { name: "Yancy Technology Center North Entrance", lat: 35.242014, lng: -80.8572064 }
+  ],
   "New Science Center (STEM)": [
     { name: "New Science Center East Entrance", lat: 35.2422896, lng: -80.8571533 },
     { name: "New Science Center West Entrance", lat: 35.2422161, lng: -80.8576124 }

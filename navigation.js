@@ -367,5 +367,6 @@
     };
   }
 
+  window.buildCampusNavigation = buildNavigation;
   window.CampusNavigation = buildNavigation(window.pathSegments || []);
 })();

@@ -33,8 +33,10 @@ const routeAdminPanel = document.querySelector("#routeAdminPanel");
 const closeRouteAdminButton = document.querySelector("#closeRouteAdmin");
 const routeAdminName = document.querySelector("#routeAdminName");
 const routeAdminOutput = document.querySelector("#routeAdminOutput");
+const loadNearestRoutePathButton = document.querySelector("#loadNearestRoutePath");
 const undoRoutePointButton = document.querySelector("#undoRoutePoint");
 const clearRouteDraftButton = document.querySelector("#clearRouteDraft");
+const applyRouteDraftButton = document.querySelector("#applyRouteDraft");
 const copyRouteDraftButton = document.querySelector("#copyRouteDraft");
 const routeAdminStatus = document.querySelector("#routeAdminStatus");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
@@ -312,6 +314,7 @@ let routeStartManuallyChanged = false;
 let routeAdminEnabled = false;
 let routeAdminDraftPoints = [];
 let routeAdminDraftLayer = null;
+let routeAdminLoadedSegment = null;
 
 let introDismissTimer = null;
 let introHiddenAt = 0;
@@ -2401,6 +2404,7 @@ function openRouteAdmin() {
 
   initializeNavigationMap();
   routeAdminPanel.hidden = false;
+  document.body.classList.add("route-admin-active");
   routeAdminEnabled = true;
   if (openRouteAdminButton) {
     openRouteAdminButton.hidden = false;
@@ -2412,6 +2416,7 @@ function closeRouteAdmin() {
   if (routeAdminPanel) {
     routeAdminPanel.hidden = true;
   }
+  document.body.classList.remove("route-admin-active");
 }
 
 function updateRouteAdminDraft() {
@@ -2431,7 +2436,8 @@ function updateRouteAdminDraft() {
   routeAdminOutput.value = routeAdminDraftPoints.length >= 2
     ? `${JSON.stringify(segment, null, 2)},`
     : "";
-  routeAdminStatus.textContent = `${routeAdminDraftPoints.length} point${routeAdminDraftPoints.length === 1 ? "" : "s"} selected. Add at least two points for a path segment.`;
+  const modeText = routeAdminLoadedSegment ? "Editing loaded path" : "New draft";
+  routeAdminStatus.textContent = `${modeText}: ${routeAdminDraftPoints.length} point${routeAdminDraftPoints.length === 1 ? "" : "s"} selected. Add at least two points for a path segment.`;
 
   if (!navigationMap || !window.L) {
     return;
@@ -2459,6 +2465,78 @@ function updateRouteAdminDraft() {
       dashArray: "6 6"
     }).addTo(routeAdminDraftLayer);
   }
+}
+
+function getNearestRouteSegmentToPoint(point) {
+  if (!point || !Array.isArray(window.pathSegments)) {
+    return null;
+  }
+
+  return window.pathSegments.reduce((nearest, segment, index) => {
+    const closestDistance = (segment.coordinates || []).reduce((bestDistance, coordinate) => {
+      const distance = getDistanceBetweenPoints(point, coordinate);
+      return Math.min(bestDistance, distance);
+    }, Number.POSITIVE_INFINITY);
+
+    if (!nearest || closestDistance < nearest.distance) {
+      return { segment, index, distance: closestDistance };
+    }
+
+    return nearest;
+  }, null);
+}
+
+function loadNearestRoutePath() {
+  if (!navigationMap) {
+    return;
+  }
+
+  const center = navigationMap.getCenter();
+  const nearest = getNearestRouteSegmentToPoint({ lat: center.lat, lng: center.lng });
+
+  if (!nearest?.segment?.coordinates?.length) {
+    routeAdminStatus.textContent = "No existing path segment found near the map center.";
+    return;
+  }
+
+  routeAdminLoadedSegment = nearest;
+  routeAdminDraftPoints = nearest.segment.coordinates.map((point) => ({ lat: point.lat, lng: point.lng }));
+
+  if (routeAdminName) {
+    routeAdminName.value = nearest.segment.name || "Existing Campus Path";
+  }
+
+  updateRouteAdminDraft();
+  routeAdminStatus.textContent = `Loaded "${nearest.segment.name || "Existing Campus Path"}". Tap to add points, then Apply Draft to test.`;
+}
+
+function applyRouteAdminDraft() {
+  if (!Array.isArray(window.pathSegments) || routeAdminDraftPoints.length < 2) {
+    routeAdminStatus.textContent = "Add at least two points before applying the draft.";
+    return;
+  }
+
+  const segment = {
+    name: routeAdminName?.value.trim() || "New Campus Path",
+    coordinates: routeAdminDraftPoints.map((point) => ({
+      lat: Number(point.lat.toFixed(7)),
+      lng: Number(point.lng.toFixed(7))
+    }))
+  };
+
+  if (routeAdminLoadedSegment) {
+    window.pathSegments[routeAdminLoadedSegment.index] = segment;
+  } else {
+    window.pathSegments.push(segment);
+    routeAdminLoadedSegment = { segment, index: window.pathSegments.length - 1, distance: 0 };
+  }
+
+  if (window.buildCampusNavigation) {
+    window.CampusNavigation = window.buildCampusNavigation(window.pathSegments);
+  }
+
+  routeAdminLoadedSegment.segment = segment;
+  routeAdminStatus.textContent = "Draft applied for this session. Copy it and update paths.js to make it permanent.";
 }
 
 function addRouteAdminPoint(event) {
@@ -2882,6 +2960,10 @@ if (routeAdminName) {
   routeAdminName.addEventListener("input", updateRouteAdminDraft);
 }
 
+if (loadNearestRoutePathButton) {
+  loadNearestRoutePathButton.addEventListener("click", loadNearestRoutePath);
+}
+
 if (undoRoutePointButton) {
   undoRoutePointButton.addEventListener("click", () => {
     routeAdminDraftPoints.pop();
@@ -2892,8 +2974,13 @@ if (undoRoutePointButton) {
 if (clearRouteDraftButton) {
   clearRouteDraftButton.addEventListener("click", () => {
     routeAdminDraftPoints = [];
+    routeAdminLoadedSegment = null;
     updateRouteAdminDraft();
   });
+}
+
+if (applyRouteDraftButton) {
+  applyRouteDraftButton.addEventListener("click", applyRouteAdminDraft);
 }
 
 if (copyRouteDraftButton) {
