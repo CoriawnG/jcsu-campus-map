@@ -28,17 +28,6 @@ const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
-const openRouteAdminButton = document.querySelector("#openRouteAdmin");
-const routeAdminPanel = document.querySelector("#routeAdminPanel");
-const closeRouteAdminButton = document.querySelector("#closeRouteAdmin");
-const routeAdminName = document.querySelector("#routeAdminName");
-const routeAdminOutput = document.querySelector("#routeAdminOutput");
-const loadNearestRoutePathButton = document.querySelector("#loadNearestRoutePath");
-const undoRoutePointButton = document.querySelector("#undoRoutePoint");
-const clearRouteDraftButton = document.querySelector("#clearRouteDraft");
-const applyRouteDraftButton = document.querySelector("#applyRouteDraft");
-const copyRouteDraftButton = document.querySelector("#copyRouteDraft");
-const routeAdminStatus = document.querySelector("#routeAdminStatus");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
@@ -370,10 +359,6 @@ let routeInstructionPoints = [];
 let activeRouteStepIndex = 0;
 let isGuidedNavigationActive = false;
 let routeStartManuallyChanged = false;
-let routeAdminEnabled = false;
-let routeAdminDraftPoints = [];
-let routeAdminDraftLayer = null;
-let routeAdminLoadedSegment = null;
 
 let introDismissTimer = null;
 let introHiddenAt = 0;
@@ -2201,9 +2186,9 @@ function renderRouteStepNavigator() {
         <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
       </div>
       <div class="route-step-controls">
-        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">‹</button>
+        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">â€¹</button>
         <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
-        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">›</button>
+        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">â€º</button>
       </div>
     </div>
   `;
@@ -2366,7 +2351,6 @@ function initializeNavigationMap() {
   navigationRouteLayer = L.layerGroup().addTo(navigationMap);
   currentLocationLayer = L.layerGroup().addTo(navigationMap);
   addNavigationLegend();
-  navigationMap.on("click", addRouteAdminPoint);
   renderNavigationMarkers(getFilteredLocations());
   refreshNavigationMapLayout();
 }
@@ -2519,199 +2503,6 @@ function drawNavigationRoute(route, start, end, options = {}) {
       paddingTopLeft: [36, 120],
       paddingBottomRight: [36, isMobilePanelEnabled() ? 270 : 80]
     });
-  }
-}
-
-function isRouteAdminRequested() {
-  try {
-    return new URLSearchParams(window.location.search).get("admin") === "routes"
-      || localStorage.getItem("jcsu-route-admin") === "true";
-  } catch {
-    return new URLSearchParams(window.location.search).get("admin") === "routes";
-  }
-}
-
-function setRouteAdminEnabled(isEnabled) {
-  routeAdminEnabled = isEnabled;
-
-  try {
-    localStorage.setItem("jcsu-route-admin", String(isEnabled));
-  } catch {
-    // Admin mode still works for the current session if storage is blocked.
-  }
-
-  if (openRouteAdminButton) {
-    openRouteAdminButton.hidden = !isEnabled;
-  }
-
-  if (!isEnabled) {
-    closeRouteAdmin();
-  }
-}
-
-function openRouteAdmin() {
-  if (!routeAdminPanel) {
-    return;
-  }
-
-  initializeNavigationMap();
-  routeAdminPanel.hidden = false;
-  document.body.classList.add("route-admin-active");
-  routeAdminEnabled = true;
-  if (openRouteAdminButton) {
-    openRouteAdminButton.hidden = false;
-  }
-  updateRouteAdminDraft();
-}
-
-function closeRouteAdmin() {
-  if (routeAdminPanel) {
-    routeAdminPanel.hidden = true;
-  }
-  document.body.classList.remove("route-admin-active");
-}
-
-function updateRouteAdminDraft() {
-  if (!routeAdminOutput || !routeAdminStatus) {
-    return;
-  }
-
-  const name = routeAdminName?.value.trim() || "New Campus Path";
-  const segment = {
-    name,
-    coordinates: routeAdminDraftPoints.map((point) => ({
-      lat: Number(point.lat.toFixed(7)),
-      lng: Number(point.lng.toFixed(7))
-    }))
-  };
-
-  routeAdminOutput.value = routeAdminDraftPoints.length >= 2
-    ? `${JSON.stringify(segment, null, 2)},`
-    : "";
-  const modeText = routeAdminLoadedSegment ? "Editing loaded path" : "New draft";
-  routeAdminStatus.textContent = `${modeText}: ${routeAdminDraftPoints.length} point${routeAdminDraftPoints.length === 1 ? "" : "s"} selected. Add at least two points for a path segment.`;
-
-  if (!navigationMap || !window.L) {
-    return;
-  }
-
-  if (!routeAdminDraftLayer) {
-    routeAdminDraftLayer = L.layerGroup().addTo(navigationMap);
-  }
-
-  routeAdminDraftLayer.clearLayers();
-  routeAdminDraftPoints.forEach((point, index) => {
-    L.circleMarker([point.lat, point.lng], {
-      radius: 6,
-      color: "#002d56",
-      weight: 2,
-      fillColor: "#ffcf01",
-      fillOpacity: 1
-    }).bindTooltip(String(index + 1), { permanent: true, direction: "top" }).addTo(routeAdminDraftLayer);
-  });
-
-  if (routeAdminDraftPoints.length > 1) {
-    L.polyline(routeAdminDraftPoints.map((point) => [point.lat, point.lng]), {
-      color: "#002d56",
-      weight: 4,
-      dashArray: "6 6"
-    }).addTo(routeAdminDraftLayer);
-  }
-}
-
-function getNearestRouteSegmentToPoint(point) {
-  if (!point || !Array.isArray(window.pathSegments)) {
-    return null;
-  }
-
-  return window.pathSegments.reduce((nearest, segment, index) => {
-    const closestDistance = (segment.coordinates || []).reduce((bestDistance, coordinate) => {
-      const distance = getDistanceBetweenPoints(point, coordinate);
-      return Math.min(bestDistance, distance);
-    }, Number.POSITIVE_INFINITY);
-
-    if (!nearest || closestDistance < nearest.distance) {
-      return { segment, index, distance: closestDistance };
-    }
-
-    return nearest;
-  }, null);
-}
-
-function loadNearestRoutePath() {
-  if (!navigationMap) {
-    return;
-  }
-
-  const center = navigationMap.getCenter();
-  const nearest = getNearestRouteSegmentToPoint({ lat: center.lat, lng: center.lng });
-
-  if (!nearest?.segment?.coordinates?.length) {
-    routeAdminStatus.textContent = "No existing path segment found near the map center.";
-    return;
-  }
-
-  routeAdminLoadedSegment = nearest;
-  routeAdminDraftPoints = nearest.segment.coordinates.map((point) => ({ lat: point.lat, lng: point.lng }));
-
-  if (routeAdminName) {
-    routeAdminName.value = nearest.segment.name || "Existing Campus Path";
-  }
-
-  updateRouteAdminDraft();
-  routeAdminStatus.textContent = `Loaded "${nearest.segment.name || "Existing Campus Path"}". Tap to add points, then Apply Draft to test.`;
-}
-
-function applyRouteAdminDraft() {
-  if (!Array.isArray(window.pathSegments) || routeAdminDraftPoints.length < 2) {
-    routeAdminStatus.textContent = "Add at least two points before applying the draft.";
-    return;
-  }
-
-  const segment = {
-    name: routeAdminName?.value.trim() || "New Campus Path",
-    coordinates: routeAdminDraftPoints.map((point) => ({
-      lat: Number(point.lat.toFixed(7)),
-      lng: Number(point.lng.toFixed(7))
-    }))
-  };
-
-  if (routeAdminLoadedSegment) {
-    window.pathSegments[routeAdminLoadedSegment.index] = segment;
-  } else {
-    window.pathSegments.push(segment);
-    routeAdminLoadedSegment = { segment, index: window.pathSegments.length - 1, distance: 0 };
-  }
-
-  if (window.buildCampusNavigation) {
-    window.CampusNavigation = window.buildCampusNavigation(window.pathSegments);
-  }
-
-  routeAdminLoadedSegment.segment = segment;
-  routeAdminStatus.textContent = "Draft applied for this session. Copy it and update paths.js to make it permanent.";
-}
-
-function addRouteAdminPoint(event) {
-  if (!routeAdminEnabled || routeAdminPanel?.hidden || !event?.latlng) {
-    return;
-  }
-
-  routeAdminDraftPoints.push({ lat: event.latlng.lat, lng: event.latlng.lng });
-  updateRouteAdminDraft();
-}
-
-async function copyRouteAdminDraft() {
-  if (!routeAdminOutput?.value.trim()) {
-    routeAdminStatus.textContent = "Add at least two points before copying.";
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(routeAdminOutput.value);
-    routeAdminStatus.textContent = "Route segment copied. Paste it into paths.js inside window.pathSegments.";
-  } catch {
-    routeAdminOutput.select();
-    routeAdminStatus.textContent = "Copy failed. Select the generated segment and copy it manually.";
   }
 }
 
@@ -3100,45 +2891,6 @@ if (openSafetyPanelMapButton) {
   openSafetyPanelMapButton.addEventListener("click", openSafetyModal);
 }
 
-if (openRouteAdminButton) {
-  openRouteAdminButton.addEventListener("click", openRouteAdmin);
-}
-
-if (closeRouteAdminButton) {
-  closeRouteAdminButton.addEventListener("click", closeRouteAdmin);
-}
-
-if (routeAdminName) {
-  routeAdminName.addEventListener("input", updateRouteAdminDraft);
-}
-
-if (loadNearestRoutePathButton) {
-  loadNearestRoutePathButton.addEventListener("click", loadNearestRoutePath);
-}
-
-if (undoRoutePointButton) {
-  undoRoutePointButton.addEventListener("click", () => {
-    routeAdminDraftPoints.pop();
-    updateRouteAdminDraft();
-  });
-}
-
-if (clearRouteDraftButton) {
-  clearRouteDraftButton.addEventListener("click", () => {
-    routeAdminDraftPoints = [];
-    routeAdminLoadedSegment = null;
-    updateRouteAdminDraft();
-  });
-}
-
-if (applyRouteDraftButton) {
-  applyRouteDraftButton.addEventListener("click", applyRouteAdminDraft);
-}
-
-if (copyRouteDraftButton) {
-  copyRouteDraftButton.addEventListener("click", copyRouteAdminDraft);
-}
-
 if (closeSafetyButton) {
   closeSafetyButton.addEventListener("click", closeSafetyModal);
 }
@@ -3200,12 +2952,6 @@ document.addEventListener("keydown", (event) => {
 
   if (event.key === "Escape" && safetyModal && !safetyModal.hidden) {
     closeSafetyModal();
-  }
-
-  if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "r") {
-    event.preventDefault();
-    setRouteAdminEnabled(true);
-    openRouteAdmin();
   }
 });
 getDirectionsButton.addEventListener("click", handleRouteAction);
@@ -3313,7 +3059,6 @@ renderLocations(locations);
 initializeNavigationMap();
 switchMapView("navigationMapView");
 setMobilePanelState("half");
-setRouteAdminEnabled(isRouteAdminRequested());
 if ("serviceWorker" in navigator) {
   let refreshingForUpdate = false;
 
