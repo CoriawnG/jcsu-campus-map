@@ -3457,3 +3457,72 @@ body.is-offline .app-shell {
     top: 142px;
   }
 }
+
+/* Building hours and open status */
+.hours-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hours-badge::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.hours-badge.open {
+  color: #ffffff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.hours-badge.closed {
+  color: #ffffff;
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.hours-badge.unknown {
+  color: var(--blue);
+  background: var(--gold-soft);
+  border-color: rgba(255, 207, 1, 0.58);
+}
+
+.detail-hours-section {
+  border-color: rgba(0, 45, 86, 0.16);
+  background: #ffffff;
+}
+
+.hours-status-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--blue);
+}
+
+.hours-status-dot {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--muted);
+  box-shadow: 0 0 0 4px rgba(101, 112, 131, 0.12);
+}
+
+.hours-status-dot.open {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(36, 116, 91, 0.14);
+}
+
+.hours-status-dot.closed {
+  background: var(--red);
+  box-shadow: 0 0 0 4px rgba(169, 54, 54, 0.14);
+}
+
+.hours-status-dot.unknown {
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(255, 207, 1, 0.18);
+}

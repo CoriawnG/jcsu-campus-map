@@ -132,6 +132,65 @@ const locationContacts = {
     { label: "New Residence Hall", phone: "704.378.6819", description: "Residence hall contact" }
   ]
 };
+const locationHours = {
+  "Administrative Cottage #4 (Campus Police)": {
+    label: "Campus Police",
+    alwaysOpen: true,
+    source: "JCSU lists Campus Police as operating 24 hours a day, 7 days a week."
+  },
+  "Administrative Cottage #3 (Counseling Center)": {
+    label: "Counseling Center",
+    weekly: {
+      1: [[480, 1020]],
+      2: [[480, 1020]],
+      3: [[480, 1020]],
+      4: [[480, 1020]],
+      5: [[480, 1020]]
+    },
+    source: "JCSU Counseling Center hours: Monday-Friday, 8 a.m.-5 p.m.; evening sessions by appointment."
+  },
+  "JCSU Health Center": {
+    label: "Health Center",
+    weekly: {
+      1: [[540, 780], [840, 1080]],
+      2: [[540, 780], [840, 1080]],
+      3: [[540, 780], [840, 1080]],
+      4: [[540, 780], [840, 1080]],
+      5: [[540, 780]]
+    },
+    source: "JCSU Health Center hours: Monday-Thursday 9 a.m.-6 p.m. closed 1-2 p.m.; Friday 9 a.m.-1 p.m."
+  },
+  "James B. Duke Memorial Library": {
+    label: "Library Fall/Spring Hours",
+    weekly: {
+      0: [[840, 1440]],
+      1: [[450, 1440]],
+      2: [[450, 1380]],
+      3: [[450, 1380]],
+      4: [[450, 1380]],
+      5: [[450, 1020]],
+      6: [[600, 840]]
+    },
+    source: "Library posted fall/spring hours; hours may change during breaks, exams, and summer."
+  },
+  "Henry J. Biddle Hall": {
+    label: "Admissions / Financial Aid / Student Accounts",
+    source: "Office hours were not confirmed in the app data. Call the office before visiting."
+  },
+  "Mary Joyce Taylor Crisp Memorial Student Union": {
+    label: "Student Union dining and services",
+    source: "Food, lounge, bookstore, and student-service hours may vary by semester. Check posted campus hours."
+  },
+  "Cafeteria": {
+    label: "Cafeteria",
+    source: "Dining hours vary by semester and meal period. Check posted campus dining hours."
+  },
+  "KoKoMo's Coffeehouse": {
+    label: "KoKoMo's Coffeehouse",
+    source: "Coffeehouse hours may vary by semester. Check posted campus dining hours."
+  }
+};
+
 const locationDetailProfiles = {
   "Band and Music Hall": {
     aliases: ["Music Building", "Band Building"],
@@ -1319,6 +1378,96 @@ function getPhoneHref(phone) {
   return `tel:+1${tenDigitNumber}`;
 }
 
+function getLocationHoursProfile(location) {
+  return locationHours[location.name] || null;
+}
+
+function formatHoursTime(minutes) {
+  if (minutes === 1440) {
+    return "12 a.m.";
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const period = hours >= 12 ? "p.m." : "a.m.";
+  const displayHour = hours % 12 || 12;
+  const displayMinutes = mins ? `:${String(mins).padStart(2, "0")}` : "";
+  return `${displayHour}${displayMinutes} ${period}`;
+}
+
+function formatHoursWindows(windows) {
+  if (!windows?.length) {
+    return "Closed today";
+  }
+
+  return windows
+    .map(([start, end]) => `${formatHoursTime(start)}-${formatHoursTime(end)}`)
+    .join(", ");
+}
+
+function getLocationHoursStatus(location, date = new Date()) {
+  const profile = getLocationHoursProfile(location);
+
+  if (!profile) {
+    return {
+      label: "Hours Unknown",
+      className: "unknown",
+      heading: "Hours Unknown",
+      today: "Hours are not listed yet for this location.",
+      note: "Use the building details or campus contact information to verify before visiting."
+    };
+  }
+
+  if (profile.alwaysOpen) {
+    return {
+      label: "Open 24/7",
+      className: "open",
+      heading: profile.label,
+      today: "Open 24 hours today",
+      note: profile.source
+    };
+  }
+
+  if (!profile.weekly) {
+    return {
+      label: "Hours Unknown",
+      className: "unknown",
+      heading: profile.label,
+      today: "Hours need to be verified.",
+      note: profile.source
+    };
+  }
+
+  const day = date.getDay();
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+  const windows = profile.weekly[day] || [];
+  const activeWindow = windows.find(([start, end]) => nowMinutes >= start && nowMinutes < end);
+  const nextWindow = windows.find(([start]) => nowMinutes < start);
+
+  return {
+    label: activeWindow ? "Open Now" : "Closed",
+    className: activeWindow ? "open" : "closed",
+    heading: profile.label,
+    today: `${formatHoursWindows(windows)}${!activeWindow && nextWindow ? `; opens at ${formatHoursTime(nextWindow[0])}` : ""}`,
+    note: profile.source
+  };
+}
+
+function getLocationHoursMarkup(location) {
+  const status = getLocationHoursStatus(location);
+
+  return `
+    <section class="detail-section detail-hours-section">
+      <h3>Hours</h3>
+      <div class="hours-status-row">
+        <span class="hours-status-dot ${status.className}" aria-hidden="true"></span>
+        <strong>${status.heading}</strong>
+      </div>
+      <p><strong>Today:</strong> ${status.today}</p>
+      <p>${status.note}</p>
+    </section>
+  `;
+}
 function getLocationDetailProfile(location) {
   return locationDetailProfiles[location.name] || {};
 }
@@ -1469,6 +1618,8 @@ function renderSelectedLocation(location) {
   const detailNotesMarkup = getDetailNotesMarkup(profile);
   const arrivalTipMarkup = getArrivalTipMarkup(profile);
   const contactMarkup = getLocationContactMarkup(location);
+  const hoursMarkup = getLocationHoursMarkup(location);
+  const hoursStatus = getLocationHoursStatus(location);
   const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
   sidebar.classList.remove("directions-detail-active");
@@ -1484,6 +1635,7 @@ function renderSelectedLocation(location) {
     <div class="detail-meta">
       <span class="tag">${location.layer}</span>
       <span class="tag">${location.category}</span>
+      <span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>
     </div>
     <section class="detail-section detail-about-section">
       <h3>About</h3>

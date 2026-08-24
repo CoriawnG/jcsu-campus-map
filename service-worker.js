@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260821-admin-edit-paths-yancy";
+const CACHE_NAME = "jcsu-campus-map-v20260824-building-hours";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260821-admin-edit-paths-yancy",
-  "./locations.js?v=20260821-yancy-entrances",
-  "./paths.js?v=20260820-campus-police-route",
-  "./navigation.js?v=20260821-admin-edit-paths",
-  "./script.js?v=20260821-admin-edit-paths-yancy",
+  "./style.css?v=20260824-building-hours",
+  "./locations.js?v=20260824-building-hours",
+  "./paths.js?v=20260824-building-hours",
+  "./navigation.js?v=20260824-building-hours",
+  "./script.js?v=20260824-building-hours",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
