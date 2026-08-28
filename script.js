@@ -7,6 +7,9 @@ const resultsContainer = document.querySelector("#locationResults");
 const personalLocationsContainer = document.querySelector("#personalLocations");
 const favoriteLocationsContainer = document.querySelector("#favoriteLocations");
 const recentLocationsContainer = document.querySelector("#recentLocations");
+const savedPanel = document.querySelector("#savedPanel");
+const savedPanelContent = document.querySelector("#savedPanelContent");
+const savedCount = document.querySelector("#savedCount");
 const resultCount = document.querySelector("#resultCount");
 const selectedLocation = document.querySelector("#selectedLocation");
 const filterButtons = document.querySelectorAll(".filter-button");
@@ -28,6 +31,7 @@ const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
+const bottomNav = document.querySelector(".app-bottom-nav");
 const bottomNavButtons = document.querySelectorAll("[data-app-nav]");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
@@ -600,6 +604,7 @@ function routeToSafetyLocation(locationName) {
   saveRecentLocation(location);
   renderSelectedLocation(location);
   renderLocations(getFilteredLocations());
+  renderSavedPanel();
   renderNavigationMarkers(getFilteredLocations());
   focusMapOnLocation(location);
 
@@ -883,6 +888,7 @@ function renderPersonalLocations() {
     card.querySelector("[data-remove-personal]").addEventListener("click", () => {
       removePersonalPlace(place.type);
       renderPersonalLocations();
+      renderSavedPanel();
       renderDirectionQuickPicks();
       if (activeLocationIndex === place.location.index) {
         renderSelectedLocation(place.location);
@@ -952,6 +958,7 @@ function selectLocation(location, options = {}) {
 
   focusMapOnLocation(location);
   renderLocations(getFilteredLocations());
+  renderSavedPanel();
   renderNavigationMarkers(getFilteredLocations());
 }
 
@@ -1012,6 +1019,7 @@ function renderLocationPreview(location) {
     toggleFavoriteLocation(location);
     renderLocationPreview(location);
     renderLocations(getFilteredLocations());
+    renderSavedPanel();
     renderDirectionQuickPicks();
   });
   selectedLocation.querySelector('[data-preview-action="details"]').addEventListener("click", () => {
@@ -1159,6 +1167,139 @@ function renderRecentLocations() {
   renderLocationRail(recentLocationsContainer, "Recently Viewed", "Recently viewed locations", recentLocations);
 }
 
+function getPersonalPlaceItems() {
+  const savedPlaces = getPersonalPlaceIndexes();
+
+  return [
+    savedPlaces.homeDorm !== null
+      ? { type: "homeDorm", label: "Home Dorm", icon: "home", location: locations[savedPlaces.homeDorm] }
+      : null,
+    savedPlaces.mainClass !== null
+      ? { type: "mainClass", label: "Main Class", icon: "school", location: locations[savedPlaces.mainClass] }
+      : null
+  ].filter(Boolean);
+}
+
+function renderSavedPlaceCard(item, options = {}) {
+  const removeType = options.removeType || item.removeType || item.type || "";
+  const card = document.createElement("article");
+  card.className = "saved-place-card";
+  card.innerHTML = `
+    <button class="saved-place-main" type="button" aria-label="Open ${item.location.name}">
+      <span class="material-symbols-outlined location-icon" aria-hidden="true">${item.icon || getLocationIcon(item.location)}</span>
+      <span>
+        <strong>${item.location.name}</strong>
+        <span>${item.label || item.location.category}</span>
+      </span>
+    </button>
+    <div class="saved-place-actions">
+      <button class="icon-button saved-route-button" type="button" aria-label="Directions to ${item.location.name}" data-saved-route>
+        <span class="material-symbols-outlined" aria-hidden="true">directions</span>
+      </button>
+      ${removeType ? `
+        <button class="icon-button saved-remove-button" type="button" aria-label="Remove ${item.location.name}" data-saved-remove="${removeType}">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      ` : ""}
+    </div>
+  `;
+
+  card.querySelector(".saved-place-main").addEventListener("click", () => selectLocation(item.location, { showDetails: true }));
+  card.querySelector("[data-saved-route]").addEventListener("click", () => setRouteEndpoint("destination", item.location, { openDirections: true }));
+
+  const removeButton = card.querySelector("[data-saved-remove]");
+  if (removeButton) {
+    removeButton.addEventListener("click", () => {
+      if (removeButton.dataset.savedRemove === "favorite") {
+        toggleFavoriteLocation(item.location);
+      } else {
+        removePersonalPlace(removeButton.dataset.savedRemove);
+      }
+
+      renderSavedPanel();
+      renderLocations(getFilteredLocations());
+      renderDirectionQuickPicks();
+
+      if (activeLocationIndex === item.location.index) {
+        renderSelectedLocation(item.location);
+      }
+    });
+  }
+
+  return card;
+}
+
+function renderSavedSection(title, items, options = {}) {
+  const section = document.createElement("section");
+  section.className = "saved-section";
+  section.innerHTML = `<div class="rail-heading"><h3>${title}</h3></div>`;
+
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "saved-empty-state";
+    empty.textContent = options.emptyText || "Nothing saved yet.";
+    section.appendChild(empty);
+    return section;
+  }
+
+  const list = document.createElement("div");
+  list.className = "saved-place-list";
+
+  items.forEach((item) => {
+    list.appendChild(renderSavedPlaceCard(item, options));
+  });
+
+  section.appendChild(list);
+  return section;
+}
+
+function renderSavedPanel() {
+  if (!savedPanel || !savedPanelContent) {
+    return;
+  }
+
+  const personalItems = getPersonalPlaceItems();
+  const favoriteItems = getFavoriteLocationIndexes().map((index) => ({
+    label: "Favorite",
+    icon: "star",
+    location: locations[index]
+  }));
+  const recentItems = getRecentLocationIndexes().map((index) => ({
+    label: locations[index].category,
+    icon: getLocationIcon(locations[index]),
+    location: locations[index]
+  }));
+  const totalSaved = personalItems.length + favoriteItems.length;
+
+  savedPanel.hidden = false;
+  if (savedCount) {
+    savedCount.textContent = totalSaved;
+  }
+
+  savedPanelContent.innerHTML = "";
+  savedPanelContent.appendChild(renderSavedSection("Pinned Places", personalItems, {
+    emptyText: "Set a home dorm or main class building from a location page."
+  }));
+  savedPanelContent.appendChild(renderSavedSection("Favorites", favoriteItems, {
+    emptyText: "Favorite a building to keep it here.",
+    removeType: "favorite"
+  }));
+  savedPanelContent.appendChild(renderSavedSection("Recently Viewed", recentItems, {
+    emptyText: "Open a few campus locations and they will appear here."
+  }));
+}
+
+function hideExploreRails() {
+  [personalLocationsContainer, favoriteLocationsContainer, recentLocationsContainer].forEach((container) => {
+    if (!container) {
+      return;
+    }
+
+    container.hidden = true;
+    container.innerHTML = "";
+  });
+}
+
 function getSearchText(location) {
   const profile = getLocationDetailProfile(location);
 
@@ -1176,9 +1317,8 @@ function getSearchText(location) {
 function renderLocations(list) {
   resultsContainer.innerHTML = "";
   resultCount.textContent = list.length;
-  renderPersonalLocations();
-  renderFavoriteLocations();
-  renderRecentLocations();
+  hideExploreRails();
+  renderSavedPanel();
 
   if (list.length === 0) {
     resultsContainer.innerHTML = '<p class="empty-state">No locations found. Try a building name, office, food spot, or dorm.</p>';
@@ -1221,6 +1361,11 @@ function setMobilePanelState(state) {
 }
 
 function setActiveBottomNav(target) {
+  if (bottomNav) {
+    bottomNav.classList.remove("is-explore-active", "is-directions-active", "is-saved-active", "is-safety-active");
+    bottomNav.classList.add(`is-${target}-active`);
+  }
+
   bottomNavButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.appNav === target);
   });
@@ -1253,15 +1398,11 @@ function openExploreView() {
 
 function openSavedView() {
   setActiveBottomNav("saved");
-  showSearchPanel();
-  searchInput.value = "";
-  activeLayer = "All";
-  filterButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.layer === "All");
-  });
-  renderLocations(getFilteredLocations());
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "directions-detail-active");
+  sidebar.classList.add("saved-panel-active");
+  renderSavedPanel();
   setMobilePanelState("full");
-  window.setTimeout(scrollPanelToSavedPlaces, 80);
+  scrollPanelToTop();
 }
 
 function openDirectionsView() {
@@ -1319,7 +1460,7 @@ function openDirectionsPanel(options = {}) {
   setActiveBottomNav("directions");
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
-  sidebar.classList.remove("location-detail-active", "location-preview-active");
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "saved-panel-active");
 
   if (options.preservePanelState && isMobilePanelEnabled()) {
     const currentPanelState = sidebar.dataset.panelState || "full";
@@ -1497,10 +1638,11 @@ function focusMapOnLocation(location) {
 
 function showSearchPanel() {
   setActiveBottomNav("explore");
-  sidebar.classList.remove("location-detail-active", "directions-detail-active", "location-preview-active");
+  sidebar.classList.remove("location-detail-active", "directions-detail-active", "location-preview-active", "saved-panel-active");
   activeLocationName = "";
   activeLocationIndex = -1;
   renderLocations(getFilteredLocations());
+  renderSavedPanel();
   renderNavigationMarkers(getFilteredLocations());
 }
 
@@ -1826,6 +1968,7 @@ function renderSelectedLocation(location) {
 
       renderSelectedLocation(location);
       renderLocations(getFilteredLocations());
+      renderSavedPanel();
       renderDirectionQuickPicks();
     });
   });
@@ -1834,6 +1977,7 @@ function renderSelectedLocation(location) {
     toggleFavoriteLocation(location);
     renderSelectedLocation(location);
     renderLocations(getFilteredLocations());
+    renderSavedPanel();
     renderDirectionQuickPicks();
   });
 }
@@ -2333,9 +2477,9 @@ function renderRouteStepNavigator() {
         <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
       </div>
       <div class="route-step-controls">
-        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹</button>
+        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">&lt;</button>
         <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
-        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº</button>
+        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">&gt;</button>
       </div>
     </div>
   `;
@@ -3196,6 +3340,10 @@ mapTabs.forEach((tab) => {
 
 bottomNavButtons.forEach((button) => {
   button.addEventListener("click", handleBottomNavigation);
+  button.addEventListener("pointerdown", () => button.classList.add("is-pressing"));
+  ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+    button.addEventListener(eventName, () => button.classList.remove("is-pressing"));
+  });
 });
 locations.forEach((location, index) => {
   location.index = index;
@@ -3206,6 +3354,8 @@ window.addEventListener("orientationchange", refreshNavigationMapLayout);
 renderLocationOptions();
 updateRouteActionButton();
 renderLocations(locations);
+renderSavedPanel();
+setActiveBottomNav("explore");
 initializeNavigationMap();
 switchMapView("navigationMapView");
 setMobilePanelState("half");
