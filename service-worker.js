@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260824-remove-route-admin";
+const CACHE_NAME = "jcsu-campus-map-v20260828-bottom-nav-structure";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260824-remove-route-admin",
-  "./locations.js?v=20260824-remove-route-admin",
-  "./paths.js?v=20260824-remove-route-admin",
-  "./navigation.js?v=20260824-remove-route-admin",
-  "./script.js?v=20260824-remove-route-admin",
+  "./style.css?v=20260828-bottom-nav-structure",
+  "./locations.js?v=20260828-bottom-nav-structure",
+  "./paths.js?v=20260828-bottom-nav-structure",
+  "./navigation.js?v=20260828-bottom-nav-structure",
+  "./script.js?v=20260828-bottom-nav-structure",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

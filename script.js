@@ -28,6 +28,7 @@ const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
+const bottomNavButtons = document.querySelectorAll("[data-app-nav]");
 const routeSegmentCount = Array.isArray(window.pathSegments) ? window.pathSegments.length : 0;
 const mapTabs = document.querySelectorAll(".map-tab");
 const mapViews = document.querySelectorAll(".map-view");
@@ -1148,6 +1149,79 @@ function setMobilePanelState(state) {
   }
 }
 
+function setActiveBottomNav(target) {
+  bottomNavButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.appNav === target);
+  });
+}
+
+function scrollPanelToTop() {
+  if (sidebar) {
+    sidebar.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function scrollPanelToSavedPlaces() {
+  const target = personalLocationsContainer && !personalLocationsContainer.hidden
+    ? personalLocationsContainer
+    : favoriteLocationsContainer && !favoriteLocationsContainer.hidden
+      ? favoriteLocationsContainer
+      : recentLocationsContainer;
+
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function openExploreView() {
+  setActiveBottomNav("explore");
+  showSearchPanel();
+  setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
+  scrollPanelToTop();
+}
+
+function openSavedView() {
+  setActiveBottomNav("saved");
+  showSearchPanel();
+  searchInput.value = "";
+  activeLayer = "All";
+  filterButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.layer === "All");
+  });
+  renderLocations(getFilteredLocations());
+  setMobilePanelState("full");
+  window.setTimeout(scrollPanelToSavedPlaces, 80);
+}
+
+function openDirectionsView() {
+  setActiveBottomNav("directions");
+  openDirectionsPanel({ preservePanelState: true });
+  setMobilePanelState("full");
+}
+
+function handleBottomNavigation(event) {
+  const target = event.currentTarget.dataset.appNav;
+
+  if (target === "explore") {
+    openExploreView();
+    return;
+  }
+
+  if (target === "directions") {
+    openDirectionsView();
+    return;
+  }
+
+  if (target === "saved") {
+    openSavedView();
+    return;
+  }
+
+  if (target === "safety") {
+    setActiveBottomNav("safety");
+    openSafetyModal();
+  }
+}
 function setMobilePanelExpanded(isExpanded) {
   setMobilePanelState(isExpanded ? "full" : "collapsed");
 }
@@ -1171,6 +1245,7 @@ function collapseMobilePanel() {
 }
 
 function openDirectionsPanel(options = {}) {
+  setActiveBottomNav("directions");
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
   sidebar.classList.remove("location-detail-active");
@@ -1350,6 +1425,7 @@ function focusMapOnLocation(location) {
 }
 
 function showSearchPanel() {
+  setActiveBottomNav("explore");
   sidebar.classList.remove("location-detail-active", "directions-detail-active");
   activeLocationName = "";
   activeLocationIndex = -1;
@@ -2186,9 +2262,9 @@ function renderRouteStepNavigator() {
         <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
       </div>
       <div class="route-step-controls">
-        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">â€¹</button>
+        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">Ã¢â‚¬Â¹</button>
         <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
-        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">â€º</button>
+        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">Ã¢â‚¬Âº</button>
       </div>
     </div>
   `;
@@ -3047,6 +3123,9 @@ mapTabs.forEach((tab) => {
   });
 });
 
+bottomNavButtons.forEach((button) => {
+  button.addEventListener("click", handleBottomNavigation);
+});
 locations.forEach((location, index) => {
   location.index = index;
 });
