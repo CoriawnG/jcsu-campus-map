@@ -3508,3 +3508,104 @@ body.is-offline .app-shell {
     bottom: calc(90px + env(safe-area-inset-bottom));
   }
 }
+
+/* Place preview card */
+.sidebar.location-preview-active .details-panel {
+  display: block;
+}
+
+.place-preview-card {
+  display: grid;
+  gap: 12px;
+  padding: 4px 2px 2px;
+}
+
+.place-preview-header {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 36px;
+  gap: 12px;
+  align-items: start;
+}
+
+.place-preview-header .location-icon {
+  width: 46px;
+  height: 46px;
+  margin: 0;
+  color: #ffffff;
+  background: var(--blue);
+  font-size: 1.55rem;
+}
+
+.place-preview-title {
+  min-width: 0;
+}
+
+.place-preview-title h2 {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 1.12rem;
+  line-height: 1.18;
+}
+
+.place-preview-meta {
+  margin: 8px 0 0;
+}
+
+.place-preview-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.place-preview-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.place-preview-actions .primary-button,
+.place-preview-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 42px;
+  padding-right: 10px;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+.place-preview-actions .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 860px) {
+  .sidebar.location-preview-active.sheet-half .search-panel,
+  .sidebar.location-preview-active.sheet-half .results-panel,
+  .sidebar.location-preview-active.sheet-half .directions-panel {
+    display: none;
+  }
+
+  .sidebar.location-preview-active.sheet-half {
+    height: min(40vh, 330px);
+    overflow: hidden;
+    transform: translateY(calc(100% - min(40vh, 330px)));
+  }
+
+  .sidebar.location-preview-active.sheet-half .details-panel {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 420px) {
+  .place-preview-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .place-preview-actions .primary-button,
+  .place-preview-actions .secondary-button {
+    min-height: 40px;
+  }
+}

@@ -937,17 +937,88 @@ function toggleFavoriteLocation(location) {
   }
 }
 
-function selectLocation(location) {
+function selectLocation(location, options = {}) {
   activeLocationName = location.name;
   activeLocationIndex = location.index;
   saveRecentLocation(location);
-  renderSelectedLocation(location);
+
+  if (options.showDetails) {
+    renderSelectedLocation(location);
+    expandMobilePanel();
+  } else {
+    renderLocationPreview(location);
+    halfOpenMobilePanel();
+  }
+
   focusMapOnLocation(location);
   renderLocations(getFilteredLocations());
   renderNavigationMarkers(getFilteredLocations());
-  expandMobilePanel();
 }
 
+function getShortDescription(text, maxLength = 118) {
+  const cleanText = String(text || "").trim();
+
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+
+  return `${cleanText.slice(0, maxLength).trim()}...`;
+}
+
+function renderLocationPreview(location) {
+  const isFavorite = isFavoriteLocation(location);
+  const hoursStatus = getLocationHoursStatus(location);
+
+  setActiveBottomNav("explore");
+  sidebar.classList.remove("directions-detail-active");
+  sidebar.classList.add("location-detail-active", "location-preview-active");
+  selectedLocation.innerHTML = `
+    <article class="place-preview-card" aria-label="${location.name} preview">
+      <div class="place-preview-header">
+        <span class="material-symbols-outlined location-icon" aria-hidden="true">${getLocationIcon(location)}</span>
+        <div class="place-preview-title">
+          <p class="eyebrow">Selected Location</p>
+          <h2>${location.name}</h2>
+          <div class="detail-meta place-preview-meta">
+            <span class="tag">${location.category}</span>
+            <span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>
+          </div>
+        </div>
+        <button id="closeLocationPreview" class="icon-button" type="button" aria-label="Back to search">x</button>
+      </div>
+      <p class="place-preview-description">${getShortDescription(location.description)}</p>
+      <div class="place-preview-actions">
+        <button class="primary-button" type="button" data-preview-action="directions">
+          <span class="material-symbols-outlined" aria-hidden="true">directions</span>
+          Directions
+        </button>
+        <button class="secondary-button" type="button" data-preview-action="favorite">
+          <span class="material-symbols-outlined" aria-hidden="true">${isFavorite ? "star" : "star_border"}</span>
+          ${isFavorite ? "Saved" : "Save"}
+        </button>
+        <button class="secondary-button" type="button" data-preview-action="details">
+          <span class="material-symbols-outlined" aria-hidden="true">info</span>
+          More Info
+        </button>
+      </div>
+    </article>
+  `;
+
+  selectedLocation.querySelector("#closeLocationPreview").addEventListener("click", showSearchPanel);
+  selectedLocation.querySelector('[data-preview-action="directions"]').addEventListener("click", () => {
+    setRouteEndpoint("destination", location, { openDirections: true });
+  });
+  selectedLocation.querySelector('[data-preview-action="favorite"]').addEventListener("click", () => {
+    toggleFavoriteLocation(location);
+    renderLocationPreview(location);
+    renderLocations(getFilteredLocations());
+    renderDirectionQuickPicks();
+  });
+  selectedLocation.querySelector('[data-preview-action="details"]').addEventListener("click", () => {
+    renderSelectedLocation(location);
+    expandMobilePanel();
+  });
+}
 function renderLocationRail(container, title, railLabel, list) {
   if (!container) {
     return;
@@ -1248,7 +1319,7 @@ function openDirectionsPanel(options = {}) {
   setActiveBottomNav("directions");
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
-  sidebar.classList.remove("location-detail-active");
+  sidebar.classList.remove("location-detail-active", "location-preview-active");
 
   if (options.preservePanelState && isMobilePanelEnabled()) {
     const currentPanelState = sidebar.dataset.panelState || "full";
@@ -1426,7 +1497,7 @@ function focusMapOnLocation(location) {
 
 function showSearchPanel() {
   setActiveBottomNav("explore");
-  sidebar.classList.remove("location-detail-active", "directions-detail-active");
+  sidebar.classList.remove("location-detail-active", "directions-detail-active", "location-preview-active");
   activeLocationName = "";
   activeLocationIndex = -1;
   renderLocations(getFilteredLocations());
@@ -1683,7 +1754,7 @@ function renderSelectedLocation(location) {
   const hoursStatus = getLocationHoursStatus(location);
   const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
-  sidebar.classList.remove("directions-detail-active");
+  sidebar.classList.remove("directions-detail-active", "location-preview-active");
   sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
     <div class="details-heading-row">
@@ -2262,9 +2333,9 @@ function renderRouteStepNavigator() {
         <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
       </div>
       <div class="route-step-controls">
-        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">Ã¢â‚¬Â¹</button>
+        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹</button>
         <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
-        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">Ã¢â‚¬Âº</button>
+        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº</button>
       </div>
     </div>
   `;
