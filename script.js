@@ -343,7 +343,15 @@ const locationDetailProfiles = {
     highlights: ["Student apartments", "Mixed-use housing", "Campus living"],
     notes: ["Student apartment and mixed-use housing complex."]
   },
-  "The Block": {
+  "Arts Factory": {
+    aliases: ["JCSU Arts Factory", "Arts Factory CLT"],
+    bestFor: ["Theatre", "Visual arts", "Performing arts", "Community events", "Historic West End arts"],
+    mainEntrance: "Use the Arts Factory entrance on West Trade Street near the Historic West End arts corridor.",
+    accessibility: "Check posted venue information for accessible entrance and event access details before visiting.",
+    highlights: ["Black box theatre", "Studios", "Classroom/workspace", "Murals", "Local arts programming"],
+    notes: ["Former Griffin Brothers Tire Sales/Griffin Tire property renovated into JCSU's Arts Factory around 2010.", "It was JCSU's first academic facility built outside the main campus and helped support visual and performing arts."],
+    arrivalTip: "This location sits off the main campus at 1545 W. Trade Street, so walking routes may extend beyond the core campus paths."
+  },  "The Block": {
     aliases: ["Block"],
     highlights: ["Student hangout", "Meeting spot", "Campus reference point"],
     notes: ["Student-known campus area used as a common meeting place and navigation reference."]

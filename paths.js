@@ -166,7 +166,7 @@ window.pathSegments = [
     ]
   },
   {
-    "name": "Intersection to Cafeteria and Student Union",
+    "name": "Intersection to Cafeteria and\u00a0Student Union",
     "coordinates": [
       {
         "lat": 35.2436025,
@@ -354,8 +354,8 @@ window.pathSegments = [
     "name": "To the Office of Admissions Intersection",
     "coordinates": [
       {
-        "lat": 35.2436025,
-        "lng": -80.8566181
+        "lat": 35.2434891,
+        "lng": -80.8566329
       },
       {
         "lat": 35.2433251,
@@ -769,12 +769,12 @@ window.pathSegments = [
     "name": "Sidewalk",
     "coordinates": [
       {
-        "lat": 35.2425274,
-        "lng": -80.8561651
+        "lat": 35.242431,
+        "lng": -80.8561758
       },
       {
-        "lat": 35.2422404,
-        "lng": -80.8561933
+        "lat": 35.2423171,
+        "lng": -80.8561879
       }
     ]
   },
@@ -799,8 +799,8 @@ window.pathSegments = [
     "name": "Metropolitan College",
     "coordinates": [
       {
-        "lat": 35.2425274,
-        "lng": -80.8561651
+        "lat": 35.242477,
+        "lng": -80.8561034
       },
       {
         "lat": 35.2424529,
@@ -958,8 +958,8 @@ window.pathSegments = [
         "lng": -80.8563559
       },
       {
-        "lat": 35.2433181,
-        "lng": -80.855948
+        "lat": 35.243328,
+        "lng": -80.8561572
       }
     ]
   },
@@ -1151,8 +1151,8 @@ window.pathSegments = [
     "name": "Metropolitan College Sidewalk to Intersection",
     "coordinates": [
       {
-        "lat": 35.2425647,
-        "lng": -80.8559497
+        "lat": 35.2425426,
+        "lng": -80.8560241
       },
       {
         "lat": 35.2425274,
@@ -1355,7 +1355,7 @@ window.pathSegments = [
     ]
   },
   {
-    "name": "Brayboy Gymnasium",
+    "name": "Brayboy\u00a0Gymnasium",
     "coordinates": [
       {
         "lat": 35.2426092,
@@ -1397,12 +1397,12 @@ window.pathSegments = [
     "name": "Brayboy HealthPlex",
     "coordinates": [
       {
-        "lat": 35.2424841,
-        "lng": -80.853906
+        "lat": 35.242615,
+        "lng": -80.8539871
       },
       {
-        "lat": 35.2426126,
-        "lng": -80.8538942
+        "lat": 35.2426304,
+        "lng": -80.853987
       }
     ]
   },
@@ -1433,7 +1433,7 @@ window.pathSegments = [
     ]
   },
   {
-    "name": "To Sustainability Village / Student Athlete Achievement Center",
+    "name": "To Sustainability Village /\u00a0Student Athlete Achievement Center",
     "coordinates": [
       {
         "lat": 35.2424747,
@@ -3219,19 +3219,6 @@ window.pathSegments = [
       {
         "lat": 35.2431818,
         "lng": -80.8584248
-      }
-    ]
-  },
-  {
-    "name": "Mosaic Village",
-    "coordinates": [
-      {
-        "lat": 35.2395217,
-        "lng": -80.8586408
-      },
-      {
-        "lat": 35.2395217,
-        "lng": -80.8585992
       }
     ]
   },
@@ -5165,8 +5152,8 @@ window.pathSegments = [
     "name": "To the McCorey building",
     "coordinates": [
       {
-        "lat": 35.2424199,
-        "lng": -80.8558494
+        "lat": 35.2424922,
+        "lng": -80.855844
       },
       {
         "lat": 35.242571,
@@ -5201,15 +5188,329 @@ window.pathSegments = [
     ]
   },
   {
-    "name": "Campus Police Connector",
+    "name": "sidewalk",
     "coordinates": [
       {
-        "lat": 35.2435115,
-        "lng": -80.8554742
+        "lat": 35.2423171,
+        "lng": -80.8561879
       },
       {
-        "lat": 35.2435107,
-        "lng": -80.8554661
+        "lat": 35.2423142,
+        "lng": -80.8563302
+      }
+    ]
+  },
+  {
+    "name": "stairs",
+    "coordinates": [
+      {
+        "lat": 35.2423142,
+        "lng": -80.8563302
+      },
+      {
+        "lat": 35.242312,
+        "lng": -80.8564402
+      }
+    ]
+  },
+  {
+    "name": "sidewalk intersection",
+    "coordinates": [
+      {
+        "lat": 35.2423142,
+        "lng": -80.8563302
+      },
+      {
+        "lat": 35.2423441,
+        "lng": -80.856296
+      },
+      {
+        "lat": 35.2423609,
+        "lng": -80.8562692
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2423609,
+        "lng": -80.8562692
+      },
+      {
+        "lat": 35.242431,
+        "lng": -80.8561758
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.2425274,
+        "lng": -80.8561651
+      },
+      {
+        "lat": 35.2424244,
+        "lng": -80.8561753
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.2425274,
+        "lng": -80.8561651
+      },
+      {
+        "lat": 35.242477,
+        "lng": -80.8561034
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.242477,
+        "lng": -80.8561034
+      },
+      {
+        "lat": 35.242431,
+        "lng": -80.8561758
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.242477,
+        "lng": -80.8561034
+      },
+      {
+        "lat": 35.2425426,
+        "lng": -80.8560241
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.2425426,
+        "lng": -80.8560241
+      },
+      {
+        "lat": 35.2425647,
+        "lng": -80.8559497
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.2425426,
+        "lng": -80.8560241
+      },
+      {
+        "lat": 35.2424922,
+        "lng": -80.855844
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk Intersection",
+    "coordinates": [
+      {
+        "lat": 35.2424199,
+        "lng": -80.8558494
+      },
+      {
+        "lat": 35.2424922,
+        "lng": -80.855844
+      }
+    ]
+  },
+  {
+    "name": "KoKoMos",
+    "coordinates": [
+      {
+        "lat": 35.2433524,
+        "lng": -80.8570673
+      },
+      {
+        "lat": 35.2433539,
+        "lng": -80.8571302
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2433181,
+        "lng": -80.855948
+      },
+      {
+        "lat": 35.243328,
+        "lng": -80.8561572
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2447775,
+        "lng": -80.8577636
+      },
+      {
+        "lat": 35.244841,
+        "lng": -80.857877
+      },
+      {
+        "lat": 35.2448622,
+        "lng": -80.8578591
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2395217,
+        "lng": -80.8585992
+      },
+      {
+        "lat": 35.2393257,
+        "lng": -80.8586207
+      }
+    ]
+  },
+  {
+    "name": "Mosaic Village",
+    "coordinates": [
+      {
+        "lat": 35.2393257,
+        "lng": -80.8586207
+      },
+      {
+        "lat": 35.2393317,
+        "lng": -80.8586565
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.242615,
+        "lng": -80.8539871
+      },
+      {
+        "lat": 35.2426121,
+        "lng": -80.8538991
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2426121,
+        "lng": -80.8538991
+      },
+      {
+        "lat": 35.2424841,
+        "lng": -80.853906
+      }
+    ]
+  },
+  {
+    "name": "The Block",
+    "coordinates": [
+      {
+        "lat": 35.2436025,
+        "lng": -80.8566181
+      },
+      {
+        "lat": 35.2434891,
+        "lng": -80.8566329
+      }
+    ]
+  },
+  {
+    "name": "Biddle Hall Side Entrance",
+    "coordinates": [
+      {
+        "lat": 35.2434949,
+        "lng": -80.8567008
+      },
+      {
+        "lat": 35.2434891,
+        "lng": -80.8566329
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2393257,
+        "lng": -80.8586207
+      },
+      {
+        "lat": 35.2390732,
+        "lng": -80.8586566
+      },
+      {
+        "lat": 35.2389374,
+        "lng": -80.8586745
+      },
+      {
+        "lat": 35.238895,
+        "lng": -80.8586745
+      },
+      {
+        "lat": 35.2388497,
+        "lng": -80.8586816
+      },
+      {
+        "lat": 35.2387825,
+        "lng": -80.8587013
+      },
+      {
+        "lat": 35.2386818,
+        "lng": -80.8587407
+      }
+    ]
+  },
+  {
+    "name": "Sidewalk",
+    "coordinates": [
+      {
+        "lat": 35.2386818,
+        "lng": -80.8587407
+      },
+      {
+        "lat": 35.2387438,
+        "lng": -80.8590393
+      }
+    ]
+  },
+  {
+    "name": "JCSU Arts Factory",
+    "coordinates": [
+      {
+        "lat": 35.2387438,
+        "lng": -80.8590393
+      },
+      {
+        "lat": 35.2386621,
+        "lng": -80.8590625
       }
     ]
   }

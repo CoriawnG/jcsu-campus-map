@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260831-route-report-rich-details";
+const CACHE_NAME = "jcsu-campus-map-v20260831-kmz-entrances-arts-factory";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260831-route-report-rich-details",
-  "./locations.js?v=20260831-route-report-rich-details",
-  "./paths.js?v=20260831-route-report-rich-details",
-  "./navigation.js?v=20260831-route-report-rich-details",
-  "./script.js?v=20260831-route-report-rich-details",
+  "./style.css?v=20260831-kmz-entrances-arts-factory",
+  "./locations.js?v=20260831-kmz-entrances-arts-factory",
+  "./paths.js?v=20260831-kmz-entrances-arts-factory",
+  "./navigation.js?v=20260831-kmz-entrances-arts-factory",
+  "./script.js?v=20260831-kmz-entrances-arts-factory",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
