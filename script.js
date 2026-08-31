@@ -27,6 +27,7 @@ const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel")
 const closeDirectionsPanelButton = document.querySelector("#closeDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
+const reportCurrentRouteIssueButton = document.querySelector("#reportCurrentRouteIssue");
 const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
@@ -188,6 +189,9 @@ const locationHours = {
 const locationDetailProfiles = {
   "Band and Music Hall": {
     aliases: ["Music Building", "Band Building"],
+    bestFor: ["Music classes", "Band rehearsal", "Performance preparation", "Arts-related meetings"],
+    mainEntrance: "Use the entrance closest to the north-side academic walkway.",
+    accessibility: "Check posted entrance signs for the most accessible doorway before entering.",
     highlights: ["Music classes", "Band rehearsal", "Performance preparation"],
     notes: ["Use this location for music, band, rehearsal, and arts-related academic activity."],
     arrivalTip: "Look for the academic building marker near the north side of campus."
@@ -205,6 +209,10 @@ const locationDetailProfiles = {
   },
   "Henry J. Biddle Hall": {
     aliases: ["Biddle", "Admissions Building"],
+    bestFor: ["Admissions visits", "Financial aid help", "Student account questions", "Housing support", "Campus pantry"],
+    mainEntrance: "Use the main building entrance, then follow the floor notes for the correct office.",
+    accessibility: "Check posted building signs for the most accessible entrance and elevator/stair access.",
+    insideTip: "Admissions is on the first floor, Financial Aid is on the second, Student Accounts is on the third, and Housing Support/Pantry are on the basement level.",
     highlights: ["Admissions", "Financial Aid", "Student Accounts", "Housing Support", "Campus Pantry"],
     floors: [
       { label: "Basement", items: ["Housing Support", "Campus Pantry"] },
@@ -217,6 +225,10 @@ const locationDetailProfiles = {
   },
   "Mary Joyce Taylor Crisp Memorial Student Union": {
     aliases: ["Student Union", "Crisp Union", "MJTCMSU"],
+    bestFor: ["Food", "Bookstore", "Student events", "Lounging", "Quick meetups"],
+    mainEntrance: "Use the student union entrance closest to the central campus paths when walking from Biddle or the cafeteria area.",
+    accessibility: "Use the building entry level that best matches the service you need; verify elevator access once inside.",
+    insideTip: "Grimes Lounge is upstairs; Lorraine's is below it; Bull Pen, Pizza Hut, and the Bookstore are on the bottom floor.",
     highlights: ["Grimes Lounge", "Lorraine's", "Bull Pen", "Pizza Hut", "Bookstore"],
     floors: [
       { label: "Top Floor", items: ["Grimes Lounge"] },
@@ -228,6 +240,10 @@ const locationDetailProfiles = {
   },
   "Irwin Belk Complex": {
     aliases: ["IBC", "Belk Complex"],
+    bestFor: ["Football", "Track", "Health and Human Performance classes", "Athletics events", "Practice navigation"],
+    mainEntrance: "Use the entrance closest to the athletic fields or event gate depending on whether you are going to class, practice, or an event.",
+    accessibility: "For events, follow posted accessible routes and gate signage around the complex.",
+    insideTip: "This location can be both a class destination and an athletics destination.",
     highlights: ["Football", "Track", "Athletics", "Classes", "Health and Human Performance spaces"],
     notes: ["This is both an athletics facility and an academic/class meeting location."],
     arrivalTip: "Use IBC in search if you want the shorter nickname."
@@ -250,17 +266,26 @@ const locationDetailProfiles = {
   },
   "Student Athlete Achievement Center": {
     aliases: ["SAAC", "Student Athlete Center"],
+    bestFor: ["Student-athlete advising", "Study support", "Academic check-ins", "Athletics support"],
+    mainEntrance: "Use the nearby athletics-side entrance and campus paths connecting toward Irwin Belk Complex.",
+    accessibility: "Use sidewalk routes and marked crossings around the athletics area where available.",
     highlights: ["Student-athlete academic support", "Advising", "Study support", "Athletics support"],
     notes: ["Useful for student-athletes looking for academic and athletic department support."],
     arrivalTip: "SAAC is a common nickname students may use in search."
   },
   "James B. Duke Memorial Library": {
     aliases: ["Library", "Duke Library"],
+    bestFor: ["Quiet study", "Research", "Printing", "Group study", "Archives"],
+    mainEntrance: "Use the main library entrance from the central campus walkway.",
+    accessibility: "Check the main entrance area for accessible entry and posted elevator information.",
     highlights: ["Study space", "Research help", "Printing", "Archives", "Group study"],
     notes: ["Best stop for studying, research, printing, technology access, and academic resources."]
   },
   "New Science Center (STEM)": {
     aliases: ["STEM", "Science Center", "New Science"],
+    bestFor: ["Science classes", "Labs", "Faculty offices", "STEM tutoring", "Academic meetings"],
+    mainEntrance: "Use the closest entrance based on your class or lab room; the app includes multiple route access points for this building.",
+    accessibility: "Choose accessible routes when stairs or steep sidewalk segments may be a concern.",
     highlights: ["Science classrooms", "Teaching labs", "Faculty offices", "STEM learning"],
     notes: ["Use this for biology, chemistry, lab, and STEM-related academic activity."]
   },
@@ -286,16 +311,25 @@ const locationDetailProfiles = {
   },
   "Wilbert Greenfield Residence Hall": {
     aliases: ["Greenfield", "Greenfield Hall"],
+    bestFor: ["Freshman female housing", "Residence Life", "Dorm navigation"],
+    mainEntrance: "Use the residence hall entrance designated by Residence Life.",
+    accessibility: "Residence access may be restricted; students should follow posted housing entry rules.",
     highlights: ["Freshman female housing", "Residence Life", "Dorm navigation"],
     notes: ["Listed in the app as an active freshman female residence hall."]
   },
   "Myers Hall": {
     aliases: ["Myers"],
+    bestFor: ["Freshman male housing", "Residence Life", "Dorm navigation"],
+    mainEntrance: "Use the residence hall entrance designated by Residence Life.",
+    accessibility: "Residence access may be restricted; students should follow posted housing entry rules.",
     highlights: ["Freshman male housing", "Residence Life", "Dorm navigation"],
     notes: ["Listed in the app as an active freshman male residence hall."]
   },
   "New Residence Hall": {
     aliases: ["New Res", "NRH"],
+    bestFor: ["Suite-style housing", "Residence Life", "Student living"],
+    mainEntrance: "Use the main residence hall entrance designated by Residence Life.",
+    accessibility: "Residence access may be restricted; students should follow posted housing entry rules.",
     highlights: ["Suite-style housing", "Residence Life", "Student living"],
     notes: ["Useful for students navigating to suite-style residence housing."]
   },
@@ -1830,6 +1864,48 @@ function getArrivalTipMarkup(profile) {
   `;
 }
 
+function getBestForMarkup(profile) {
+  if (!profile.bestFor?.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-best-section">
+      <h3>Best For</h3>
+      ${getDetailListMarkup(profile.bestFor)}
+    </section>
+  `;
+}
+
+function getVisitInfoMarkup(profile) {
+  const rows = [
+    profile.mainEntrance ? { icon: "login", label: "Main Entrance", value: profile.mainEntrance } : null,
+    profile.accessibility ? { icon: "accessible", label: "Accessibility", value: profile.accessibility } : null,
+    profile.insideTip ? { icon: "stairs", label: "Inside Tip", value: profile.insideTip } : null
+  ].filter(Boolean);
+
+  if (!rows.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-visit-section">
+      <h3>Visit Info</h3>
+      <div class="detail-info-row-list">
+        ${rows.map((row) => `
+          <div class="detail-info-row">
+            <span class="material-symbols-outlined" aria-hidden="true">${row.icon}</span>
+            <span>
+              <strong>${row.label}</strong>
+              <span>${row.value}</span>
+            </span>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function getLocationContactMarkup(location) {
   const contacts = locationContacts[location.name] || [];
 
@@ -1887,6 +1963,8 @@ function renderSelectedLocation(location) {
   const isMainClass = savedPersonalPlaces.mainClass === location.index;
   const profile = getLocationDetailProfile(location);
   const aliasMarkup = getAliasMarkup(profile);
+  const bestForMarkup = getBestForMarkup(profile);
+  const visitInfoMarkup = getVisitInfoMarkup(profile);
   const highlightsMarkup = getHighlightsMarkup(profile);
   const floorNotesMarkup = getFloorNotesMarkup(profile);
   const detailNotesMarkup = getDetailNotesMarkup(profile);
@@ -2200,6 +2278,26 @@ function getRouteSignature(start, end) {
   return `${startKey}->${endKey}`;
 }
 
+function updateRouteIssueButton() {
+  if (!reportCurrentRouteIssueButton) {
+    return;
+  }
+
+  reportCurrentRouteIssueButton.hidden = !latestRoutePreview;
+}
+
+function reportLatestRouteIssue(issueType = "") {
+  if (!latestRoutePreview) {
+    openFeedbackModal({
+      type: "Route issue",
+      status: "Choose a route first so the app can attach start and destination details.",
+      message: "Issue type: Describe the route problem\n\nWhat should be fixed: "
+    });
+    return;
+  }
+
+  openRouteIssueReporter(latestRoutePreview.route, latestRoutePreview.routePreferenceLabel, issueType);
+}
 function renderDirectionsPreview(options = {}) {
   const start = getLocationBySelectValue(fromLocationSelect.value);
   const end = getLocationBySelectValue(toLocationSelect.value);
@@ -2216,6 +2314,7 @@ function renderDirectionsPreview(options = {}) {
     isGuidedNavigationActive = false;
     hideRouteStepNavigator();
     directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
+    updateRouteIssueButton();
     hideLocationStatus();
     syncCurrentLocationMarker({ centerMap: false });
     return null;
@@ -2228,6 +2327,7 @@ function renderDirectionsPreview(options = {}) {
     isGuidedNavigationActive = false;
     hideRouteStepNavigator();
     directionsOutput.textContent = "Your starting point and destination are the same.";
+    updateRouteIssueButton();
     syncCurrentLocationMarker({ centerMap: false });
     return null;
   }
@@ -2237,6 +2337,8 @@ function renderDirectionsPreview(options = {}) {
     const estimateText = walkingMinutes
       ? ` Estimated walking time: about ${walkingMinutes} minute${walkingMinutes === 1 ? "" : "s"}.`
       : "";
+    latestRoutePreview = null;
+    updateRouteIssueButton();
 
     directionsOutput.innerHTML = `
       <strong>${start.name} to ${end.name}</strong>${estimateText}
@@ -2266,6 +2368,7 @@ function renderDirectionsPreview(options = {}) {
       <br>
       Choose another nearby starting point or destination.
     `;
+    updateRouteIssueButton();
     if (isCurrentLocationStart) {
       syncCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
@@ -2282,6 +2385,7 @@ function renderDirectionsPreview(options = {}) {
 
   const directionSteps = buildDirectionSteps(route.steps);
   latestRoutePreview = { route, start, end, routePreferenceLabel };
+  updateRouteIssueButton();
   latestDirectionSteps = directionSteps.length
     ? directionSteps
     : [{ instruction: `Continue to ${end.name}`, distance: route.distanceMeters || 1 }];
@@ -2806,6 +2910,7 @@ function clearRoute() {
   shouldFitRouteToMap = true;
   latestRoutePreview = null;
   latestDirectionSteps = [];
+  updateRouteIssueButton();
   routeInstructionPoints = [];
   activeRouteStepIndex = 0;
   isGuidedNavigationActive = false;
@@ -3305,6 +3410,9 @@ if (routePreferenceSelect) {
   });
 }
 clearRouteButton.addEventListener("click", clearRoute);
+if (reportCurrentRouteIssueButton) {
+  reportCurrentRouteIssueButton.addEventListener("click", () => reportLatestRouteIssue());
+}
 sidebar.addEventListener("pointerdown", startSheetSwipe);
 sidebar.addEventListener("pointerup", endSheetSwipe);
 sidebar.addEventListener("pointercancel", () => {

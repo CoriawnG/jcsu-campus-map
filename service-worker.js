@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260828-bottom-nav-saved-section";
+const CACHE_NAME = "jcsu-campus-map-v20260831-route-report-rich-details";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260828-bottom-nav-saved-section",
-  "./locations.js?v=20260828-bottom-nav-saved-section",
-  "./paths.js?v=20260828-bottom-nav-saved-section",
-  "./navigation.js?v=20260828-bottom-nav-saved-section",
-  "./script.js?v=20260828-bottom-nav-saved-section",
+  "./style.css?v=20260831-route-report-rich-details",
+  "./locations.js?v=20260831-route-report-rich-details",
+  "./paths.js?v=20260831-route-report-rich-details",
+  "./navigation.js?v=20260831-route-report-rich-details",
+  "./script.js?v=20260831-route-report-rich-details",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
