@@ -602,51 +602,53 @@ select:focus {
 }
 
 .campus-building-label {
-  pointer-events: none;
+  cursor: pointer;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .campus-building-label span {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  max-width: 176px;
+  gap: 3px;
+  max-width: 132px;
   min-width: 0;
-  padding: 1px 4px 1px 2px;
+  padding: 0;
   color: #ffffff;
-  background: rgba(15, 23, 42, 0.44);
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 999px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-  font-size: 0.56rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0.52rem;
   font-weight: 800;
   line-height: 1;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42);
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 0.85);
   transform: translate(0, -50%);
   white-space: nowrap;
 }
 
 .campus-building-label i {
   flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: var(--label-color);
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.38);
 }
 
 .campus-building-label b {
   display: block;
   min-width: 0;
-  max-width: 154px;
+  max-width: 118px;
   overflow: hidden;
   font: inherit;
   text-overflow: ellipsis;
 }
 
 .campus-building-label.is-faint {
-  opacity: 0.34;
+  opacity: 0;
 }
 
 .campus-building-label.is-visible {
@@ -660,8 +662,37 @@ select:focus {
 
 .campus-building-label.is-close span,
 .campus-building-label.is-selected span {
-  background: rgba(15, 23, 42, 0.58);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
+}
+
+.basemap-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 10px;
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 45, 86, 0.18);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+  pointer-events: auto;
+}
+
+.basemap-picker .material-symbols-outlined {
+  font-size: 1.18rem;
+}
+
+.basemap-picker select {
+  width: 88px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  outline: 0;
 }
 
 .map-legend {

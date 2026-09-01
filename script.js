@@ -26,6 +26,7 @@ const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
 const toggleLiveTrackingMapButton = document.querySelector("#toggleLiveTrackingMap");
 const recenterLocationMapButton = document.querySelector("#recenterLocationMap");
 const openDirectionsPanelButton = document.querySelector("#openDirectionsPanel");
+const basemapSelect = document.querySelector("#basemapSelect");
 const closeDirectionsPanelButton = document.querySelector("#closeDirectionsPanel");
 const getDirectionsButton = document.querySelector("#getDirections");
 const clearRouteButton = document.querySelector("#clearRoute");
@@ -376,8 +377,35 @@ const mobilePanelLabels = {
   half: "Search and Directions - Half",
   full: "Search and Directions - Full"
 };
-const mapMarkerMinZoom = 19;
-const mapLabelMinZoom = 17;
+const mapMarkerMinZoom = 18;
+const mapLabelMinZoom = 18;
+const basemapOptions = {
+  imagery: {
+    name: "Satellite",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    options: {
+      maxZoom: 20,
+      attribution: "Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+    }
+  },
+  streets: {
+    name: "Streets",
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    options: {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }
+  },
+  clean: {
+    name: "Clean",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    options: {
+      maxNativeZoom: 16,
+      maxZoom: 20,
+      attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+    }
+  }
+};
 let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
@@ -388,6 +416,7 @@ let liveTrackingWatchId = null;
 let isLiveTracking = false;
 let hasLiveTrackingCentered = false;
 let navigationMap = null;
+let navigationBaseLayer = null;
 let navigationMarkerLayer = null;
 let navigationLabelLayer = null;
 let navigationRouteLayer = null;
@@ -2911,10 +2940,7 @@ function initializeNavigationMap() {
     prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
   }).addTo(navigationMap);
 
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    maxZoom: 20,
-    attribution: "Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-  }).addTo(navigationMap);
+  setNavigationBasemap(basemapSelect ? basemapSelect.value : "imagery");
 
   navigationMarkerLayer = L.layerGroup().addTo(navigationMap);
   navigationLabelLayer = L.layerGroup().addTo(navigationMap);
@@ -2928,6 +2954,24 @@ function initializeNavigationMap() {
 
 function getLayerStyle(layer) {
   return layerStyles[layer] || { label: layer, color: "#1c4f9c" };
+}
+
+function setNavigationBasemap(type = "imagery") {
+  if (!navigationMap || !window.L) {
+    return;
+  }
+
+  const basemap = basemapOptions[type] || basemapOptions.imagery;
+
+  if (navigationBaseLayer) {
+    navigationMap.removeLayer(navigationBaseLayer);
+  }
+
+  navigationBaseLayer = L.tileLayer(basemap.url, basemap.options).addTo(navigationMap);
+
+  if (basemapSelect && basemapSelect.value !== type) {
+    basemapSelect.value = type;
+  }
 }
 
 function shouldShowMapLabel(location) {
@@ -2972,15 +3016,17 @@ function addNavigationLegend() {
 }
 
 function renderNavigationMarkers(list) {
-  if (!navigationMarkerLayer || !navigationLabelLayer || !window.L) {
+  if (!navigationMarkerLayer || !window.L) {
     return;
   }
 
   navigationMarkerLayer.clearLayers();
-  navigationLabelLayer.clearLayers();
+  if (navigationLabelLayer) {
+    navigationLabelLayer.clearLayers();
+  }
   const zoom = navigationMap ? navigationMap.getZoom() : 17;
-  const shouldShowDots = zoom >= mapMarkerMinZoom;
-  const shouldShowLabels = zoom >= mapLabelMinZoom;
+  const shouldShowMapText = zoom >= mapLabelMinZoom;
+  const shouldShowMapDots = zoom >= mapMarkerMinZoom;
   const labelZoomClass = getMapLabelZoomClass(zoom);
 
   list.forEach((location) => {
@@ -2990,10 +3036,11 @@ function renderNavigationMarkers(list) {
 
     const style = getLayerStyle(location.layer);
     const isSelected = location.index === activeLocationIndex;
+    const shouldRenderLocation = isSelected || (shouldShowMapDots && shouldShowMapText);
 
-    if ((shouldShowLabels || isSelected) && shouldShowMapLabel(location)) {
-      const label = L.marker([location.lat, location.lng], {
-        interactive: false,
+    if (shouldRenderLocation && shouldShowMapLabel(location)) {
+      const marker = L.marker([location.lat, location.lng], {
+        interactive: true,
         icon: L.divIcon({
           className: `campus-building-label ${isSelected ? "is-selected" : labelZoomClass}`,
           html: `
@@ -3006,26 +3053,33 @@ function renderNavigationMarkers(list) {
           iconAnchor: [8, 8]
         })
       });
-      label.addTo(navigationLabelLayer);
+
+      marker.bindTooltip(location.name, {
+        direction: "top",
+        offset: [0, -10]
+      });
+
+      marker.on("click", () => selectLocation(location));
+      marker.addTo(navigationMarkerLayer);
+
+      return;
     }
 
-    if (shouldShowDots || isSelected) {
+    if (shouldRenderLocation) {
       const marker = L.circleMarker([location.lat, location.lng], {
-        radius: isSelected ? 9 : 6,
+        radius: isSelected ? 8 : 5,
         color: isSelected ? "#111827" : style.color,
         weight: isSelected ? 4 : 2,
         fillColor: style.color,
-        fillOpacity: 0.95
+        fillOpacity: isSelected ? 0.98 : 0.78
       });
 
-      marker.bindPopup(`
-        <strong>${location.name}</strong>
-        ${location.category}<br>
-        ${location.layer}
-      `);
+      marker.bindTooltip(location.name, {
+        direction: "top",
+        offset: [0, -8]
+      });
 
       marker.on("click", () => selectLocation(location));
-
       marker.addTo(navigationMarkerLayer);
     }
   });
@@ -3472,6 +3526,12 @@ if (recenterLocationMapButton) {
 
 if (openDirectionsPanelButton) {
   openDirectionsPanelButton.addEventListener("click", openDirectionsPanel);
+}
+
+if (basemapSelect) {
+  basemapSelect.addEventListener("change", () => {
+    setNavigationBasemap(basemapSelect.value);
+  });
 }
 
 if (closeDirectionsPanelButton) {
