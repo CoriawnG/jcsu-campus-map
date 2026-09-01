@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260901-esri-native-zoom-fix";
+const CACHE_NAME = "jcsu-campus-map-v20260901-esri-imagery-basemap";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260901-esri-native-zoom-fix",
-  "./locations.js?v=20260901-esri-native-zoom-fix",
-  "./paths.js?v=20260901-esri-native-zoom-fix",
-  "./navigation.js?v=20260901-esri-native-zoom-fix",
-  "./script.js?v=20260901-esri-native-zoom-fix",
+  "./style.css?v=20260901-esri-imagery-basemap",
+  "./locations.js?v=20260901-esri-imagery-basemap",
+  "./paths.js?v=20260901-esri-imagery-basemap",
+  "./navigation.js?v=20260901-esri-imagery-basemap",
+  "./script.js?v=20260901-esri-imagery-basemap",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

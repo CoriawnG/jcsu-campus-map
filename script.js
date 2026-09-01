@@ -2902,10 +2902,9 @@ function initializeNavigationMap() {
 
   navigationMap = L.map("navigationMap").setView(jcsuCenter, 17);
 
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
-    maxNativeZoom: 16,
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
     maxZoom: 20,
-    attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+    attribution: "Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community"
   }).addTo(navigationMap);
 
   navigationMarkerLayer = L.layerGroup().addTo(navigationMap);
