@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260901-map-labels-zoom-dots";
+const CACHE_NAME = "jcsu-campus-map-v20260901-apple-style-map-labels";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260901-map-labels-zoom-dots",
-  "./locations.js?v=20260901-map-labels-zoom-dots",
-  "./paths.js?v=20260901-map-labels-zoom-dots",
-  "./navigation.js?v=20260901-map-labels-zoom-dots",
-  "./script.js?v=20260901-map-labels-zoom-dots",
+  "./style.css?v=20260901-apple-style-map-labels",
+  "./locations.js?v=20260901-apple-style-map-labels",
+  "./paths.js?v=20260901-apple-style-map-labels",
+  "./navigation.js?v=20260901-apple-style-map-labels",
+  "./script.js?v=20260901-apple-style-map-labels",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

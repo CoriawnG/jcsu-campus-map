@@ -603,23 +603,65 @@ select:focus {
 
 .campus-building-label {
   pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .campus-building-label span {
-  display: inline-block;
-  max-width: 142px;
-  padding: 2px 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 176px;
+  min-width: 0;
+  padding: 1px 4px 1px 2px;
   color: #ffffff;
-  background: rgba(15, 23, 42, 0.68);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 5px;
-  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.28);
-  font-size: 0.66rem;
+  background: rgba(15, 23, 42, 0.44);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  font-size: 0.56rem;
   font-weight: 800;
-  line-height: 1.05;
-  overflow-wrap: anywhere;
+  line-height: 1;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42);
-  transform: translate(-50%, -100%);
+  transform: translate(0, -50%);
+  white-space: nowrap;
+}
+
+.campus-building-label i {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  background: var(--label-color);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.22);
+}
+
+.campus-building-label b {
+  display: block;
+  min-width: 0;
+  max-width: 154px;
+  overflow: hidden;
+  font: inherit;
+  text-overflow: ellipsis;
+}
+
+.campus-building-label.is-faint {
+  opacity: 0.34;
+}
+
+.campus-building-label.is-visible {
+  opacity: 0.72;
+}
+
+.campus-building-label.is-close,
+.campus-building-label.is-selected {
+  opacity: 1;
+}
+
+.campus-building-label.is-close span,
+.campus-building-label.is-selected span {
+  background: rgba(15, 23, 42, 0.58);
+  font-size: 0.62rem;
 }
 
 .map-legend {

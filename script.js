@@ -376,8 +376,8 @@ const mobilePanelLabels = {
   half: "Search and Directions - Half",
   full: "Search and Directions - Full"
 };
-const mapMarkerMinZoom = 18;
-const mapLabelMinZoom = 16;
+const mapMarkerMinZoom = 19;
+const mapLabelMinZoom = 17;
 let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
@@ -2934,6 +2934,18 @@ function shouldShowMapLabel(location) {
   return location.layer !== "Parking and Transportation";
 }
 
+function getMapLabelZoomClass(zoom) {
+  if (zoom >= 19) {
+    return "is-close";
+  }
+
+  if (zoom >= 18) {
+    return "is-visible";
+  }
+
+  return "is-faint";
+}
+
 function addNavigationLegend() {
   const legend = L.control({ position: "bottomright" });
 
@@ -2969,6 +2981,7 @@ function renderNavigationMarkers(list) {
   const zoom = navigationMap ? navigationMap.getZoom() : 17;
   const shouldShowDots = zoom >= mapMarkerMinZoom;
   const shouldShowLabels = zoom >= mapLabelMinZoom;
+  const labelZoomClass = getMapLabelZoomClass(zoom);
 
   list.forEach((location) => {
     if (!location.lat || !location.lng) {
@@ -2982,10 +2995,15 @@ function renderNavigationMarkers(list) {
       const label = L.marker([location.lat, location.lng], {
         interactive: false,
         icon: L.divIcon({
-          className: "campus-building-label",
-          html: `<span>${location.name}</span>`,
+          className: `campus-building-label ${isSelected ? "is-selected" : labelZoomClass}`,
+          html: `
+            <span style="--label-color:${style.color}">
+              <i aria-hidden="true"></i>
+              <b>${location.name}</b>
+            </span>
+          `,
           iconSize: null,
-          iconAnchor: [0, 0]
+          iconAnchor: [8, 8]
         })
       });
       label.addTo(navigationLabelLayer);
