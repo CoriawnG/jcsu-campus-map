@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260901-entrance-aware-routing";
+const CACHE_NAME = "jcsu-campus-map-v20260901-no-label-basemap";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260901-entrance-aware-routing",
-  "./locations.js?v=20260901-entrance-aware-routing",
-  "./paths.js?v=20260901-entrance-aware-routing",
-  "./navigation.js?v=20260901-entrance-aware-routing",
-  "./script.js?v=20260901-entrance-aware-routing",
+  "./style.css?v=20260901-no-label-basemap",
+  "./locations.js?v=20260901-no-label-basemap",
+  "./paths.js?v=20260901-no-label-basemap",
+  "./navigation.js?v=20260901-no-label-basemap",
+  "./script.js?v=20260901-no-label-basemap",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

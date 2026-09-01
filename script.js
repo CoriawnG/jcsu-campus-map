@@ -2902,9 +2902,10 @@ function initializeNavigationMap() {
 
   navigationMap = L.map("navigationMap").setView(jcsuCenter, 17);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
     maxZoom: 20,
-    attribution: "&copy; OpenStreetMap contributors"
+    subdomains: "abcd",
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
   }).addTo(navigationMap);
 
   navigationMarkerLayer = L.layerGroup().addTo(navigationMap);
