@@ -376,6 +376,8 @@ const mobilePanelLabels = {
   half: "Search and Directions - Half",
   full: "Search and Directions - Full"
 };
+const mapMarkerMinZoom = 18;
+const mapLabelMinZoom = 16;
 let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
@@ -387,6 +389,7 @@ let isLiveTracking = false;
 let hasLiveTrackingCentered = false;
 let navigationMap = null;
 let navigationMarkerLayer = null;
+let navigationLabelLayer = null;
 let navigationRouteLayer = null;
 let currentLocationLayer = null;
 let isPanelDragging = false;
@@ -2904,7 +2907,7 @@ function initializeNavigationMap() {
     attributionControl: false
   }).setView(jcsuCenter, 17);
   L.control.attribution({
-    position: "topleft",
+    position: "topright",
     prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
   }).addTo(navigationMap);
 
@@ -2914,15 +2917,21 @@ function initializeNavigationMap() {
   }).addTo(navigationMap);
 
   navigationMarkerLayer = L.layerGroup().addTo(navigationMap);
+  navigationLabelLayer = L.layerGroup().addTo(navigationMap);
   navigationRouteLayer = L.layerGroup().addTo(navigationMap);
   currentLocationLayer = L.layerGroup().addTo(navigationMap);
   addNavigationLegend();
   renderNavigationMarkers(getFilteredLocations());
+  navigationMap.on("zoomend", () => renderNavigationMarkers(getFilteredLocations()));
   refreshNavigationMapLayout();
 }
 
 function getLayerStyle(layer) {
   return layerStyles[layer] || { label: layer, color: "#1c4f9c" };
+}
+
+function shouldShowMapLabel(location) {
+  return location.layer !== "Parking and Transportation";
 }
 
 function addNavigationLegend() {
@@ -2951,11 +2960,15 @@ function addNavigationLegend() {
 }
 
 function renderNavigationMarkers(list) {
-  if (!navigationMarkerLayer || !window.L) {
+  if (!navigationMarkerLayer || !navigationLabelLayer || !window.L) {
     return;
   }
 
   navigationMarkerLayer.clearLayers();
+  navigationLabelLayer.clearLayers();
+  const zoom = navigationMap ? navigationMap.getZoom() : 17;
+  const shouldShowDots = zoom >= mapMarkerMinZoom;
+  const shouldShowLabels = zoom >= mapLabelMinZoom;
 
   list.forEach((location) => {
     if (!location.lat || !location.lng) {
@@ -2964,23 +2977,39 @@ function renderNavigationMarkers(list) {
 
     const style = getLayerStyle(location.layer);
     const isSelected = location.index === activeLocationIndex;
-    const marker = L.circleMarker([location.lat, location.lng], {
-      radius: isSelected ? 9 : 6,
-      color: isSelected ? "#111827" : style.color,
-      weight: isSelected ? 4 : 2,
-      fillColor: style.color,
-      fillOpacity: 0.95
-    });
 
-    marker.bindPopup(`
-      <strong>${location.name}</strong>
-      ${location.category}<br>
-      ${location.layer}
-    `);
+    if ((shouldShowLabels || isSelected) && shouldShowMapLabel(location)) {
+      const label = L.marker([location.lat, location.lng], {
+        interactive: false,
+        icon: L.divIcon({
+          className: "campus-building-label",
+          html: `<span>${location.name}</span>`,
+          iconSize: null,
+          iconAnchor: [0, 0]
+        })
+      });
+      label.addTo(navigationLabelLayer);
+    }
 
-    marker.on("click", () => selectLocation(location));
+    if (shouldShowDots || isSelected) {
+      const marker = L.circleMarker([location.lat, location.lng], {
+        radius: isSelected ? 9 : 6,
+        color: isSelected ? "#111827" : style.color,
+        weight: isSelected ? 4 : 2,
+        fillColor: style.color,
+        fillOpacity: 0.95
+      });
 
-    marker.addTo(navigationMarkerLayer);
+      marker.bindPopup(`
+        <strong>${location.name}</strong>
+        ${location.category}<br>
+        ${location.layer}
+      `);
+
+      marker.on("click", () => selectLocation(location));
+
+      marker.addTo(navigationMarkerLayer);
+    }
   });
 }
 

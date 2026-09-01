@@ -586,17 +586,40 @@ select:focus {
   margin-bottom: 4px;
 }
 .leaflet-control-attribution {
-  margin: 12px !important;
-  padding: 4px 7px !important;
+  margin: 8px !important;
+  padding: 3px 6px !important;
   color: #334155 !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(29, 36, 51, 0.14);
-  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-radius: 5px;
+  box-shadow: 0 3px 8px rgba(29, 36, 51, 0.1);
+  font-size: 0.58rem;
+  line-height: 1.2;
+  max-width: min(210px, calc(100vw - 122px));
 }
 
 .leaflet-control-attribution a {
   color: var(--blue) !important;
+}
+
+.campus-building-label {
+  pointer-events: none;
+}
+
+.campus-building-label span {
+  display: inline-block;
+  max-width: 142px;
+  padding: 2px 5px;
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 5px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.28);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.42);
+  transform: translate(-50%, -100%);
 }
 
 .map-legend {
