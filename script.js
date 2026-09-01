@@ -17,7 +17,9 @@ const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
 const routePreferenceSelect = document.querySelector("#routePreference");
 const fromLocationSuggestions = document.querySelector("#fromLocationSuggestions");
+const fromEntranceOptions = document.querySelector("#fromEntranceOptions");
 const toLocationSuggestions = document.querySelector("#toLocationSuggestions");
+const toEntranceOptions = document.querySelector("#toEntranceOptions");
 const directionQuickPicks = document.querySelector("#directionQuickPicks");
 const useMyLocationButton = document.querySelector("#useMyLocation");
 const toggleLiveTrackingButton = document.querySelector("#toggleLiveTracking");
@@ -1106,6 +1108,152 @@ function renderLocationRail(container, title, railLabel, list) {
   });
 }
 
+function getEntranceLabel(point) {
+  const name = point?.name || "Building Entrance";
+  const lowerName = name.toLowerCase();
+
+  if (point?.type === "accessible" || lowerName.includes("accessible") || lowerName.includes("elevator")) {
+    return name.includes("Accessible") ? name : `${name} - Accessible / Elevator`;
+  }
+
+  if (lowerName.includes("side")) {
+    return name.includes("Entrance") ? name : `${name} Side Entrance`;
+  }
+
+  if (lowerName.includes("back")) {
+    return name;
+  }
+
+  if (lowerName.includes("main")) {
+    return name;
+  }
+
+  return name;
+}
+
+function getLocationEntranceOptions(location) {
+  return Array.isArray(location?.routeAccessPoints) ? location.routeAccessPoints : [];
+}
+
+function resetEntranceSelectionForField(field) {
+  const container = field === fromLocationSelect ? fromEntranceOptions : toEntranceOptions;
+
+  if (container) {
+    container.dataset.selectedEntranceIndex = "0";
+  }
+}
+
+function getEntranceSelectorForType(type) {
+  return type === "start" ? fromEntranceOptions : toEntranceOptions;
+}
+
+function getSelectedEntrance(location, type) {
+  const entrances = getLocationEntranceOptions(location);
+  const selector = getEntranceSelectorForType(type);
+
+  if (!entrances.length || !selector) {
+    return null;
+  }
+
+  const selectedIndex = Number(selector.dataset.selectedEntranceIndex || 0);
+  return entrances[selectedIndex] || entrances[0];
+}
+
+function getRoutePointForEndpoint(location, type) {
+  const selectedEntrance = getSelectedEntrance(location, type);
+
+  if (!selectedEntrance) {
+    return location;
+  }
+
+  return {
+    ...location,
+    lat: selectedEntrance.lat,
+    lng: selectedEntrance.lng,
+    routeAccessPoints: [selectedEntrance],
+    selectedEntrance
+  };
+}
+
+function renderEntranceOptions(type, location) {
+  const container = getEntranceSelectorForType(type);
+  const entrances = getLocationEntranceOptions(location);
+
+  if (!container) {
+    return;
+  }
+
+  if (!location || entrances.length === 0) {
+    container.hidden = true;
+    container.innerHTML = "";
+    container.dataset.selectedEntranceIndex = "0";
+    return;
+  }
+
+  const selectedIndex = Math.min(Number(container.dataset.selectedEntranceIndex || 0), entrances.length - 1);
+  container.dataset.selectedEntranceIndex = String(selectedIndex);
+  container.hidden = false;
+  container.innerHTML = `
+    <label for="${type}EntranceSelect">${type === "start" ? "Start" : "Destination"} entrance</label>
+    <select id="${type}EntranceSelect" class="entrance-select">
+      ${entrances.map((point, index) => `
+        <option value="${index}" ${index === selectedIndex ? "selected" : ""}>${getEntranceLabel(point)}</option>
+      `).join("")}
+    </select>
+  `;
+
+  container.querySelector("select").addEventListener("change", (event) => {
+    container.dataset.selectedEntranceIndex = event.target.value;
+    shouldFitRouteToMap = true;
+
+    if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
+      renderDirectionsPreview({ preservePanelState: true });
+    }
+  });
+}
+
+function syncEntranceOptions() {
+  renderEntranceOptions("start", getLocationBySelectValue(fromLocationSelect.value));
+  renderEntranceOptions("destination", getLocationBySelectValue(toLocationSelect.value));
+}
+
+function getEntranceSummaryMarkup(location, type, fallbackLabel) {
+  const selectedEntrance = location?.selectedEntrance;
+
+  if (!selectedEntrance) {
+    return `<span>${fallbackLabel}</span>`;
+  }
+
+  return `
+    <span>${fallbackLabel}</span>
+    <small class="route-entrance-note">${getEntranceLabel(selectedEntrance)}</small>
+  `;
+}
+
+function getLocationEntranceMarkup(location) {
+  const entrances = getLocationEntranceOptions(location);
+
+  if (!entrances.length) {
+    return "";
+  }
+
+  return `
+    <section class="detail-section detail-entrance-section">
+      <h3>Entrances</h3>
+      <div class="detail-entrance-list">
+        ${entrances.map((point, index) => `
+          <button class="detail-entrance-row" type="button" data-route-entrance="${index}">
+            <span class="material-symbols-outlined" aria-hidden="true">${point.type === "accessible" ? "accessible" : "door_open"}</span>
+            <span>
+              <strong>${getEntranceLabel(point)}</strong>
+              <span>${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}</span>
+            </span>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
 function getLocationInputValue(location) {
   const duplicateNameCount = locations.filter((item) => item.name === location.name).length;
   return duplicateNameCount > 1
@@ -1973,6 +2121,7 @@ function renderSelectedLocation(location) {
   const aliasMarkup = getAliasMarkup(profile);
   const bestForMarkup = getBestForMarkup(profile);
   const visitInfoMarkup = getVisitInfoMarkup(profile);
+  const entranceMarkup = getLocationEntranceMarkup(location);
   const highlightsMarkup = getHighlightsMarkup(profile);
   const floorNotesMarkup = getFloorNotesMarkup(profile);
   const detailNotesMarkup = getDetailNotesMarkup(profile);
@@ -2042,6 +2191,11 @@ function renderSelectedLocation(location) {
 
   selectedLocation.querySelector('[data-route-action="destination"]').addEventListener("click", () => {
     setRouteEndpoint("destination", location, { openDirections: true });
+  });
+  selectedLocation.querySelectorAll("[data-route-entrance]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setRouteEndpoint("destination", location, { openDirections: true, entranceIndex: Number(button.dataset.routeEntrance) });
+    });
   });
 
   selectedLocation.querySelectorAll("[data-personal-action]").forEach((button) => {
@@ -2307,8 +2461,11 @@ function reportLatestRouteIssue(issueType = "") {
   openRouteIssueReporter(latestRoutePreview.route, latestRoutePreview.routePreferenceLabel, issueType);
 }
 function renderDirectionsPreview(options = {}) {
-  const start = getLocationBySelectValue(fromLocationSelect.value);
-  const end = getLocationBySelectValue(toLocationSelect.value);
+  const startBase = getLocationBySelectValue(fromLocationSelect.value);
+  const endBase = getLocationBySelectValue(toLocationSelect.value);
+  syncEntranceOptions();
+  const start = getRoutePointForEndpoint(startBase, "start");
+  const end = getRoutePointForEndpoint(endBase, "destination");
   const isCurrentLocationStart = isCurrentLocationInput(fromLocationSelect.value);
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
@@ -2424,14 +2581,14 @@ function renderDirectionsPreview(options = {}) {
           <span class="material-symbols-outlined start-dot" aria-hidden="true">radio_button_checked</span>
           <div>
             <strong>Start</strong>
-            <span>${start.name}</span>
+            ${getEntranceSummaryMarkup(start, "start", start.name)}
           </div>
         </div>
         <div class="route-endpoint-row">
           <span class="material-symbols-outlined destination-dot" aria-hidden="true">location_on</span>
           <div>
             <strong>Destination</strong>
-            <span>${end.name}</span>
+            ${getEntranceSummaryMarkup(end, "destination", end.name)}
           </div>
         </div>
       </div>
@@ -3092,6 +3249,7 @@ function routeUsesCurrentLocation() {
 }
 
 function updateRouteActionButton() {
+  syncEntranceOptions();
   if (!getDirectionsButton) {
     return;
   }

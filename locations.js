@@ -53,7 +53,7 @@ const routeAccessPointsByLocation = {
   ],
   "Henry J. Biddle Hall": [
     {"name": "Biddle Hall Entrance", "lat": 35.243382, "lng": -80.8568782},
-    {"name": "Biddle Hall Side Entrance", "lat": 35.2434949, "lng": -80.8567008}
+    {"name": "Biddle Accessible / Elevator Entrance", "lat": 35.2434949, "lng": -80.8567008, "type": "accessible"}
   ],
   "Henry Lawrence McCrorey Memorial Hall": [
     {"name": "McCrorey Side Entrance", "lat": 35.242571, "lng": -80.855836},
