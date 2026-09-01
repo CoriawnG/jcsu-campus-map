@@ -2902,10 +2902,9 @@ function initializeNavigationMap() {
 
   navigationMap = L.map("navigationMap").setView(jcsuCenter, 17);
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
     maxZoom: 20,
-    subdomains: "abcd",
-    attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+    attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
   }).addTo(navigationMap);
 
   navigationMarkerLayer = L.layerGroup().addTo(navigationMap);
