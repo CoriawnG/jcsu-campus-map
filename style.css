@@ -585,6 +585,19 @@ select:focus {
   display: block;
   margin-bottom: 4px;
 }
+.leaflet-control-attribution {
+  margin: 12px !important;
+  padding: 4px 7px !important;
+  color: #334155 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(29, 36, 51, 0.14);
+  font-size: 0.68rem;
+}
+
+.leaflet-control-attribution a {
+  color: var(--blue) !important;
+}
 
 .map-legend {
   min-width: 150px;

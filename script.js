@@ -2900,7 +2900,13 @@ function initializeNavigationMap() {
     return;
   }
 
-  navigationMap = L.map("navigationMap").setView(jcsuCenter, 17);
+  navigationMap = L.map("navigationMap", {
+    attributionControl: false
+  }).setView(jcsuCenter, 17);
+  L.control.attribution({
+    position: "topleft",
+    prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
+  }).addTo(navigationMap);
 
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
     maxZoom: 20,

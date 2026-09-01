@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260901-esri-imagery-basemap";
+const CACHE_NAME = "jcsu-campus-map-v20260901-attribution-placement";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260901-esri-imagery-basemap",
-  "./locations.js?v=20260901-esri-imagery-basemap",
-  "./paths.js?v=20260901-esri-imagery-basemap",
-  "./navigation.js?v=20260901-esri-imagery-basemap",
-  "./script.js?v=20260901-esri-imagery-basemap",
+  "./style.css?v=20260901-attribution-placement",
+  "./locations.js?v=20260901-attribution-placement",
+  "./paths.js?v=20260901-attribution-placement",
+  "./navigation.js?v=20260901-attribution-placement",
+  "./script.js?v=20260901-attribution-placement",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
