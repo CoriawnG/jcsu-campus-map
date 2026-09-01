@@ -2903,6 +2903,7 @@ function initializeNavigationMap() {
   navigationMap = L.map("navigationMap").setView(jcsuCenter, 17);
 
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    maxNativeZoom: 16,
     maxZoom: 20,
     attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
   }).addTo(navigationMap);
