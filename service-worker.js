@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260904-panel-basemap-oldscience";
+const CACHE_NAME = "jcsu-campus-map-v20260904-sheet-pointer-drag-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260904-panel-basemap-oldscience",
-  "./locations.js?v=20260904-panel-basemap-oldscience",
-  "./paths.js?v=20260904-panel-basemap-oldscience",
-  "./navigation.js?v=20260904-panel-basemap-oldscience",
-  "./script.js?v=20260904-panel-basemap-oldscience",
+  "./style.css?v=20260904-sheet-pointer-drag-fix",
+  "./locations.js?v=20260904-sheet-pointer-drag-fix",
+  "./paths.js?v=20260904-sheet-pointer-drag-fix",
+  "./navigation.js?v=20260904-sheet-pointer-drag-fix",
+  "./script.js?v=20260904-sheet-pointer-drag-fix",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

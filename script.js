@@ -1817,6 +1817,10 @@ function startSheetSwipe(event) {
   sheetSwipeStartTranslate = getCurrentPanelTranslate();
   sheetSwipeLatestTranslate = sheetSwipeStartTranslate;
   sheetSwipeMoved = false;
+
+  if (event.pointerId !== undefined && sidebar.setPointerCapture) {
+    sidebar.setPointerCapture(event.pointerId);
+  }
 }
 
 function moveSheetSwipe(event) {
@@ -1854,6 +1858,10 @@ function endSheetSwipe(event) {
   sheetSwipeStartedAt = 0;
   sidebar.classList.remove("is-dragging");
   sidebar.style.transform = "";
+
+  if (event.pointerId !== undefined && sidebar.hasPointerCapture && sidebar.hasPointerCapture(event.pointerId)) {
+    sidebar.releasePointerCapture(event.pointerId);
+  }
 
   if (sheetSwipeMoved) {
     setMobilePanelState(getNearestPanelState(sheetSwipeLatestTranslate));
@@ -3703,9 +3711,13 @@ if (reportCurrentRouteIssueButton) {
   reportCurrentRouteIssueButton.addEventListener("click", () => reportLatestRouteIssue());
 }
 sidebar.addEventListener("pointerdown", startSheetSwipe);
+sidebar.addEventListener("pointermove", moveSheetSwipe);
 sidebar.addEventListener("pointerup", endSheetSwipe);
 sidebar.addEventListener("pointercancel", () => {
   sheetSwipeStartedAt = 0;
+  sheetSwipeMoved = false;
+  sidebar.classList.remove("is-dragging");
+  sidebar.style.transform = "";
 });
 sidebar.addEventListener("touchstart", startSheetSwipe, { passive: true });
 sidebar.addEventListener("touchmove", moveSheetSwipe, { passive: false });
