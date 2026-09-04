@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260904-sheet-pointer-drag-fix";
+const CACHE_NAME = "jcsu-campus-map-v20260904-no-snap-sheet-drag";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260904-sheet-pointer-drag-fix",
-  "./locations.js?v=20260904-sheet-pointer-drag-fix",
-  "./paths.js?v=20260904-sheet-pointer-drag-fix",
-  "./navigation.js?v=20260904-sheet-pointer-drag-fix",
-  "./script.js?v=20260904-sheet-pointer-drag-fix",
+  "./style.css?v=20260904-no-snap-sheet-drag",
+  "./locations.js?v=20260904-no-snap-sheet-drag",
+  "./paths.js?v=20260904-no-snap-sheet-drag",
+  "./navigation.js?v=20260904-no-snap-sheet-drag",
+  "./script.js?v=20260904-no-snap-sheet-drag",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

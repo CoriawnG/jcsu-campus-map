@@ -1851,10 +1851,6 @@ function endSheetSwipe(event) {
     return;
   }
 
-  const point = getSwipePoint(event);
-  const deltaY = point.clientY - sheetSwipeStartY;
-  const deltaX = Math.abs(point.clientX - sheetSwipeStartX);
-  const elapsed = Date.now() - sheetSwipeStartedAt;
   sheetSwipeStartedAt = 0;
   sidebar.classList.remove("is-dragging");
   sidebar.style.transform = "";
@@ -1865,8 +1861,6 @@ function endSheetSwipe(event) {
 
   if (sheetSwipeMoved) {
     setMobilePanelState(getNearestPanelState(sheetSwipeLatestTranslate));
-  } else if (deltaY < -34 && Math.abs(deltaY) > deltaX && elapsed < 900) {
-    setMobilePanelState("full");
   }
 
   sheetSwipeMoved = false;
