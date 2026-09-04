@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260904-no-snap-sheet-drag";
+const CACHE_NAME = "jcsu-campus-map-v20260904-quick-info-sheet-toggle";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260904-no-snap-sheet-drag",
-  "./locations.js?v=20260904-no-snap-sheet-drag",
-  "./paths.js?v=20260904-no-snap-sheet-drag",
-  "./navigation.js?v=20260904-no-snap-sheet-drag",
-  "./script.js?v=20260904-no-snap-sheet-drag",
+  "./style.css?v=20260904-quick-info-sheet-toggle",
+  "./locations.js?v=20260904-quick-info-sheet-toggle",
+  "./paths.js?v=20260904-quick-info-sheet-toggle",
+  "./navigation.js?v=20260904-quick-info-sheet-toggle",
+  "./script.js?v=20260904-quick-info-sheet-toggle",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

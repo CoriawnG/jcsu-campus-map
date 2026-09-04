@@ -1793,7 +1793,9 @@ function endPanelDrag(event) {
     mobilePanelToggle.releasePointerCapture(event.pointerId);
   }
 
-  setMobilePanelState(getNearestPanelState(panelDragLatestTranslate));
+  if (panelDragMoved) {
+    setMobilePanelState(getNearestPanelState(panelDragLatestTranslate));
+  }
 
   setTimeout(() => {
     panelDragMoved = false;

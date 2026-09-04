@@ -4014,15 +4014,6 @@ body.is-offline .app-shell {
     display: none;
   }
 
-  .sidebar.location-preview-active.sheet-half {
-    height: min(40vh, 330px);
-    overflow: hidden;
-    transform: translateY(calc(100% - min(40vh, 330px)));
-  }
-
-  .sidebar.location-preview-active.sheet-half .details-panel {
-    overflow: hidden;
-  }
 }
 
 @media (max-width: 420px) {
