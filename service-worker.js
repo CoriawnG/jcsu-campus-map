@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260901-basemap-picker-label-units";
+const CACHE_NAME = "jcsu-campus-map-v20260904-panel-basemap-oldscience";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260901-basemap-picker-label-units",
-  "./locations.js?v=20260901-basemap-picker-label-units",
-  "./paths.js?v=20260901-basemap-picker-label-units",
-  "./navigation.js?v=20260901-basemap-picker-label-units",
-  "./script.js?v=20260901-basemap-picker-label-units",
+  "./style.css?v=20260904-panel-basemap-oldscience",
+  "./locations.js?v=20260904-panel-basemap-oldscience",
+  "./paths.js?v=20260904-panel-basemap-oldscience",
+  "./navigation.js?v=20260904-panel-basemap-oldscience",
+  "./script.js?v=20260904-panel-basemap-oldscience",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

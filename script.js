@@ -395,15 +395,6 @@ const basemapOptions = {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap contributors"
     }
-  },
-  clean: {
-    name: "Clean",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-    options: {
-      maxNativeZoom: 16,
-      maxZoom: 20,
-      attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
-    }
   }
 };
 let activeLocationName = "";
@@ -1728,6 +1719,25 @@ function getPanelStateTranslate(state) {
 }
 
 function getCurrentPanelTranslate() {
+  if (!sidebar) {
+    return 0;
+  }
+
+  const transform = window.getComputedStyle(sidebar).transform;
+
+  if (transform && transform !== "none") {
+    const match = transform.match(/matrix.*\((.+)\)/);
+
+    if (match) {
+      const values = match[1].split(",").map((value) => Number(value.trim()));
+      const translateY = values.length === 6 ? values[5] : values[13];
+
+      if (Number.isFinite(translateY)) {
+        return translateY;
+      }
+    }
+  }
+
   return getPanelStateTranslate(sidebar.dataset.panelState || "full");
 }
 
