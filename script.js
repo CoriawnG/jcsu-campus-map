@@ -1,4 +1,4 @@
-const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
+﻿const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
 const appIntro = document.querySelector("#appIntro");
 const offlineBanner = document.querySelector("#offlineBanner");
@@ -139,35 +139,35 @@ const locationHours = {
   "Administrative Cottage #3 (Counseling Center)": {
     label: "Counseling Center",
     weekly: {
-      1: [[480, 1020]],
-      2: [[480, 1020]],
-      3: [[480, 1020]],
-      4: [[480, 1020]],
-      5: [[480, 1020]]
+      Monday: [["8:00 AM", "5:00 PM"]],
+      Tuesday: [["8:00 AM", "5:00 PM"]],
+      Wednesday: [["8:00 AM", "5:00 PM"]],
+      Thursday: [["8:00 AM", "5:00 PM"]],
+      Friday: [["8:00 AM", "5:00 PM"]]
     },
     source: "JCSU Counseling Center hours: Monday-Friday, 8 a.m.-5 p.m.; evening sessions by appointment."
   },
   "JCSU Health Center": {
     label: "Health Center",
     weekly: {
-      1: [[540, 780], [840, 1080]],
-      2: [[540, 780], [840, 1080]],
-      3: [[540, 780], [840, 1080]],
-      4: [[540, 780], [840, 1080]],
-      5: [[540, 780]]
+      Monday: [["9:00 AM", "1:00 PM"], ["2:00 PM", "6:00 PM"]],
+      Tuesday: [["9:00 AM", "1:00 PM"], ["2:00 PM", "6:00 PM"]],
+      Wednesday: [["9:00 AM", "1:00 PM"], ["2:00 PM", "6:00 PM"]],
+      Thursday: [["9:00 AM", "1:00 PM"], ["2:00 PM", "6:00 PM"]],
+      Friday: [["9:00 AM", "1:00 PM"]]
     },
     source: "JCSU Health Center hours: Monday-Thursday 9 a.m.-6 p.m. closed 1-2 p.m.; Friday 9 a.m.-1 p.m."
   },
   "James B. Duke Memorial Library": {
     label: "Library Fall/Spring Hours",
     weekly: {
-      0: [[840, 1440]],
-      1: [[450, 1440]],
-      2: [[450, 1380]],
-      3: [[450, 1380]],
-      4: [[450, 1380]],
-      5: [[450, 1020]],
-      6: [[600, 840]]
+      Sunday: [["2:00 PM", 1440]],
+      Monday: [["7:30 AM", 1440]],
+      Tuesday: [["7:30 AM", "11:00 PM"]],
+      Wednesday: [["7:30 AM", "11:00 PM"]],
+      Thursday: [["7:30 AM", "11:00 PM"]],
+      Friday: [["7:30 AM", "5:00 PM"]],
+      Saturday: [["10:00 AM", "2:00 PM"]]
     },
     source: "Library posted fall/spring hours; hours may change during breaks, exams, and summer."
   },
@@ -186,6 +186,241 @@ const locationHours = {
   "KoKoMo's Coffeehouse": {
     label: "KoKoMo's Coffeehouse",
     source: "Coffeehouse hours may vary by semester. Check posted campus dining hours."
+  }
+};
+
+const facultyOfficeHours = {
+  "New Science Center (STEM)": {
+    label: "College of STEM Faculty",
+    source: "College of STEM office hours collected for the JCSU Map senior project. Times can change during breaks and exams.",
+    faculty: [
+      {
+        name: "Dr. Mark Dugo",
+        room: "NSC 223E",
+        email: "mdugo@jcsu.edu",
+        weekly: {
+          Monday: [["1:00 PM", "2:00 PM"], ["3:00 PM", "5:00 PM"]],
+          Wednesday: [["1:00 PM", "2:00 PM"], ["3:00 PM", "5:00 PM"]],
+          Friday: [["1:00 PM", "2:00 PM"]]
+        },
+        appointment: {
+          Monday: [["11:00 AM", "12:00 PM"]],
+          Wednesday: [["11:00 AM", "12:00 PM"]],
+          Thursday: [["11:00 AM", "1:00 PM"]],
+          Friday: [["11:00 AM", "12:00 PM"]]
+        }
+      },
+      {
+        name: "Dr. Sunil Gupta",
+        room: "NSC 354",
+        email: "sgupta@jcsu.edu",
+        weekly: {
+          Monday: [["10:00 AM", "12:00 PM"]],
+          Wednesday: [["10:00 AM", "12:00 PM"]],
+          Friday: [["10:00 AM", "12:00 PM"]]
+        },
+        note: "Appointments: email to schedule."
+      },
+      {
+        name: "Dr. Jasmine Hamlehary",
+        room: "NSC 345",
+        email: "jhamlehdary@jcsu.edu",
+        weekly: {
+          Friday: [["10:00 AM", "12:00 PM"]]
+        },
+        note: "Appointments: email to schedule."
+      },
+      {
+        name: "Ms. Nakoria Strong",
+        room: "NSC 341",
+        email: "nstrong@jcsu.edu",
+        weekly: {
+          Monday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]],
+          Wednesday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]],
+          Friday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]]
+        },
+        appointment: {
+          Monday: [["10:30 AM", "11:30 AM"], ["2:30 PM", "4:00 PM"]],
+          Tuesday: [["10:00 AM", "11:30 AM"], ["1:30 PM", "4:30 PM"]],
+          Wednesday: [["10:30 AM", "11:30 AM"], ["2:30 PM", "4:00 PM"]],
+          Thursday: [["10:00 AM", "11:30 AM"], ["1:30 PM", "4:30 PM"]]
+        },
+        note: "Appointments: email to schedule."
+      },
+      {
+        name: "Dr. Thomas Fleming",
+        room: "NSC 346",
+        email: "tfleming@jcsu.edu",
+        weekly: {
+          Monday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]],
+          Wednesday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]],
+          Friday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]]
+        },
+        appointment: {
+          Tuesday: [["8:00 AM", "11:00 AM"], ["3:00 PM", "5:00 PM"]]
+        }
+      },
+      {
+        name: "Dr. Willie Fleming",
+        room: "NSC 337",
+        email: "wfleming@JCSU.EDU",
+        weekly: {
+          Tuesday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "12:00 PM"], ["3:30 PM", "4:30 PM"]],
+          Wednesday: [["9:00 AM", "12:00 PM"]],
+          Thursday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "12:00 PM"], ["3:30 PM", "4:30 PM"]]
+        },
+        note: "Appointments: as needed."
+      },
+      {
+        name: "Dr. Thipwiwatpotjana Phantipa (Yim)",
+        room: "NSC 334",
+        email: "pthipwiwatpotjana@JCSU.EDU",
+        weekly: {
+          Monday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]],
+          Wednesday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]],
+          Friday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]]
+        },
+        appointment: {
+          Tuesday: [["11:00 AM", "12:30 PM"]],
+          Thursday: [["11:00 AM", "12:30 PM"]]
+        },
+        note: "Tuesday/Thursday appointment slots meet on Microsoft Teams."
+      },
+      {
+        name: "Dr. Jason Tarkington",
+        room: "NSC 208",
+        email: "jtarkington@JCSU.EDU",
+        weekly: {
+          Monday: [["1:00 PM", "2:00 PM"]],
+          Tuesday: [["11:00 AM", "12:00 PM"], ["1:00 PM", "3:00 PM"]],
+          Wednesday: [["1:00 PM", "2:00 PM"]],
+          Friday: [["1:00 PM", "2:00 PM"]]
+        },
+        note: "Appointments: email to schedule."
+      },
+      {
+        name: "Dr. Brian Hunt",
+        room: "NSC 336",
+        email: "bjhunt@jcsu.edu",
+        weekly: {
+          Monday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
+          Wednesday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
+          Friday: [["12:00 PM", "1:00 PM"]]
+        },
+        appointment: {
+          Monday: [["9:00 AM", "11:00 AM"]],
+          Wednesday: [["9:00 AM", "10:00 AM"]],
+          Friday: [["9:00 AM", "11:00 AM"]]
+        }
+      },
+      {
+        name: "Dr. Douglas Cooper",
+        room: "NSC 340",
+        email: "dpcooper@jcsu.edu",
+        weekly: {
+          Monday: [["4:00 PM", "5:00 PM"]],
+          Tuesday: [["1:00 PM", "3:00 PM"]],
+          Wednesday: [["2:00 PM", "5:00 PM"]],
+          Thursday: [["1:00 PM", "3:00 PM"]],
+          Friday: [["2:00 PM", "5:00 PM"]]
+        },
+        note: "Tuesday and Thursday times are virtual only; Monday, Wednesday, and Friday are walk-in and virtual."
+      },
+      {
+        name: "Dr. Vijaya Gompa",
+        room: "NSC 348",
+        email: "vgompa@JCSU.EDU",
+        weekly: {
+          Monday: [["2:00 PM", "3:45 PM"]],
+          Wednesday: [["2:00 PM", "3:45 PM"]],
+          Friday: [["2:00 PM", "3:45 PM"]]
+        },
+        appointment: {
+          Monday: [["8:00 AM", "9:00 AM"]],
+          Wednesday: [["8:00 AM", "9:00 AM"]],
+          Friday: [["8:00 AM", "9:00 AM"]]
+        },
+        note: "The PDF printed 'MWF 2-3:45PM / 2:00-3:00PM'; entered as 2-3:45 p.m. Verify with the department."
+      }
+    ]
+  },
+  "Dorothy Cowser Yancy Technology Center": {
+    label: "College of STEM Faculty (Yancy)",
+    faculty: [
+      {
+        name: "Dr. Vanessa Figgers",
+        room: "Yancy (TC) 314",
+        email: "vfiggers@jcsu.edu",
+        weekly: {
+          Monday: [["9:00 AM", "10:00 AM"], ["11:00 AM", "12:00 PM"]],
+          Wednesday: [["9:00 AM", "10:00 AM"], ["11:00 AM", "12:00 PM"]],
+          Friday: [["9:00 AM", "10:00 AM"]]
+        },
+        appointment: {
+          Monday: [["12:00 PM", "2:30 PM"]],
+          Wednesday: [["12:00 PM", "2:30 PM"]]
+        }
+      },
+      {
+        name: "Dr. Awatif Amin",
+        room: "Yancy (TC) 113",
+        email: "aamin@jcsu.edu",
+        weekly: {
+          Monday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
+          Tuesday: [["11:00 AM", "1:30 PM"]],
+          Wednesday: [["12:00 PM", "1:00 PM"]],
+          Thursday: [["11:00 AM", "1:30 PM"]],
+          Friday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]]
+        }
+      },
+      {
+        name: "Dr. Sabina Otienoburu",
+        room: "Yancy (TC) 312",
+        email: "sotienoburu@JCSU.EDU",
+        weekly: {
+          Monday: [["10:00 AM", "12:00 PM"]],
+          Friday: [["10:00 AM", "12:00 PM"]]
+        },
+        appointment: {
+          Tuesday: [["10:00 AM", "3:00 PM"]]
+        },
+        note: "NSC 130 Lab, 1:00-2:00 p.m."
+      },
+      {
+        name: "Professor Raymond Scriven",
+        room: "Yancy (TC) 112",
+        email: "rscriven@JCSU.EDU",
+        weekly: {
+          Monday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]],
+          Tuesday: [["9:00 AM", "12:00 PM"]],
+          Wednesday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]],
+          Thursday: [["9:00 AM", "12:00 PM"]],
+          Friday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]]
+        },
+        appointment: {
+          Monday: [["3:00 PM", "4:00 PM"]],
+          Tuesday: [["3:00 PM", "4:00 PM"]],
+          Wednesday: [["3:00 PM", "4:00 PM"]],
+          Thursday: [["3:00 PM", "4:00 PM"]],
+          Friday: [["3:00 PM", "4:00 PM"]]
+        }
+      },
+      {
+        name: "Dr. Sonya Worrell",
+        room: "Yancy (TC) 214",
+        email: "sworrell@JCSU.EDU",
+        weekly: {
+          Monday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]],
+          Tuesday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]],
+          Wednesday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]]
+        },
+        appointment: {
+          Tuesday: [["10:00 AM", "2:00 PM"]],
+          Thursday: [["10:00 AM", "2:00 PM"]]
+        }
+      }
+    ],
+    source: "College of STEM faculty located in Yancy Technology Center, collected with the same office hours list. Times can change during breaks and exams."
   }
 };
 
@@ -1950,7 +2185,7 @@ function getLocationHoursStatus(location, date = new Date()) {
 
   const day = date.getDay();
   const nowMinutes = date.getHours() * 60 + date.getMinutes();
-  const windows = profile.weekly[day] || [];
+  const windows = normalizeWeeklySchedule(profile.weekly)[day] || [];
   const activeWindow = windows.find(([start, end]) => nowMinutes >= start && nowMinutes < end);
   const nextWindow = windows.find(([start]) => nowMinutes < start);
 
@@ -1978,6 +2213,272 @@ function getLocationHoursMarkup(location) {
     </section>
   `;
 }
+function getFacultyHoursProfile(location) {
+  return facultyOfficeHours[location.name] || null;
+}
+
+function normalizeFacultyWindows(windows) {
+  if (!windows || !windows.length) {
+    return [];
+  }
+
+  return Array.isArray(windows[0]) ? windows : [windows];
+}
+
+function formatFacultyWindows(windows) {
+  windows = normalizeFacultyWindows(windows);
+
+  if (!windows?.length) {
+    return "";
+  }
+
+  return windows
+    .slice()
+    .sort((a, b) => a[0] - b[0])
+    .map(([start, end]) => `${formatHoursTime(start)}-${formatHoursTime(end)}`)
+    .join(", ");
+}
+
+function getFacultyAvailabilityStatus(faculty, date = new Date()) {
+  const day = date.getDay();
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+  const officeWindows = normalizeFacultyWindows(normalizeWeeklySchedule(faculty.weekly)[day]);
+  const appointmentWindows = normalizeFacultyWindows(normalizeWeeklySchedule(faculty.appointment)[day]);
+  const officeText = formatFacultyWindows(officeWindows);
+  const appointmentText = formatFacultyWindows(appointmentWindows);
+  const todayParts = [];
+
+  if (officeText) {
+    todayParts.push(`Office hours ${officeText}`);
+  }
+
+  if (appointmentText) {
+    todayParts.push(`Appointments ${appointmentText}`);
+  }
+
+  return {
+    isAvailable: officeWindows.concat(appointmentWindows).some(([start, end]) => nowMinutes >= start && nowMinutes < end),
+    today: todayParts.length ? todayParts.join("; ") : "No scheduled times today"
+  };
+}
+
+const facultyDayNames = {
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  0: "Sunday"
+};
+
+const facultyDayNumbers = {
+  sunday: 0,
+  sun: 0,
+  monday: 1,
+  mon: 1,
+  tuesday: 2,
+  tues: 2,
+  tue: 2,
+  wednesday: 3,
+  wed: 3,
+  thursday: 4,
+  thurs: 4,
+  thur: 4,
+  thu: 4,
+  friday: 5,
+  fri: 5,
+  saturday: 6,
+  sat: 6
+};
+
+function parseScheduleTime(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const text = String(value).trim().toLowerCase().replace(/\s+/g, " ");
+  let match = text.match(/^(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)$/);
+
+  if (match) {
+    let hours = Number(match[1]) % 12;
+
+    if (match[3].startsWith("p")) {
+      hours += 12;
+    }
+
+    return hours * 60 + Number(match[2] || 0);
+  }
+
+  match = text.match(/^(\d{1,2}):(\d{2})$/);
+
+  if (match) {
+    return Number(match[1]) * 60 + Number(match[2]);
+  }
+
+  match = text.match(/^(\d{1,2})$/);
+
+  if (match) {
+    return (Number(match[1]) % 24) * 60;
+  }
+
+  return NaN;
+}
+
+function normalizeScheduleWindows(windows) {
+  if (!Array.isArray(windows)) {
+    return [];
+  }
+
+  return windows
+    .map((pair) => {
+      if (!Array.isArray(pair) || pair.length < 2) {
+        return null;
+      }
+
+      if (typeof pair[0] === "number" && typeof pair[1] === "number") {
+        return [pair[0], pair[1]];
+      }
+
+      const start = parseScheduleTime(pair[0]);
+      const end = parseScheduleTime(pair[1]);
+      return Number.isFinite(start) && Number.isFinite(end) ? [start, end] : null;
+    })
+    .filter((pair) => pair && pair[0] < pair[1]);
+}
+
+function normalizeWeeklySchedule(schedule) {
+  if (!schedule) {
+    return {};
+  }
+
+  const normalized = {};
+
+  Object.entries(schedule).forEach(([key, windows]) => {
+    const keyText = String(key).trim().toLowerCase();
+    let dayNumber = facultyDayNumbers[keyText];
+
+    if (dayNumber === undefined && /^\d$/.test(keyText)) {
+      dayNumber = Number(keyText);
+    }
+
+    if (dayNumber !== undefined) {
+      normalized[dayNumber] = normalizeScheduleWindows(windows);
+    }
+  });
+
+  return normalized;
+}
+
+function getFacultyDayWindows(faculty, day) {
+  const dayWindows = [];
+  normalizeFacultyWindows(normalizeWeeklySchedule(faculty.weekly)[day]).forEach(([start, end]) => {
+    dayWindows.push({ start, end, kind: "office hours" });
+  });
+  normalizeFacultyWindows(normalizeWeeklySchedule(faculty.appointment)[day]).forEach(([start, end]) => {
+    dayWindows.push({ start, end, kind: "appointments" });
+  });
+  return dayWindows.sort((a, b) => a.start - b.start);
+}
+
+function getFacultyDayText(faculty, day) {
+  const officeText = formatFacultyWindows(normalizeWeeklySchedule(faculty.weekly)[day]);
+  const appointmentText = formatFacultyWindows(normalizeWeeklySchedule(faculty.appointment)[day]);
+  const parts = [];
+
+  if (officeText) {
+    parts.push(`Office hours ${officeText}`);
+  }
+
+  if (appointmentText) {
+    parts.push(`Appointments ${appointmentText}`);
+  }
+
+  return parts.join("; ");
+}
+
+function getNextFacultyScheduledText(faculty, date = new Date()) {
+  const today = date.getDay();
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+
+  for (let offset = 0; offset < 8; offset += 1) {
+    const checkDay = (today + offset) % 7;
+    const dayWindows = getFacultyDayWindows(faculty, checkDay).filter((win) => offset > 0 || win.start > nowMinutes);
+
+    if (!dayWindows.length) {
+      continue;
+    }
+
+    const dayLabel = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : facultyDayNames[checkDay];
+    const text = dayWindows.map((win) => `${win.kind} ${formatHoursTime(win.start)}-${formatHoursTime(win.end)}`).join(", ");
+    return `${dayLabel}: ${text}`;
+  }
+
+  return "";
+}
+
+function getFacultyWeeklyMarkup(faculty) {
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  const rows = dayOrder
+    .map((day) => {
+      const text = getFacultyDayText(faculty, day) || "—";
+      return `<li><span class="faculty-hours-day">${facultyDayNames[day]}</span><span class="faculty-hours-day-times">${text}</span></li>`;
+    })
+    .join("");
+
+  return `
+        <details class="faculty-hours-week">
+          <summary>See full weekly schedule</summary>
+          <ul class="faculty-hours-week-list">
+            ${rows}
+          </ul>
+        </details>
+      `;
+}
+
+function getFacultyHoursMarkup(location) {
+  const profile = getFacultyHoursProfile(location);
+
+  if (!profile || !profile.faculty?.length) {
+    return "";
+  }
+
+  const now = new Date();
+  const entries = profile.faculty
+    .map((faculty) => ({ faculty, status: getFacultyAvailabilityStatus(faculty, now), next: getNextFacultyScheduledText(faculty, now) }))
+    .sort((a, b) => (b.status.isAvailable === a.status.isAvailable
+      ? a.faculty.name.localeCompare(b.faculty.name)
+      : (b.status.isAvailable ? 1 : 0) - (a.status.isAvailable ? 1 : 0)));
+  const availableCount = entries.filter((entry) => entry.status.isAvailable).length;
+
+  return `
+    <section class="detail-section detail-faculty-section">
+      <h3>Faculty Office Hours</h3>
+      <div class="hours-status-row">
+        <span class="hours-status-dot ${availableCount ? "open" : "closed"}" aria-hidden="true"></span>
+        <strong>${availableCount} of ${entries.length} faculty available right now</strong>
+      </div>
+      <ul class="faculty-hours-list">
+        ${entries.map((entry) => `
+          <li class="faculty-hours-item${entry.status.isAvailable ? " is-available" : ""}">
+            <div class="faculty-hours-top">
+              <span class="faculty-hours-dot${entry.status.isAvailable ? " open" : ""}" aria-hidden="true"></span>
+              <strong>${entry.faculty.name}</strong>
+              <span class="faculty-hours-room">${entry.faculty.room}</span>
+            </div>
+            <p class="faculty-hours-today"><strong>Today:</strong> ${entry.status.today}</p>
+            ${!entry.status.isAvailable && entry.next ? `<p class="faculty-hours-next"><strong>Next:</strong> ${entry.next}</p>` : ""}
+            ${entry.faculty.email ? `<a class="faculty-hours-email" href="mailto:${entry.faculty.email}">${entry.faculty.email}</a>` : ""}
+            ${getFacultyWeeklyMarkup(entry.faculty)}
+            ${entry.faculty.note ? `<p class="faculty-hours-note">${entry.faculty.note}</p>` : ""}
+          </li>
+        `).join("")}
+      </ul>
+      <p class="faculty-hours-source">${profile.source}</p>
+    </section>
+  `;
+}
+
 function getLocationDetailProfile(location) {
   return locationDetailProfiles[location.name] || {};
 }
@@ -2174,6 +2675,7 @@ function renderSelectedLocation(location) {
   const arrivalTipMarkup = getArrivalTipMarkup(profile);
   const contactMarkup = getLocationContactMarkup(location);
   const hoursMarkup = getLocationHoursMarkup(location);
+  const facultyHoursMarkup = getFacultyHoursMarkup(location);
   const hoursStatus = getLocationHoursStatus(location);
   const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
@@ -2200,6 +2702,7 @@ function renderSelectedLocation(location) {
     ${highlightsMarkup}
     ${floorNotesMarkup}
     ${contactMarkup}
+    ${facultyHoursMarkup}
     ${detailNotesMarkup}
     ${arrivalTipMarkup}
     <section class="detail-section detail-location-section">

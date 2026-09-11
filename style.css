@@ -613,7 +613,7 @@ select:focus {
   max-width: 132px;
   min-width: 0;
   padding: 0;
-  color: #ffffff;
+  color: #ebf312;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -633,7 +633,7 @@ select:focus {
   width: 7px;
   height: 7px;
   background: var(--label-color);
-  border: 1px solid rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(19, 18, 18, 0.86);
   border-radius: 999px;
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.38);
 }
@@ -3679,6 +3679,151 @@ body.is-offline .app-shell {
 .hours-status-dot.unknown {
   background: var(--gold);
   box-shadow: 0 0 0 4px rgba(255, 207, 1, 0.18);
+}
+
+/* Faculty office hours */
+.detail-faculty-section {
+  border-color: rgba(0, 45, 86, 0.16);
+  background: #ffffff;
+}
+
+.faculty-hours-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.faculty-hours-item {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 45, 86, 0.1);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.faculty-hours-item.is-available {
+  border-color: rgba(36, 116, 91, 0.42);
+  background: rgba(36, 116, 91, 0.06);
+}
+
+.faculty-hours-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.faculty-hours-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.faculty-hours-dot.open {
+  background: var(--green);
+}
+
+.faculty-hours-room {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.faculty-hours-today {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+}
+
+.faculty-hours-email {
+  display: inline-block;
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 45, 86, 0.25);
+}
+
+.faculty-hours-email:active {
+  color: var(--gold);
+}
+
+.faculty-hours-next {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.faculty-hours-week {
+  margin: 8px 0 0;
+}
+
+.faculty-hours-week summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue);
+  list-style: none;
+}
+
+.faculty-hours-week summary::-webkit-details-marker {
+  display: none;
+}
+
+.faculty-hours-week summary::after {
+  content: "▾";
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.faculty-hours-week[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.faculty-hours-week-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  display: grid;
+  gap: 4px;
+  background: rgba(0, 45, 86, 0.04);
+  border-radius: 10px;
+}
+
+.faculty-hours-week-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+
+.faculty-hours-day {
+  flex: 0 0 84px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.faculty-hours-day-times {
+  flex: 1;
+}
+
+.faculty-hours-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.faculty-hours-source {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
 }
 
 /* Dedicated saved places screen */
