@@ -2198,8 +2198,34 @@ function getLocationHoursStatus(location, date = new Date()) {
   };
 }
 
+function getBuildingWeeklyText(profile, day) {
+  const windows = normalizeWeeklySchedule(profile.weekly)[day] || [];
+  return windows.length ? formatHoursWindows(windows) : "";
+}
+
+function getBuildingWeeklyMarkup(profile) {
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  const rows = dayOrder
+    .map((day) => {
+      const text = getBuildingWeeklyText(profile, day) || "—";
+      return `<li><span class="faculty-hours-day">${scheduleDayNames[day]}</span><span class="faculty-hours-day-times">${text}</span></li>`;
+    })
+    .join("");
+
+  return `
+        <details class="faculty-hours-week">
+          <summary>See full weekly schedule</summary>
+          <ul class="faculty-hours-week-list">
+            ${rows}
+          </ul>
+        </details>
+      `;
+}
+
 function getLocationHoursMarkup(location) {
+  const profile = getLocationHoursProfile(location);
   const status = getLocationHoursStatus(location);
+  const weeklyMarkup = profile && profile.weekly ? getBuildingWeeklyMarkup(profile) : "";
 
   return `
     <section class="detail-section detail-hours-section">
@@ -2209,6 +2235,7 @@ function getLocationHoursMarkup(location) {
         <strong>${status.heading}</strong>
       </div>
       <p><strong>Today:</strong> ${status.today}</p>
+      ${weeklyMarkup}
       <p>${status.note}</p>
     </section>
   `;
@@ -2262,7 +2289,7 @@ function getFacultyAvailabilityStatus(faculty, date = new Date()) {
   };
 }
 
-const facultyDayNames = {
+const scheduleDayNames = {
   1: "Monday",
   2: "Tuesday",
   3: "Wednesday",
@@ -2409,7 +2436,7 @@ function getNextFacultyScheduledText(faculty, date = new Date()) {
       continue;
     }
 
-    const dayLabel = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : facultyDayNames[checkDay];
+    const dayLabel = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : scheduleDayNames[checkDay];
     const text = dayWindows.map((win) => `${win.kind} ${formatHoursTime(win.start)}-${formatHoursTime(win.end)}`).join(", ");
     return `${dayLabel}: ${text}`;
   }
@@ -2422,7 +2449,7 @@ function getFacultyWeeklyMarkup(faculty) {
   const rows = dayOrder
     .map((day) => {
       const text = getFacultyDayText(faculty, day) || "—";
-      return `<li><span class="faculty-hours-day">${facultyDayNames[day]}</span><span class="faculty-hours-day-times">${text}</span></li>`;
+      return `<li><span class="faculty-hours-day">${scheduleDayNames[day]}</span><span class="faculty-hours-day-times">${text}</span></li>`;
     })
     .join("");
 
@@ -2699,8 +2726,12 @@ function renderSelectedLocation(location) {
       <p>${location.description}</p>
     </section>
     ${aliasMarkup}
+    ${bestForMarkup}
     ${highlightsMarkup}
     ${floorNotesMarkup}
+    ${visitInfoMarkup}
+    ${entranceMarkup}
+    ${hoursMarkup}
     ${contactMarkup}
     ${facultyHoursMarkup}
     ${detailNotesMarkup}

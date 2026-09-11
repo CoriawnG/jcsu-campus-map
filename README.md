@@ -1,6 +1,6 @@
 # JCSU Campus Navigation
 
-An interactive mobile-first campus map and walking navigation web app for Johnson C. Smith University. The app uses campus location data, sidewalk path data, Leaflet, OpenStreetMap tiles, and Dijkstra-based routing to help students search for places, get walking directions, save personal shortcuts, and report route issues.
+An interactive mobile-first campus map and walking navigation web app for Johnson C. Smith University. The app uses campus location data, sidewalk path data, Leaflet, Esri World Imagery satellite tiles, and Dijkstra-based routing to help students search for places, get walking directions, save personal shortcuts, and report route issues.
 
 ## Live Website
 
@@ -19,6 +19,9 @@ https://coriawng.github.io/jcsu-campus-map/
 - Route preferences: Fastest, Accessible, Avoid Roads, and Prefer Main Sidewalks
 - Route issue reporter connected to the existing Google Forms feedback flow
 - Emergency/Safety quick panel with call buttons and route shortcuts
+- Satellite/Streets basemap picker using Esri World Imagery tiles
+- Custom campus building labels that fade in as you zoom closer
+- Building hours and College of STEM faculty office hours with open-now status and weekly schedules
 - PWA install support for iPhone and Android home screen use
 
 ## Tech Stack
@@ -27,7 +30,7 @@ https://coriawng.github.io/jcsu-campus-map/
 - CSS
 - JavaScript
 - Leaflet
-- OpenStreetMap tiles
+- Esri World Imagery tiles (Satellite) with a Streets option
 - Google My Maps / KML / KMZ data workflow
 - Browser Geolocation API
 - Web App Manifest
