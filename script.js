@@ -1762,14 +1762,84 @@ function getSearchText(location) {
   ].join(" ").toLowerCase();
 }
 
+function getFacultySearchMatches(query) {
+  if (!query) {
+    return [];
+  }
+
+  const matches = [];
+
+  Object.entries(facultyOfficeHours).forEach(([buildingName, profile]) => {
+    (profile.faculty || []).forEach((faculty) => {
+      const haystack = `${faculty.name} ${faculty.room || ""} ${faculty.email || ""} ${buildingName}`.toLowerCase();
+
+      if (haystack.includes(query)) {
+        matches.push({ faculty, buildingName, profile });
+      }
+    });
+  });
+
+  return matches;
+}
+
+function getFacultySearchAvailabilityText(faculty) {
+  const status = getFacultyAvailabilityStatus(faculty);
+
+  if (status.isAvailable) {
+    return "Available now";
+  }
+
+  return getNextFacultyScheduledText(faculty) || "No scheduled times";
+}
+
 function renderLocations(list) {
   resultsContainer.innerHTML = "";
-  resultCount.textContent = list.length;
+  const query = searchInput.value.trim().toLowerCase();
+  const facultyMatches = getFacultySearchMatches(query);
+  resultCount.textContent = list.length + facultyMatches.length;
   hideExploreRails();
   renderSavedPanel();
 
-  if (list.length === 0) {
-    resultsContainer.innerHTML = '<p class="empty-state">No locations found. Try a building name, office, food spot, or dorm.</p>';
+  if (facultyMatches.length) {
+    const heading = document.createElement("p");
+    heading.className = "eyebrow";
+    heading.textContent = "Faculty";
+    resultsContainer.appendChild(heading);
+
+    facultyMatches.forEach((match) => {
+      const button = document.createElement("button");
+      button.className = "location-button";
+      button.type = "button";
+      button.innerHTML = `
+        <span class="material-symbols-outlined location-icon" aria-hidden="true">person</span>
+        <strong>${match.faculty.name}</strong>
+        <span>${getFacultySearchAvailabilityText(match.faculty)} &middot; ${match.faculty.room} &middot; ${match.buildingName}</span>
+      `;
+
+      button.addEventListener("click", () => {
+        const building = locations.find((item) => item.name === match.buildingName);
+
+        if (!building) {
+          return;
+        }
+
+        selectLocation(building, { showDetails: true });
+
+        setTimeout(() => {
+          const section = selectedLocation.querySelector(".detail-faculty-section");
+
+          if (section) {
+            section.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 60);
+      });
+
+      resultsContainer.appendChild(button);
+    });
+  }
+
+  if (list.length === 0 && !facultyMatches.length) {
+    resultsContainer.innerHTML = '<p class="empty-state">No locations found. Try a building name, office, food spot, dorm, or professor name.</p>';
     return;
   }
 
@@ -3522,6 +3592,71 @@ function setNavigationBasemap(type = "imagery") {
   }
 }
 
+const labelMeasureContext = typeof document !== "undefined" && document.createElement
+  ? document.createElement("canvas").getContext("2d")
+  : null;
+
+function measureMapLabelText(text, fontSize) {
+  if (!labelMeasureContext) {
+    return String(text).length * 5.4;
+  }
+
+  labelMeasureContext.font = `800 ${fontSize}px "Segoe UI", system-ui, sans-serif`;
+  return labelMeasureContext.measureText(text).width;
+}
+
+function estimateMapLabelWidth(name, zoom) {
+  const fontSize = zoom >= 19 ? 9.28 : 8.32;
+  const textWidth = Math.min(measureMapLabelText(name, fontSize) * 1.15, 118);
+  return Math.round(9 + 3 + textWidth);
+}
+
+function planBuildingLabelPlacements(candidates, map, zoom) {
+  const labelHalfHeight = 8;
+  const sideGap = 3;
+  const placed = [];
+  const overlaps = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+
+  candidates.forEach((candidate) => {
+    const point = map.latLngToContainerPoint([candidate.location.lat, candidate.location.lng]);
+    const width = estimateMapLabelWidth(candidate.location.name, zoom);
+    const rightRect = [point.x + sideGap, point.y - labelHalfHeight, point.x + sideGap + width, point.y + labelHalfHeight];
+    const leftRect = [point.x - sideGap - width, point.y - labelHalfHeight, point.x - sideGap, point.y + labelHalfHeight];
+
+    if (candidate.isSelected || !placed.some((entry) => !entry.hidden && overlaps(entry.rect, rightRect))) {
+      placed.push({ ...candidate, side: "right", width, rect: rightRect, hidden: false });
+      return;
+    }
+
+    if (!placed.some((entry) => !entry.hidden && overlaps(entry.rect, leftRect))) {
+      placed.push({ ...candidate, side: "left", width, rect: leftRect, hidden: false });
+      return;
+    }
+
+    placed.push({ ...candidate, side: "right", width, rect: rightRect, hidden: true });
+  });
+
+  return placed;
+}
+
+function addBuildingDotMarker(location, style, isSelected) {
+  const marker = L.circleMarker([location.lat, location.lng], {
+    radius: isSelected ? 8 : 5,
+    color: isSelected ? "#111827" : style.color,
+    weight: isSelected ? 4 : 2,
+    fillColor: style.color,
+    fillOpacity: isSelected ? 0.98 : 0.78
+  });
+
+  marker.bindTooltip(location.name, {
+    direction: "top",
+    offset: [0, -8]
+  });
+
+  marker.on("click", () => selectLocation(location));
+  marker.addTo(navigationMarkerLayer);
+}
+
 function shouldShowMapLabel(location) {
   return location.layer !== "Parking and Transportation";
 }
@@ -3577,6 +3712,9 @@ function renderNavigationMarkers(list) {
   const shouldShowMapDots = zoom >= mapMarkerMinZoom;
   const labelZoomClass = getMapLabelZoomClass(zoom);
 
+  const labelCandidates = [];
+  let selectedEntry = null;
+
   list.forEach((location) => {
     if (!location.lat || !location.lng) {
       return;
@@ -3586,50 +3724,91 @@ function renderNavigationMarkers(list) {
     const isSelected = location.index === activeLocationIndex;
     const shouldRenderLocation = isSelected || (shouldShowMapDots && shouldShowMapText);
 
+    if (isSelected) {
+      selectedEntry = location;
+    }
+
     if (shouldRenderLocation && shouldShowMapLabel(location)) {
-      const marker = L.marker([location.lat, location.lng], {
-        interactive: true,
-        icon: L.divIcon({
-          className: `campus-building-label ${isSelected ? "is-selected" : labelZoomClass}`,
-          html: `
-            <span style="--label-color:${style.color}">
-              <i aria-hidden="true"></i>
-              <b>${location.name}</b>
-            </span>
-          `,
-          iconSize: null,
-          iconAnchor: [8, 8]
-        })
-      });
-
-      marker.bindTooltip(location.name, {
-        direction: "top",
-        offset: [0, -10]
-      });
-
-      marker.on("click", () => selectLocation(location));
-      marker.addTo(navigationMarkerLayer);
-
+      labelCandidates.push({ location, style, isSelected });
       return;
     }
 
     if (shouldRenderLocation) {
-      const marker = L.circleMarker([location.lat, location.lng], {
-        radius: isSelected ? 8 : 5,
-        color: isSelected ? "#111827" : style.color,
-        weight: isSelected ? 4 : 2,
-        fillColor: style.color,
-        fillOpacity: isSelected ? 0.98 : 0.78
-      });
-
-      marker.bindTooltip(location.name, {
-        direction: "top",
-        offset: [0, -8]
-      });
-
-      marker.on("click", () => selectLocation(location));
-      marker.addTo(navigationMarkerLayer);
+      addBuildingDotMarker(location, style, isSelected);
     }
+  });
+
+  labelCandidates.sort((a, b) => (a.isSelected === b.isSelected ? 0 : a.isSelected ? -1 : 1));
+  const placements = planBuildingLabelPlacements(labelCandidates, navigationMap, zoom);
+
+  placements.forEach((placement) => {
+    if (placement.hidden) {
+      addBuildingDotMarker(placement.location, placement.style, placement.isSelected);
+      return;
+    }
+
+    const marker = L.marker([placement.location.lat, placement.location.lng], {
+      interactive: true,
+      icon: L.divIcon({
+        className: `campus-building-label ${placement.side === "left" ? "is-left " : ""}${placement.isSelected ? "is-selected" : labelZoomClass}`,
+        html: `
+          <span style="--label-color:${placement.style.color}">
+            <i aria-hidden="true"></i>
+            <b>${placement.location.name}</b>
+          </span>
+        `,
+        iconSize: null,
+        iconAnchor: placement.side === "left" ? [Math.round(placement.width + 8), 8] : [8, 8]
+      })
+    });
+
+    marker.bindTooltip(placement.location.name, {
+      direction: "top",
+      offset: [0, -10]
+    });
+
+    marker.on("click", () => selectLocation(placement.location));
+    marker.addTo(navigationMarkerLayer);
+  });
+
+  if (selectedEntry) {
+    addEntrancePinsForLocation(selectedEntry, zoom);
+  }
+}
+
+function addEntrancePinsForLocation(location, zoom) {
+  const entrances = getLocationEntranceOptions(location);
+
+  if (!entrances.length || zoom < mapMarkerMinZoom) {
+    return;
+  }
+
+  const selectedEntrance = getSelectedEntrance(location, "destination");
+  const selectedIndex = selectedEntrance ? entrances.indexOf(selectedEntrance) : -1;
+
+  entrances.forEach((point, index) => {
+    const isAccessible = point.type === "accessible";
+    const isChosen = index === selectedIndex;
+    const pin = L.marker([point.lat, point.lng], {
+      interactive: true,
+      icon: L.divIcon({
+        className: `campus-entrance-pin${isAccessible ? " is-accessible" : ""}${isChosen ? " is-chosen" : ""}`,
+        html: `<span class="material-symbols-outlined" aria-hidden="true">${isAccessible ? "accessible" : "door_open"}</span>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 22]
+      })
+    });
+
+    pin.bindTooltip(`${getEntranceLabel(point)}${isAccessible ? " (Accessible)" : ""}${isChosen ? " — selected" : ""}`, {
+      direction: "top",
+      offset: [0, -14]
+    });
+
+    pin.on("click", () => {
+      setRouteEndpoint("destination", location, { openDirections: true, entranceIndex: index });
+    });
+
+    pin.addTo(navigationMarkerLayer);
   });
 }
 

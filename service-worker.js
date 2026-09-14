@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260911-detail-sections";
+const CACHE_NAME = "jcsu-campus-map-v20260912-label-entrance-pins";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260911-detail-sections",
-  "./locations.js?v=20260911-detail-sections",
-  "./paths.js?v=20260911-detail-sections",
-  "./navigation.js?v=20260911-detail-sections",
-  "./script.js?v=20260911-detail-sections",
+  "./style.css?v=20260912-label-entrance-pins",
+  "./locations.js?v=20260912-label-entrance-pins",
+  "./paths.js?v=20260912-label-entrance-pins",
+  "./navigation.js?v=20260912-label-entrance-pins",
+  "./script.js?v=20260912-label-entrance-pins",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
