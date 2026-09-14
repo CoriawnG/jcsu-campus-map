@@ -74,6 +74,13 @@ const googleFeedbackEntries = {
   contact: "entry.932342083"
 };
 const jcsuCenter = [35.2435, -80.8565];
+// Campus-only map bounds: every mapped location, pan room to the east
+// edge (-80.8488) covering the baseball field by the IBC, and room
+// west/south so Mosaic Village and the Arts Factory can be centered.
+const campusMapBounds = [
+  [35.2368, -80.8616],
+  [35.247, -80.8488]
+];
 const layerIconNames = {
   "Academic Buildings": "school",
   "Campus Services": "business_center",
@@ -2533,6 +2540,39 @@ function getFacultyWeeklyMarkup(faculty) {
       `;
 }
 
+function openFacultyEmailCompose(faculty) {
+  if (!faculty?.email) {
+    return;
+  }
+
+  const outlookDeepLink = `ms-outlook://compose?to=${encodeURIComponent(faculty.email)}`;
+  const fallbackStartedAt = Date.now();
+  const fallbackDelayMs = 1600;
+  let fallbackTimer = 0;
+  let fallbackDone = false;
+
+  const openFallback = () => {
+    if (fallbackDone || document.hidden || Date.now() - fallbackStartedAt > fallbackDelayMs + 400) {
+      return;
+    }
+
+    fallbackDone = true;
+    window.clearTimeout(fallbackTimer);
+    document.removeEventListener("visibilitychange", cancelFallback);
+    window.location.href = `mailto:${faculty.email}`;
+  };
+
+  const cancelFallback = () => {
+    fallbackDone = true;
+    window.clearTimeout(fallbackTimer);
+    document.removeEventListener("visibilitychange", cancelFallback);
+  };
+
+  fallbackTimer = window.setTimeout(openFallback, fallbackDelayMs);
+  document.addEventListener("visibilitychange", cancelFallback);
+  window.location.href = outlookDeepLink;
+}
+
 function getFacultyHoursMarkup(location) {
   const profile = getFacultyHoursProfile(location);
 
@@ -2565,7 +2605,7 @@ function getFacultyHoursMarkup(location) {
             </div>
             <p class="faculty-hours-today"><strong>Today:</strong> ${entry.status.today}</p>
             ${!entry.status.isAvailable && entry.next ? `<p class="faculty-hours-next"><strong>Next:</strong> ${entry.next}</p>` : ""}
-            ${entry.faculty.email ? `<a class="faculty-hours-email" href="mailto:${entry.faculty.email}">${entry.faculty.email}</a>` : ""}
+            ${entry.faculty.email ? `<button class="faculty-hours-email" type="button" data-faculty-email="${entry.faculty.email}">${entry.faculty.email}</button>` : ""}
             ${getFacultyWeeklyMarkup(entry.faculty)}
             ${entry.faculty.note ? `<p class="faculty-hours-note">${entry.faculty.note}</p>` : ""}
           </li>
@@ -2845,6 +2885,12 @@ function renderSelectedLocation(location) {
   selectedLocation.querySelectorAll("[data-route-entrance]").forEach((button) => {
     button.addEventListener("click", () => {
       setRouteEndpoint("destination", location, { openDirections: true, entranceIndex: Number(button.dataset.routeEntrance) });
+    });
+  });
+
+  selectedLocation.querySelectorAll("[data-faculty-email]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openFacultyEmailCompose({ email: button.dataset.facultyEmail });
     });
   });
 
@@ -3551,7 +3597,10 @@ function initializeNavigationMap() {
   }
 
   navigationMap = L.map("navigationMap", {
-    attributionControl: false
+    attributionControl: false,
+    minZoom: 16,
+    maxBounds: L.latLngBounds(campusMapBounds),
+    maxBoundsViscosity: 1.0
   }).setView(jcsuCenter, 17);
   L.control.attribution({
     position: "topright",
@@ -3829,6 +3878,10 @@ function showCurrentLocationMarker(options = {}) {
 
   currentLocationLayer.clearLayers();
 
+  if (!isCampusPosition(currentPosition.lat, currentPosition.lng)) {
+    return;
+  }
+
   const accuracyRadius = Math.max(18, Math.min(currentPosition.accuracy || 30, 120));
   const accuracyText = currentPosition.accuracy
     ? `<br>Accuracy: about ${Math.round(currentPosition.accuracy)} meters`
@@ -3850,7 +3903,7 @@ function showCurrentLocationMarker(options = {}) {
     fillOpacity: 1
   }).bindPopup(`<strong>You are here</strong>${accuracyText}`).addTo(currentLocationLayer);
 
-  if (options.centerMap !== false) {
+  if (isCampusPosition(currentPosition.lat, currentPosition.lng) && options.centerMap !== false) {
     navigationMap.setView([currentPosition.lat, currentPosition.lng], 19);
   }
 }
@@ -4096,12 +4149,21 @@ function shouldShowLiveLocationPin() {
   return !hasRouteEndpoints || routeUsesCurrentLocation();
 }
 
+function isCampusPosition(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return false;
+  }
+
+  const [[south, west], [north, east]] = campusMapBounds;
+  return lat >= south && lat <= north && lng >= west && lng <= east;
+}
+
 function syncCurrentLocationMarker(options = {}) {
   if (!currentLocationLayer) {
     return;
   }
 
-  if (shouldShowLiveLocationPin()) {
+  if (shouldShowLiveLocationPin() && currentPosition && isCampusPosition(currentPosition.lat, currentPosition.lng)) {
     showCurrentLocationMarker(options);
   } else {
     currentLocationLayer.clearLayers();
