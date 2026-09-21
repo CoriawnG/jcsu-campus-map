@@ -13,6 +13,7 @@ const savedCount = document.querySelector("#savedCount");
 const resultCount = document.querySelector("#resultCount");
 const selectedLocation = document.querySelector("#selectedLocation");
 const filterButtons = document.querySelectorAll(".filter-button");
+const openNowToggle = document.querySelector("[data-open-now]");
 const fromLocationSelect = document.querySelector("#fromLocation");
 const toLocationSelect = document.querySelector("#toLocation");
 const routePreferenceSelect = document.querySelector("#routePreference");
@@ -96,6 +97,7 @@ const personalPlacesStorageKey = "jcsu-personal-places";
 const favoriteLocationsStorageKey = "jcsu-favorite-locations";
 const recentLocationsStorageKey = "jcsu-recent-locations";
 const helpSeenStorageKey = "jcsu-help-seen";
+const outlookEmailFallbackDelayMs = 2400;
 const maxRecentLocations = 8;
 
 const routePreferenceLabels = {
@@ -201,6 +203,79 @@ const facultyOfficeHours = {
     label: "College of STEM Faculty",
     source: "College of STEM office hours collected for the JCSU Map senior project. Times can change during breaks and exams.",
     faculty: [
+      {
+        name: "Dr. Jason Tarkington",
+        room: "NSC 231",
+        email: "jtarkington@JCSU.EDU",
+        weekly: {
+          Monday: [["10:00 AM","12:00 PM"]],
+          Tuesday: [["11:00 AM","12:00 PM"],["1:00 AM", "3:00 PM"]],
+          Wednesday: [["10:00 AM","12:00 PM"]],
+          Friday: [["10:00 AM","12:00 PM"]],
+
+        },
+        note: "Appointment email to schedule."
+      },
+      {
+        name: "Dr. Alexa von Dohlen",
+        room: "NSC 232",
+        email: "acrosypal@jcsu.edu",
+        weekly:{
+          Monday: [["10:30 AM", "11:00 AM"], ["1:00 PM", "3:00 PM"]],
+          Wednesday: [["10:30 AM", "11:00 AM"], ["1:00 PM", "3:00 PM"]],
+        },
+        appointment: {
+          Tuesday: [["8:00 AM", "11:00 AM"]],
+          Thursday: [["9:00 AM", "11:00 AM"]],
+        }
+      },
+
+      {
+        name: "Dr. Tracy Fox-Brown",
+        room: "NSC 306",
+        email: "tbrown2@JCSU.EDU",
+        weekly: {
+          Monday: [["9:00 AM", "10:00 AM"]],
+          Wednesday: [["9:00 AM", "10:00 AM"]],
+          Thursday: [["9:00", "12:00 PM"]],
+          Friday: [["9:00 AM", "10:00 AM"]],
+
+        },
+        appointment: {
+          Monday: [["8:00 AM", "9:00 AM"]],
+          Wednesday: [["8:00 AM", "9:00 AM"]],
+          Thursday: [["8:00 AM", "9:00 AM"]],
+          Friday: [["8:00 AM", "9:00 AM"]],
+
+        }
+
+      },
+      {
+        name: "Dr. Debra Terrell",
+        room: "NSC 223B",
+        email: "dterrell@jcsu.edu",
+        weekly: {
+          Tuesday: [["11:00 AM", "3:00 PM"]],
+          Thursday: [["11:00 AM", "3:00 PM"]],
+
+        },
+        note: "Friday by Appointment Only."
+
+      },
+      {
+        name: "Ms. Rashawna Huntley",
+        room: "NSC 223C",
+        email: "rhuntley@JCSU.EDU",
+        weekly: {
+          Monday: [["8:00 AM", "12:00 PM"], ["1:00 PM", "5:00 PM"]],
+          Wednesday: [["8:00 AM", "12:00 PM"], ["1:00 PM", "5:00 PM"]],
+          Thursday: [["12:00 PM", "5:00 PM"]],
+          Friday: [["9:00 AM", "1:30 PM"]],
+
+        },
+      
+      },
+      
       {
         name: "Dr. Mark Dugo",
         room: "NSC 223E",
@@ -354,6 +429,39 @@ const facultyOfficeHours = {
   "Dorothy Cowser Yancy Technology Center": {
     label: "College of STEM Faculty (Yancy)",
     faculty: [
+      {
+        name: "Dr. Suraydip Chakraborty",
+        room: "Yancy (TC) 317",
+        email: "schakraborty@JCSU.EDU",
+        weekly: {
+          Monday: [["2:00 PM", "3:00 PM"]],
+          Wednesday: [["2:00 PM", "3:00 PM"]],
+          Thursday: [["9:30 AM", "11:00 AM"]], 
+
+        },
+        appointment: {
+          Monday: [["12:00 PM", "2:00 PM"]],
+          Tuesday: [["11:00 AM", "12:00 PM"]],
+          Thursday: [["3:00 PM", "4:00 PM"]],
+
+        }
+
+      },
+      {
+        name: "Dr. Felesia Stukes",
+        room: "Yancy (TC) 209 ",
+        email: "fstukes@JCSU.EDU",
+        weekly: {
+          Thursday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "11:45 AM"], ["2:45 PM", "3:45 PM"]],
+
+        },
+        appointment: {
+          Monday: [["8:00 AM", "9:30 AM"], ["2:45 PM", "3:45 PM"]],
+          Wednesday: [["8:00 AM", "9:30 AM"], ["2:45 PM", "3:45 PM"]]
+          
+        }
+
+      },
       {
         name: "Dr. Vanessa Figgers",
         room: "Yancy (TC) 314",
@@ -642,6 +750,7 @@ const basemapOptions = {
 let activeLocationName = "";
 let activeLocationIndex = -1;
 let activeLayer = "All";
+let activeOpenNowFilter = false;
 let currentPosition = null;
 let rawCurrentPosition = null;
 let recentGpsPositions = [];
@@ -672,6 +781,9 @@ let latestDirectionSteps = [];
 let routeInstructionPoints = [];
 let activeRouteStepIndex = 0;
 let isGuidedNavigationActive = false;
+let hasAnnouncedRouteArrival = false;
+let offRouteFixCount = 0;
+let offRouteAnnounced = false;
 let routeStartManuallyChanged = false;
 
 let introDismissTimer = null;
@@ -1846,7 +1958,9 @@ function renderLocations(list) {
   }
 
   if (list.length === 0 && !facultyMatches.length) {
-    resultsContainer.innerHTML = '<p class="empty-state">No locations found. Try a building name, office, food spot, dorm, or professor name.</p>';
+    resultsContainer.innerHTML = activeOpenNowFilter
+      ? '<p class="empty-state">Nothing matches while the "Open now" filter is on. Some places do not have hours listed yet, so try turning the filter off.</p>'
+      : '<p class="empty-state">No locations found. Try a building name, office, food spot, dorm, or professor name.</p>';
     return;
   }
 
@@ -1982,6 +2096,10 @@ function collapseMobilePanel() {
 }
 
 function openDirectionsPanel(options = {}) {
+  if (options.preserveView) {
+    return;
+  }
+
   setActiveBottomNav("directions");
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
@@ -2215,6 +2333,11 @@ function formatHoursTime(minutes) {
   const displayHour = hours % 12 || 12;
   const displayMinutes = mins ? `:${String(mins).padStart(2, "0")}` : "";
   return `${displayHour}${displayMinutes} ${period}`;
+}
+
+function getArrivalEtaText(minutes) {
+  const eta = new Date(Date.now() + minutes * 60000);
+  return formatHoursTime(eta.getHours() * 60 + eta.getMinutes());
 }
 
 function formatHoursWindows(windows) {
@@ -2540,36 +2663,58 @@ function getFacultyWeeklyMarkup(faculty) {
       `;
 }
 
+let emailComposeAttemptId = 0;
+
 function openFacultyEmailCompose(faculty) {
   if (!faculty?.email) {
     return;
   }
 
-  const outlookDeepLink = `ms-outlook://compose?to=${encodeURIComponent(faculty.email)}`;
-  const fallbackStartedAt = Date.now();
-  const fallbackDelayMs = 1600;
-  let fallbackTimer = 0;
-  let fallbackDone = false;
+  const email = faculty.email;
+  const mailtoUrl = `mailto:${email}`;
+  const outlookDeepLink = `ms-outlook://compose?to=${encodeURIComponent(email)}`;
 
-  const openFallback = () => {
-    if (fallbackDone || document.hidden || Date.now() - fallbackStartedAt > fallbackDelayMs + 400) {
+  // A mail app can take a few seconds to come to the front on a phone, so we look for any sign
+  // that another app took over instead of trusting the clock alone. If we see none, we fall back
+  // to the phone's default mail app.
+  const attemptId = (emailComposeAttemptId += 1);
+  let appTookOver = false;
+  let fallbackTimer = 0;
+
+  const stopWatching = () => {
+    window.clearTimeout(fallbackTimer);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.removeEventListener("blur", handleAppTookOver);
+    window.removeEventListener("pagehide", handleAppTookOver);
+  };
+
+  const handleAppTookOver = () => {
+    appTookOver = true;
+    stopWatching();
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") {
+      handleAppTookOver();
+    }
+  };
+
+  const openDefaultMailApp = () => {
+    stopWatching();
+
+    if (attemptId !== emailComposeAttemptId || appTookOver || document.visibilityState === "hidden") {
       return;
     }
 
-    fallbackDone = true;
-    window.clearTimeout(fallbackTimer);
-    document.removeEventListener("visibilitychange", cancelFallback);
-    window.location.href = `mailto:${faculty.email}`;
+    window.location.href = mailtoUrl;
   };
 
-  const cancelFallback = () => {
-    fallbackDone = true;
-    window.clearTimeout(fallbackTimer);
-    document.removeEventListener("visibilitychange", cancelFallback);
-  };
+  // Watch for the hand-off BEFORE launching Outlook so a quick app switch is never missed.
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("blur", handleAppTookOver);
+  window.addEventListener("pagehide", handleAppTookOver);
+  fallbackTimer = window.setTimeout(openDefaultMailApp, outlookEmailFallbackDelayMs);
 
-  fallbackTimer = window.setTimeout(openFallback, fallbackDelayMs);
-  document.addEventListener("visibilitychange", cancelFallback);
   window.location.href = outlookDeepLink;
 }
 
@@ -2918,12 +3063,17 @@ function renderSelectedLocation(location) {
   });
 }
 
+function isLocationOpenNow(location) {
+  return getLocationHoursStatus(location).className === "open";
+}
+
 function getFilteredLocations() {
   const query = searchInput.value.trim().toLowerCase();
   const layerMatches = (location) => activeLayer === "All" || location.layer === activeLayer;
   const queryMatches = (location) => !query || getSearchText(location).includes(query);
+  const openNowMatches = (location) => !activeOpenNowFilter || isLocationOpenNow(location);
 
-  return locations.filter((location) => layerMatches(location) && queryMatches(location));
+  return locations.filter((location) => layerMatches(location) && queryMatches(location) && openNowMatches(location));
 }
 
 function getLocationAliases(location) {
@@ -3167,7 +3317,7 @@ function renderDirectionsPreview(options = {}) {
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
   const shouldShowStepNavigator = Boolean(options.showStepNavigator);
 
-  openDirectionsPanel({ preservePanelState: options.preservePanelState });
+  openDirectionsPanel({ preservePanelState: options.preservePanelState, preserveView: options.silentRefresh });
   if (!start || !end) {
     latestRoutePreview = null;
     latestDirectionSteps = [];
@@ -3250,17 +3400,20 @@ function renderDirectionsPreview(options = {}) {
   latestDirectionSteps = directionSteps.length
     ? directionSteps
     : [{ instruction: `Continue to ${end.name}`, distance: route.distanceMeters || 1 }];
-  routeInstructionPoints = buildRouteInstructionPoints(route, start, end, latestDirectionSteps.length);
+  routeInstructionPoints = buildRouteInstructionPoints(route, start, end, latestDirectionSteps);
   activeRouteStepIndex = 0;
   isGuidedNavigationActive = false;
-  const visibleSteps = directionSteps.slice(0, 8);
-  const extraStepCount = Math.max(0, directionSteps.length - visibleSteps.length);
-  const stepsMarkup = visibleSteps
-    .map((step, index) => `<li>${index + 1}. ${step.instruction} for ${formatRouteDistance(step.distance)}.</li>`)
+  hasAnnouncedRouteArrival = false;
+  const stepsMarkup = directionSteps
+    .map((step, index) => `
+        <li>
+          <button type="button" class="route-step-item" data-route-step="${index}">
+            <span class="route-step-number" aria-hidden="true">${index + 1}</span>
+            <span class="route-step-copy">${step.instruction} for ${formatRouteDistance(step.distance)}.</span>
+          </button>
+        </li>
+    `)
     .join("");
-  const extraMarkup = extraStepCount
-    ? `<li>Continue through ${extraStepCount} more short campus path${extraStepCount === 1 ? "" : "s"}.</li>`
-    : "";
 
   directionsOutput.innerHTML = `
     <article class="route-preview-card" aria-label="Route preview">
@@ -3293,6 +3446,7 @@ function renderDirectionsPreview(options = {}) {
         <div class="route-metric-card primary-route-metric">
           <span>Estimated Time</span>
           <strong>${route.minutes} min</strong>
+          <small class="route-metric-note">arrives ~${getArrivalEtaText(route.minutes)}</small>
         </div>
         <div class="route-metric-card">
           <span>Distance</span>
@@ -3303,8 +3457,8 @@ function renderDirectionsPreview(options = {}) {
           <strong>${routePreferenceLabel}</strong>
         </div>
         <div class="route-metric-card">
-          <span>Path Segments</span>
-          <strong>${route.graphEdgeCount}</strong>
+          <span>Directions Steps</span>
+          <strong>${latestDirectionSteps.length}</strong>
         </div>
       </div>
 
@@ -3315,7 +3469,6 @@ function renderDirectionsPreview(options = {}) {
         <ol class="route-steps">
           <li>Start at ${start.name}.</li>
           ${stepsMarkup}
-          ${extraMarkup}
           <li>Arrive at ${end.name}.</li>
         </ol>
       </details>
@@ -3350,6 +3503,27 @@ function renderDirectionsPreview(options = {}) {
     openRouteIssueReporter(route, routePreferenceLabel);
   });
 
+  const stepButtons = Array.from(directionsOutput.querySelectorAll("[data-route-step]"));
+
+  function highlightActiveRouteStep() {
+    stepButtons.forEach((button) => {
+      button.classList.toggle("is-active", Number(button.dataset.routeStep) === activeRouteStepIndex);
+    });
+  }
+
+  stepButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      activeRouteStepIndex = Number(button.dataset.routeStep);
+      highlightActiveRouteStep();
+      focusRouteStepOnMap(activeRouteStepIndex);
+      if (isMobilePanelEnabled()) {
+        setMobilePanelState("collapsed");
+      }
+    });
+  });
+
+  highlightActiveRouteStep();
+
   drawNavigationRoute(route, start, end, { fitBounds: shouldFitThisRoute });
   if (shouldShowStepNavigator) {
     renderRouteStepNavigator();
@@ -3378,15 +3552,30 @@ function formatRouteDistance(meters) {
   return `${(feet / 5280).toFixed(2)} mi`;
 }
 
-function buildRouteInstructionPoints(route, start, end, stepCount) {
+function buildRouteInstructionPoints(route, start, end, displaySteps) {
   const points = [start, ...(route?.path || []), end].filter((point) => point?.lat && point?.lng);
+  const stepCount = displaySteps.length;
 
   if (!points.length || stepCount <= 0) {
     return [];
   }
 
+  const steps = route?.steps || [];
+  const hasAnchors = steps.length >= stepCount && displaySteps.every((step) => Number.isInteger(step.nodeIndex));
+
+  if (!hasAnchors) {
+    return Array.from({ length: stepCount }, (_, index) => {
+      const pointIndex = Math.min(points.length - 1, Math.round((index / Math.max(1, stepCount - 1)) * (points.length - 1)));
+      return points[pointIndex];
+    });
+  }
+
   return Array.from({ length: stepCount }, (_, index) => {
-    const pointIndex = Math.min(points.length - 1, Math.round((index / Math.max(1, stepCount - 1)) * (points.length - 1)));
+    if (index === stepCount - 1) {
+      return points[points.length - 1];
+    }
+
+    const pointIndex = Math.min(points.length - 2, Math.max(0, displaySteps[index].nodeIndex + 1));
     return points[pointIndex];
   });
 }
@@ -3468,11 +3657,119 @@ function advanceGuidedNavigationIfNeeded() {
     return;
   }
 
+  if (navigationMap) {
+    navigationMap.setView([currentPosition.lat, currentPosition.lng], 19, { animate: true });
+  }
+
   const nextPoint = routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
   const distanceMeters = getDistanceBetweenPoints(currentPosition, nextPoint) * 1609.344;
+  const isLastStep = activeRouteStepIndex === latestDirectionSteps.length - 1;
 
-  if (distanceMeters < 18 && activeRouteStepIndex < latestDirectionSteps.length - 1) {
+  if (isLastStep) {
+    if (!hasAnnouncedRouteArrival && distanceMeters < 15) {
+      hasAnnouncedRouteArrival = true;
+      isGuidedNavigationActive = false;
+      offRouteFixCount = 0;
+      offRouteAnnounced = false;
+      navigator.vibrate?.([90, 60, 90]);
+      setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
+      setActiveRouteStep(activeRouteStepIndex, { focusMap: false });
+      setLocationStatus("<strong>You have arrived! 🎉</strong><br>You reached your destination.");
+    }
+    return;
+  }
+
+  const wentOffRoute = updateOffRouteTracking(getMetersToRoutePath(currentPosition));
+
+  if (wentOffRoute || offRouteAnnounced) {
+    showOffRouteBanner();
+    return;
+  }
+
+  if (distanceMeters < 18) {
     setActiveRouteStep(activeRouteStepIndex + 1, { focusMap: false });
+    navigator.vibrate?.(50);
+  }
+}
+
+function getMetersToRoutePath(point) {
+  const pathPoints = latestRoutePreview?.route?.path || [];
+
+  if (!pathPoints.length) {
+    return Infinity;
+  }
+
+  let nearest = Infinity;
+  pathPoints.forEach((vertex) => {
+    const distanceMeters = getDistanceBetweenPoints(point, vertex) * 1609.344;
+
+    if (distanceMeters < nearest) {
+      nearest = distanceMeters;
+    }
+  });
+
+  return nearest;
+}
+
+function updateOffRouteTracking(distanceMeters) {
+  if (distanceMeters <= 45) {
+    offRouteFixCount = 0;
+
+    if (offRouteAnnounced) {
+      offRouteAnnounced = false;
+      renderRouteStepNavigator();
+    }
+
+    return false;
+  }
+
+  offRouteFixCount += 1;
+
+  if (offRouteFixCount >= 2 && !offRouteAnnounced) {
+    offRouteAnnounced = true;
+    navigator.vibrate?.([60, 40, 60]);
+    return true;
+  }
+
+  return offRouteAnnounced;
+}
+
+function showOffRouteBanner() {
+  if (!routeStepNavigator) {
+    return;
+  }
+
+  routeStepNavigator.hidden = false;
+  routeStepNavigator.innerHTML = `
+    <div class="route-step-card is-offroute">
+      <div class="route-step-copy" aria-live="polite">
+        <span>Off route</span>
+        <strong>You left the highlighted path</strong>
+        <small>Walk back toward the gold line, or recalculate from where you are now.</small>
+      </div>
+      <div class="route-step-controls">
+        <button class="route-step-control route-recalc-button" type="button" data-recalc-route>Recalculate</button>
+      </div>
+    </div>
+  `;
+
+  routeStepNavigator.querySelector("[data-recalc-route]").addEventListener("click", recalculateRouteFromCurrentPosition);
+}
+
+function recalculateRouteFromCurrentPosition() {
+  if (!currentPosition || !latestRoutePreview) {
+    return;
+  }
+
+  offRouteFixCount = 0;
+  offRouteAnnounced = false;
+  fromLocationSelect.value = "Current Location";
+  routeStartManuallyChanged = false;
+
+  const preview = renderDirectionsPreview({ preservePanelState: true, showStepNavigator: true });
+
+  if (preview) {
+    startGuidedNavigation();
   }
 }
 
@@ -3482,6 +3779,9 @@ function startGuidedNavigation() {
   }
 
   isGuidedNavigationActive = true;
+  hasAnnouncedRouteArrival = false;
+  offRouteFixCount = 0;
+  offRouteAnnounced = false;
   setMobilePanelState("collapsed");
   setActiveRouteStep(0, { focusMap: false });
   showCurrentLocationMarker({ centerMap: true });
@@ -3504,7 +3804,8 @@ function buildDirectionSteps(rawSteps) {
     } else {
       groupedSteps.push({
         instruction,
-        distance: step.distance
+        distance: step.distance,
+        nodeIndex: step.nodeIndex
       });
     }
   });
@@ -3966,6 +4267,9 @@ function clearRoute() {
   routeInstructionPoints = [];
   activeRouteStepIndex = 0;
   isGuidedNavigationActive = false;
+  hasAnnouncedRouteArrival = false;
+  offRouteFixCount = 0;
+  offRouteAnnounced = false;
   updateRouteActionButton();
   hideRouteStepNavigator();
   hideLocationStatus();
@@ -4025,6 +4329,18 @@ filterButtons.forEach((button) => {
     renderNavigationMarkers(filteredLocations);
   });
 });
+
+if (openNowToggle) {
+  openNowToggle.addEventListener("click", () => {
+    activeOpenNowFilter = !activeOpenNowFilter;
+    openNowToggle.classList.toggle("is-active", activeOpenNowFilter);
+    openNowToggle.setAttribute("aria-pressed", String(activeOpenNowFilter));
+
+    const filteredLocations = getFilteredLocations();
+    renderLocations(filteredLocations);
+    renderNavigationMarkers(filteredLocations);
+  });
+}
 
 function getLocationErrorMessage(error) {
   if (error?.code === 1) {
@@ -4200,7 +4516,7 @@ function updateCurrentLocation(position, mode) {
   }
 
   if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value) && (mode !== "live" || routeUsesCurrentLocation())) {
-    renderDirectionsPreview({ preservePanelState: mode === "live" });
+    renderDirectionsPreview({ preservePanelState: mode === "live", silentRefresh: mode === "live" });
   } else if (mode !== "live") {
     collapseMobilePanel();
   }
@@ -4240,6 +4556,8 @@ function stopLiveTracking(options = {}) {
 
   isLiveTracking = false;
   hasLiveTrackingCentered = false;
+  offRouteFixCount = 0;
+  offRouteAnnounced = false;
   setLiveTrackingButtons();
 
   if (options.showStatus !== false) {

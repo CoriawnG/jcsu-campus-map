@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260914-map-pan-east";
+const CACHE_NAME = "jcsu-campus-map-v20260914-outlook-fallback";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260914-map-pan-east",
-  "./locations.js?v=20260914-map-pan-east",
-  "./paths.js?v=20260914-map-pan-east",
-  "./navigation.js?v=20260914-map-pan-east",
-  "./script.js?v=20260914-map-pan-east",
+  "./style.css?v=20260914-outlook-fallback",
+  "./locations.js?v=20260914-outlook-fallback",
+  "./paths.js?v=20260914-outlook-fallback",
+  "./navigation.js?v=20260914-outlook-fallback",
+  "./script.js?v=20260914-outlook-fallback",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

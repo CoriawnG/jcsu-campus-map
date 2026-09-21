@@ -147,6 +147,43 @@ input[type="search"]:focus {
   border-color: var(--blue);
 }
 
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  color: var(--text);
+  background: #f6f8fc;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.filter-toggle-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--green);
+  opacity: 0.35;
+}
+
+.filter-toggle:hover,
+.filter-toggle.is-active {
+  color: #ffffff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.filter-toggle:hover .filter-toggle-dot,
+.filter-toggle.is-active .filter-toggle-dot {
+  background: #ffffff;
+  opacity: 1;
+}
+
 .results-panel {
   display: flex;
   flex-direction: column;
@@ -544,9 +581,11 @@ select:focus {
   z-index: 650;
   display: grid;
   gap: 2px;
-  min-width: 120px;
+  max-width: 168px;
+  padding: 6px 10px;
   color: var(--blue);
   background: rgba(255, 255, 255, 0.96);
+  font-size: 0.72rem;
 }
 
 .gps-accuracy-badge[hidden] {
@@ -1609,6 +1648,25 @@ textarea:focus,
   border-color: var(--gold);
 }
 
+.filter-toggle {
+  color: var(--green);
+  background: #ffffff;
+  border-color: rgba(36, 116, 91, 0.28);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+
+.filter-toggle.is-active {
+  color: #ffffff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.filter-toggle.is-active .filter-toggle-dot {
+  background: #ffffff;
+  opacity: 1;
+}
+
 .panel-heading {
   background: #ffffff;
 }
@@ -1951,6 +2009,13 @@ textarea:focus,
   .results-panel .panel-heading,
   .location-list {
     border-color: rgba(0, 45, 86, 0.13);
+  }
+}
+
+/* Right-side spacing for the map on larger screens */
+@media (min-width: 861px) {
+  .map-panel {
+    margin-right: 14px;
   }
 }
 
@@ -3175,6 +3240,61 @@ body.intro-running .app-shell {
   display: grid;
 }
 
+/* Tappable route steps in the preview list */
+.route-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.route-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--navy);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-step-item.is-active {
+  border-color: var(--blue);
+  background: var(--gold-soft);
+  font-weight: 600;
+}
+
+.route-step-number {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.route-step-item.is-active .route-step-number {
+  background: var(--blue);
+}
+
+.route-step-copy {
+  flex: 1 1 auto;
+}
+
 .route-step-navigator {
   position: absolute;
   top: 14px;
@@ -3204,6 +3324,25 @@ body.intro-running .app-shell {
 
 .route-step-card.is-guiding {
   border-color: rgba(255, 207, 1, 0.9);
+}
+
+.route-step-card.is-offroute {
+  border-color: rgba(169, 54, 54, 0.8);
+}
+
+.route-step-card.is-offroute .route-step-copy span {
+  color: var(--red);
+}
+
+.route-step-card.is-offroute .route-step-controls {
+  grid-template-columns: 1fr;
+}
+
+.route-recalc-button {
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 0.9rem;
 }
 
 .route-step-copy {
@@ -3772,15 +3911,29 @@ body.is-offline .app-shell {
 .faculty-hours-email {
   display: inline-block;
   margin: 6px 0 0;
+  padding: 0;
+  color: var(--blue);
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(0, 45, 86, 0.25);
+  font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--blue);
+  text-align: left;
   text-decoration: none;
-  border-bottom: 1px solid rgba(0, 45, 86, 0.25);
+  cursor: pointer;
 }
 
 .faculty-hours-email:active {
   color: var(--gold);
+}
+
+.route-metric-card small.route-metric-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .faculty-hours-next {

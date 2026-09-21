@@ -225,6 +225,12 @@
       nodeIds.unshift(cursor);
     }
 
+    const nodeIndexById = new Map();
+    nodeIds.forEach((id, index) => nodeIndexById.set(id, index));
+    edgeSteps.forEach((edge) => {
+      edge.fromIndex = nodeIndexById.get(edge.from) ?? 0;
+    });
+
     return {
       nodeIds,
       edgeSteps,
@@ -243,7 +249,8 @@
       } else {
         steps.push({
           name: edge.segmentName,
-          distance: edge.distance
+          distance: edge.distance,
+          nodeIndex: edge.fromIndex
         });
       }
     });
