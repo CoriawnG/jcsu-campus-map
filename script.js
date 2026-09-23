@@ -35,6 +35,24 @@ const reportCurrentRouteIssueButton = document.querySelector("#reportCurrentRout
 const directionsOutput = document.querySelector("#directionsOutput");
 const routeStepNavigator = document.querySelector("#routeStepNavigator");
 const gpsAccuracyBadge = document.querySelector("#gpsAccuracyBadge");
+const startArModeButton = document.querySelector("#startArMode");
+const arModeLayer = document.querySelector("#arMode");
+const arCameraVideo = document.querySelector("#arCamera");
+const closeArModeButton = document.querySelector("#closeArMode");
+const arArrowElement = document.querySelector("#arArrow");
+const arBearingText = document.querySelector("#arBearingText");
+const arTargetNameText = document.querySelector("#arTargetName");
+const arInstructionText = document.querySelector("#arInstruction");
+const arDistanceText = document.querySelector("#arDistance");
+const arEtaText = document.querySelector("#arEta");
+const arStatusText = document.querySelector("#arStatus");
+const routeDock = document.querySelector("#routeDock");
+const routeDockHandle = document.querySelector("#routeDockHandle");
+const routeDockArrival = document.querySelector("#routeDockArrival");
+const routeDockDestination = document.querySelector("#routeDockDestination");
+const routeDockDetail = document.querySelector("#routeDockDetail");
+const routeDockArButton = document.querySelector("#routeDockAr");
+const endRouteButton = document.querySelector("#endRoute");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
 const bottomNav = document.querySelector(".app-bottom-nav");
 const bottomNavButtons = document.querySelectorAll("[data-app-nav]");
@@ -779,6 +797,15 @@ let shouldFitRouteToMap = true;
 let latestRoutePreview = null;
 let latestDirectionSteps = [];
 let routeInstructionPoints = [];
+let arModeActive = false;
+let arCameraStream = null;
+let arAnimationFrameId = 0;
+let arCompassHeading = null;
+let arHeadingReady = false;
+let arAddedBodyLock = false;
+let stepsScrollTimer = 0;
+let isSyncingCarousel = false;
+let suppressDockClick = false;
 let activeRouteStepIndex = 0;
 let isGuidedNavigationActive = false;
 let hasAnnouncedRouteArrival = false;
@@ -3287,6 +3314,9 @@ function getRouteSignature(start, end) {
 }
 
 function updateRouteIssueButton() {
+  updateArModeButton();
+  updateRouteDock();
+
   if (!reportCurrentRouteIssueButton) {
     return;
   }
@@ -3404,6 +3434,8 @@ function renderDirectionsPreview(options = {}) {
   activeRouteStepIndex = 0;
   isGuidedNavigationActive = false;
   hasAnnouncedRouteArrival = false;
+  // Refresh after the state above is settled, so the dock reads the new route's mode.
+  updateRouteDock();
   const stepsMarkup = directionSteps
     .map((step, index) => `
         <li>
@@ -3605,11 +3637,59 @@ function setActiveRouteStep(index, options = {}) {
     return;
   }
 
-  activeRouteStepIndex = Math.max(0, Math.min(index, latestDirectionSteps.length - 1));
-  renderRouteStepNavigator();
+  const nextIndex = Math.max(0, Math.min(index, latestDirectionSteps.length - 1));
+
+  if (options.source === "swipe" && nextIndex === activeRouteStepIndex) {
+    return;
+  }
+
+  activeRouteStepIndex = nextIndex;
+
+  // A swipe has already moved the carousel, so only refresh highlights instead of rebuilding it.
+  if (options.source === "swipe") {
+    syncStepsCarousel();
+  } else {
+    renderRouteStepNavigator();
+  }
 
   if (options.focusMap !== false) {
     focusRouteStepOnMap(activeRouteStepIndex);
+  }
+}
+
+function getGuidedStepMeters() {
+  if (!currentPosition || !routeInstructionPoints.length) {
+    return null;
+  }
+
+  const nextPoint = routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
+  return nextPoint ? getDistanceBetweenPoints(currentPosition, nextPoint) * 1609.344 : null;
+}
+
+function getNextInstructionPreview() {
+  const nextStep = latestDirectionSteps[activeRouteStepIndex + 1];
+  return nextStep ? nextStep.instruction : `Arrive at ${latestRoutePreview?.end?.name || "your destination"}`;
+}
+
+function getGuidedStepDetailText() {
+  const isLastStep = activeRouteStepIndex === latestDirectionSteps.length - 1;
+  const meters = getGuidedStepMeters();
+  const distanceText = Number.isFinite(meters) ? `${formatArDistance(meters)} to go · ` : "";
+
+  return isLastStep
+    ? `${distanceText}You are on the last stretch.`
+    : `${distanceText}Then: ${getNextInstructionPreview()}`;
+}
+
+function refreshGuidedBanner() {
+  if (!isGuidedNavigationActive || !routeStepNavigator) {
+    return;
+  }
+
+  const detail = routeStepNavigator.querySelector("#guidedStepDetail");
+
+  if (detail) {
+    setTextIfChanged(detail, getGuidedStepDetailText());
   }
 }
 
@@ -3619,37 +3699,106 @@ function renderRouteStepNavigator() {
     return;
   }
 
+  // "Go" mode (route starts at your location) gets one banner that advances by itself.
+  // "Steps" mode (building to building) gets swipeable step cards.
+  routeStepNavigator.hidden = false;
+
+  if (isGuidedNavigationActive) {
+    renderGuidedStepBanner();
+  } else {
+    renderStepsCarousel();
+  }
+}
+
+function renderGuidedStepBanner() {
   const step = latestDirectionSteps[activeRouteStepIndex];
   const isLastStep = activeRouteStepIndex === latestDirectionSteps.length - 1;
+  const destinationName = latestRoutePreview?.end?.name || "your destination";
 
-  routeStepNavigator.hidden = false;
   routeStepNavigator.innerHTML = `
-    <div class="route-step-card ${isGuidedNavigationActive ? "is-guiding" : ""}">
+    <div class="route-step-card is-guiding">
       <div class="route-step-copy">
-        <span>${isGuidedNavigationActive ? "Go" : "Preview"} Step ${activeRouteStepIndex + 1} of ${latestDirectionSteps.length}</span>
-        <strong>${isLastStep ? "Arrive at destination" : step.instruction}</strong>
-        <small>${isLastStep ? "You are at the end of this route." : formatRouteDistance(step.distance)}</small>
-      </div>
-      <div class="route-step-controls">
-        <button class="route-step-control" type="button" data-route-step-prev aria-label="Previous step">&lt;</button>
-        <input type="range" min="0" max="${latestDirectionSteps.length - 1}" value="${activeRouteStepIndex}" aria-label="Route step">
-        <button class="route-step-control" type="button" data-route-step-next aria-label="Next step">&gt;</button>
+        <span>Go · Step ${activeRouteStepIndex + 1} of ${latestDirectionSteps.length}</span>
+        <strong>${isLastStep ? `Arrive at ${destinationName}` : step.instruction}</strong>
+        <small id="guidedStepDetail">${getGuidedStepDetailText()}</small>
       </div>
     </div>
   `;
+}
 
-  const slider = routeStepNavigator.querySelector('input[type="range"]');
-  slider.addEventListener("input", () => {
-    setActiveRouteStep(Number(slider.value));
+function renderStepsCarousel() {
+  const slides = latestDirectionSteps.map((step, index) => `
+      <article class="route-step-slide ${index === activeRouteStepIndex ? "is-active" : ""}" data-step-slide="${index}" role="listitem">
+        <span class="route-step-slide-number" aria-hidden="true">${index + 1}</span>
+        <div class="route-step-copy">
+          <strong>${step.instruction}</strong>
+          <small>${formatRouteDistance(step.distance)}</small>
+        </div>
+      </article>
+  `).join("");
+
+  const dots = latestDirectionSteps
+    .map((step, index) => `<span class="route-step-dot ${index === activeRouteStepIndex ? "is-active" : ""}"></span>`)
+    .join("");
+
+  routeStepNavigator.innerHTML = `
+    <div class="route-step-carousel-wrap">
+      <div id="routeStepCarousel" class="route-step-carousel" role="list" aria-label="Route steps. Swipe left or right to preview each step.">
+        ${slides}
+      </div>
+      <div class="route-step-dots" aria-hidden="true">${dots}</div>
+    </div>
+  `;
+
+  const carousel = routeStepNavigator.querySelector("#routeStepCarousel");
+
+  if (!carousel) {
+    return;
+  }
+
+  carousel.scrollLeft = activeRouteStepIndex * carousel.clientWidth;
+  carousel.addEventListener("scroll", handleStepsCarouselScroll, { passive: true });
+}
+
+function handleStepsCarouselScroll(event) {
+  if (isSyncingCarousel) {
+    return;
+  }
+
+  const carousel = event.currentTarget;
+  window.clearTimeout(stepsScrollTimer);
+
+  // Wait for the swipe to settle, then snap the active step to the nearest card.
+  stepsScrollTimer = window.setTimeout(() => {
+    const slideWidth = carousel.clientWidth || 1;
+    setActiveRouteStep(Math.round(carousel.scrollLeft / slideWidth), { focusMap: true, source: "swipe" });
+  }, 130);
+}
+
+function syncStepsCarousel() {
+  if (!routeStepNavigator) {
+    return;
+  }
+
+  routeStepNavigator.querySelectorAll("[data-step-slide]").forEach((slide) => {
+    slide.classList.toggle("is-active", Number(slide.dataset.stepSlide) === activeRouteStepIndex);
   });
 
-  routeStepNavigator.querySelector("[data-route-step-prev]").addEventListener("click", () => {
-    setActiveRouteStep(activeRouteStepIndex - 1);
+  routeStepNavigator.querySelectorAll(".route-step-dot").forEach((dot, index) => {
+    dot.classList.toggle("is-active", index === activeRouteStepIndex);
   });
 
-  routeStepNavigator.querySelector("[data-route-step-next]").addEventListener("click", () => {
-    setActiveRouteStep(activeRouteStepIndex + 1);
-  });
+  const carousel = routeStepNavigator.querySelector("#routeStepCarousel");
+
+  if (!carousel) {
+    return;
+  }
+
+  isSyncingCarousel = true;
+  carousel.scrollTo({ left: activeRouteStepIndex * carousel.clientWidth, behavior: "smooth" });
+  window.setTimeout(() => {
+    isSyncingCarousel = false;
+  }, 340);
 }
 
 function advanceGuidedNavigationIfNeeded() {
@@ -3660,6 +3809,9 @@ function advanceGuidedNavigationIfNeeded() {
   if (navigationMap) {
     navigationMap.setView([currentPosition.lat, currentPosition.lng], 19, { animate: true });
   }
+
+  // Keep the "36 m to go · Then: ..." line live as the user walks.
+  refreshGuidedBanner();
 
   const nextPoint = routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
   const distanceMeters = getDistanceBetweenPoints(currentPosition, nextPoint) * 1609.344;
@@ -3675,6 +3827,7 @@ function advanceGuidedNavigationIfNeeded() {
       setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
       setActiveRouteStep(activeRouteStepIndex, { focusMap: false });
       setLocationStatus("<strong>You have arrived! 🎉</strong><br>You reached your destination.");
+      updateRouteDock();
     }
     return;
   }
@@ -3784,6 +3937,7 @@ function startGuidedNavigation() {
   offRouteAnnounced = false;
   setMobilePanelState("collapsed");
   setActiveRouteStep(0, { focusMap: false });
+  updateRouteDock();
   showCurrentLocationMarker({ centerMap: true });
   const accuracy = Math.round(rawCurrentPosition?.accuracy || currentPosition?.accuracy || 0);
   const accuracyGuidance = getAccuracyGuidance(rawCurrentPosition?.accuracy || currentPosition?.accuracy);
@@ -4342,6 +4496,526 @@ if (openNowToggle) {
   });
 }
 
+/* ===== AR navigation mode =====
+   A camera-view wayfinder: the live camera fills the screen and a compass-driven arrow
+   points at the next route waypoint. Built on the camera + device orientation APIs so it
+   works on both iPhone and Android. A WebXR 3D layer could be added on top for Android later. */
+function normalizeHeadingDegrees(value) {
+  return ((value % 360) + 360) % 360;
+}
+
+function getScreenOrientationAngle() {
+  if (typeof screen !== "undefined" && screen.orientation && typeof screen.orientation.angle === "number") {
+    return screen.orientation.angle;
+  }
+
+  // Older iOS Safari uses the legacy window.orientation value.
+  if (typeof window.orientation === "number") {
+    return window.orientation;
+  }
+
+  return 0;
+}
+
+function getCoordinateBearing(from, to) {
+  const toRadiansValue = (value) => (value * Math.PI) / 180;
+  const lat1 = toRadiansValue(from.lat);
+  const lat2 = toRadiansValue(to.lat);
+  const deltaLng = toRadiansValue(to.lng - from.lng);
+  const y = Math.sin(deltaLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+  return normalizeHeadingDegrees((Math.atan2(y, x) * 180) / Math.PI);
+}
+
+function getCompassHeadingFromOrientation(event) {
+  // iOS Safari reports a real compass heading, already measured clockwise from north.
+  if (typeof event.webkitCompassHeading === "number" && !Number.isNaN(event.webkitCompassHeading)) {
+    return normalizeHeadingDegrees(event.webkitCompassHeading + getScreenOrientationAngle());
+  }
+
+  const isAbsoluteAlpha = event.absolute === true || event.type === "deviceorientationabsolute";
+
+  if (typeof event.alpha === "number" && isAbsoluteAlpha) {
+    // Absolute alpha turns counter-clockwise from north, so the heading is 360 - alpha.
+    return normalizeHeadingDegrees(360 - event.alpha + getScreenOrientationAngle());
+  }
+
+  // Relative alpha only measures turning since page load, so it cannot point at anything.
+  return null;
+}
+
+function handleArOrientation(event) {
+  const heading = getCompassHeadingFromOrientation(event);
+
+  if (heading === null) {
+    return;
+  }
+
+  arCompassHeading = heading;
+
+  if (!arHeadingReady) {
+    arHeadingReady = true;
+    setArStatus("");
+  }
+}
+
+function detachArCompass() {
+  window.removeEventListener("deviceorientationabsolute", handleArOrientation, true);
+  window.removeEventListener("deviceorientation", handleArOrientation, true);
+}
+
+async function attachArCompass() {
+  if (!window.DeviceOrientationEvent) {
+    return "unavailable";
+  }
+
+  // iOS 13+ needs an explicit permission ask from a tap, and absolute:true also requests the magnetometer.
+  if (typeof window.DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      const permission = await window.DeviceOrientationEvent.requestPermission(true);
+
+      if (permission !== "granted") {
+        return "denied";
+      }
+    } catch (error) {
+      return "denied";
+    }
+  }
+
+  window.addEventListener("deviceorientationabsolute", handleArOrientation, true);
+  window.addEventListener("deviceorientation", handleArOrientation, true);
+  return "ready";
+}
+
+function setTextIfChanged(element, text) {
+  if (element && element.textContent !== text) {
+    element.textContent = text;
+  }
+}
+
+function setArStatus(message) {
+  if (!arStatusText) {
+    return;
+  }
+
+  setTextIfChanged(arStatusText, message || "");
+  arStatusText.hidden = !message;
+}
+
+function getArTargetPoint() {
+  if (!routeInstructionPoints.length) {
+    return null;
+  }
+
+  // Mirrors guided navigation: aim at the point AFTER the active step, or the destination on the last step.
+  if (activeRouteStepIndex >= latestDirectionSteps.length - 1) {
+    return routeInstructionPoints[routeInstructionPoints.length - 1];
+  }
+
+  return routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
+}
+
+function getArInstructionText() {
+  if (activeRouteStepIndex >= latestDirectionSteps.length - 1) {
+    return "Arrive at your destination";
+  }
+
+  const step = latestDirectionSteps[activeRouteStepIndex];
+  return step ? step.instruction : "Follow the arrow";
+}
+
+function getArRemainingMeters() {
+  if (!currentPosition || !routeInstructionPoints.length) {
+    return null;
+  }
+
+  const isLastStep = activeRouteStepIndex >= latestDirectionSteps.length - 1;
+  const remainingPoints = isLastStep
+    ? [routeInstructionPoints[routeInstructionPoints.length - 1]]
+    : routeInstructionPoints.slice(activeRouteStepIndex + 1);
+
+  if (!remainingPoints.length) {
+    return null;
+  }
+
+  let totalMeters = getDistanceBetweenPoints(currentPosition, remainingPoints[0]) * 1609.344;
+
+  for (let index = 1; index < remainingPoints.length; index += 1) {
+    totalMeters += getDistanceBetweenPoints(remainingPoints[index - 1], remainingPoints[index]) * 1609.344;
+  }
+
+  return totalMeters;
+}
+
+function getArRemainingMinutes(remainingMeters) {
+  const route = latestRoutePreview?.route;
+
+  if (!route || !route.minutes || !route.distanceMeters || !Number.isFinite(remainingMeters)) {
+    return null;
+  }
+
+  // Scale the app's own route time by how much walking is left.
+  return Math.max(1, Math.round((remainingMeters / route.distanceMeters) * route.minutes));
+}
+
+function formatArDistance(meters) {
+  if (!Number.isFinite(meters)) {
+    return "--";
+  }
+
+  if (meters < 1000) {
+    return `${Math.round(meters)} m`;
+  }
+
+  return `${(meters / 1609.344).toFixed(1)} mi`;
+}
+
+function renderArFrame() {
+  if (!arModeActive) {
+    return;
+  }
+
+  arAnimationFrameId = window.requestAnimationFrame(renderArFrame);
+
+  if (!arArrowElement) {
+    return;
+  }
+
+  const target = getArTargetPoint();
+  const hasPosition = Boolean(currentPosition);
+
+  if (!hasPosition || !target) {
+    arArrowElement.classList.remove("is-centered");
+    arArrowElement.classList.add("is-unknown");
+    arArrowElement.style.transform = "rotate(0deg)";
+    setTextIfChanged(arBearingText, hasPosition ? "No active route to point at" : "Waiting for GPS...");
+    return;
+  }
+
+  const targetBearing = getCoordinateBearing(currentPosition, target);
+
+  if (arCompassHeading === null) {
+    arArrowElement.classList.remove("is-centered");
+    arArrowElement.classList.add("is-unknown");
+    arArrowElement.style.transform = "rotate(0deg)";
+    setTextIfChanged(arBearingText, `Target is at ${Math.round(targetBearing)}° - compass unavailable`);
+    return;
+  }
+
+  const relativeBearing = normalizeHeadingDegrees(targetBearing - arCompassHeading);
+  const isFacingTarget = relativeBearing <= 12 || relativeBearing >= 348;
+  const turnAmount = Math.round(relativeBearing > 180 ? 360 - relativeBearing : relativeBearing);
+
+  arArrowElement.classList.remove("is-unknown");
+  arArrowElement.classList.toggle("is-centered", isFacingTarget);
+  arArrowElement.style.transform = `rotate(${Math.round(relativeBearing)}deg)`;
+
+  setTextIfChanged(
+    arBearingText,
+    isFacingTarget ? `Straight ahead · ${Math.round(targetBearing)}°` : `Turn ${relativeBearing > 180 ? "left" : "right"} ${turnAmount}°`
+  );
+
+  const remainingMeters = getArRemainingMeters();
+  const remainingMinutes = getArRemainingMinutes(remainingMeters);
+
+  setTextIfChanged(arTargetNameText, latestRoutePreview?.end?.name || "Destination");
+  setTextIfChanged(arInstructionText, getArInstructionText());
+  setTextIfChanged(arDistanceText, Number.isFinite(remainingMeters) ? `${formatArDistance(remainingMeters)} to go` : "--");
+  setTextIfChanged(arEtaText, remainingMinutes ? `~${remainingMinutes} min walk` : "--");
+}
+
+async function startArMode() {
+  if (arModeActive) {
+    return;
+  }
+
+  if (!latestRoutePreview || !routeUsesCurrentLocation()) {
+    setLocationStatus("AR mode needs a route that starts from your current location. Set From to Current Location first.", { isError: true });
+    return;
+  }
+
+  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setLocationStatus("AR mode needs an HTTPS connection and a device with a camera.", { isError: true });
+    return;
+  }
+
+  arModeActive = true;
+  arCompassHeading = null;
+  arHeadingReady = false;
+
+  if (arModeLayer) {
+    arModeLayer.hidden = false;
+  }
+
+  arAddedBodyLock = !document.body.classList.contains("modal-open");
+  document.body.classList.add("modal-open");
+
+  setArStatus("");
+  setTextIfChanged(arTargetNameText, latestRoutePreview?.end?.name || "Destination");
+  setTextIfChanged(arInstructionText, getArInstructionText());
+
+  try {
+    arCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+
+    if (arCameraVideo) {
+      arCameraVideo.srcObject = arCameraStream;
+      await arCameraVideo.play().catch(() => {
+        // Autoplay can be refused; the stream stays attached and starts on the next frame.
+      });
+    }
+  } catch (error) {
+    stopArMode();
+    setLocationStatus("Camera access was blocked, so AR mode cannot start. Allow camera access for this site, then try again.", { isError: true });
+    return;
+  }
+
+  const compassResult = await attachArCompass();
+
+  // The user may have closed AR mode while the permission prompts were open.
+  if (!arModeActive) {
+    return;
+  }
+
+  if (compassResult === "denied") {
+    setArStatus("Compass permission was denied, so the arrow cannot point. The direction number still tells you which way to face.");
+  } else if (compassResult !== "ready") {
+    setArStatus("This device has no compass, so the arrow cannot point. The direction number still tells you which way to face.");
+  }
+
+  arAnimationFrameId = window.requestAnimationFrame(renderArFrame);
+}
+
+function stopArMode() {
+  arModeActive = false;
+
+  if (arAnimationFrameId) {
+    window.cancelAnimationFrame(arAnimationFrameId);
+    arAnimationFrameId = 0;
+  }
+
+  detachArCompass();
+  arCompassHeading = null;
+  arHeadingReady = false;
+
+  if (arCameraStream) {
+    arCameraStream.getTracks().forEach((track) => track.stop());
+    arCameraStream = null;
+  }
+
+  if (arCameraVideo) {
+    arCameraVideo.srcObject = null;
+  }
+
+  if (arModeLayer) {
+    arModeLayer.hidden = true;
+  }
+
+  if (arAddedBodyLock) {
+    document.body.classList.remove("modal-open");
+    arAddedBodyLock = false;
+  }
+}
+
+function updateArModeButton() {
+  if (!startArModeButton) {
+    return;
+  }
+
+  const canStartAr = Boolean(latestRoutePreview) && routeUsesCurrentLocation();
+  startArModeButton.hidden = !canStartAr;
+
+  // If the route changed underneath an open AR session, close AR instead of pointing at nothing.
+  if (arModeActive && !canStartAr) {
+    stopArMode();
+  }
+}
+
+if (startArModeButton) {
+  startArModeButton.addEventListener("click", () => {
+    startArMode();
+  });
+}
+
+if (closeArModeButton) {
+  closeArModeButton.addEventListener("click", () => {
+    stopArMode();
+  });
+}
+
+// Hand the camera back when the page is really going away.
+window.addEventListener("pagehide", () => {
+  if (arModeActive) {
+    stopArMode();
+  }
+});
+
+initRouteDock();
+
+/* ===== Bottom route dock (arrival indicator -> End Route) ===== */
+function getRouteDockSummary() {
+  const route = latestRoutePreview?.route;
+  const end = latestRoutePreview?.end;
+
+  if (!route || !end) {
+    return null;
+  }
+
+  // Go mode: the headline is the clock time the user will arrive.
+  if (isGuidedNavigationActive) {
+    const remainingMeters = getArRemainingMeters();
+    const remainingMinutes = getArRemainingMinutes(remainingMeters);
+    const minutes = remainingMinutes || route.minutes;
+
+    return {
+      primary: `Arriving ~${getArrivalEtaText(minutes)}`,
+      destination: `To ${end.name}`,
+      detail: Number.isFinite(remainingMeters)
+        ? `${formatArDistance(remainingMeters)} left · about ${minutes} min to go`
+        : `${route.distanceText} total · about ${route.minutes} min`
+    };
+  }
+
+  // Arrived: navigation is over, so the dock should not suggest a remaining walk time.
+  if (hasAnnouncedRouteArrival) {
+    return {
+      primary: "You have arrived",
+      destination: `At ${end.name}`,
+      detail: "Navigation is finished. End the route to clear it from the map, or keep exploring this building."
+    };
+  }
+
+  // Steps mode: destination building plus how long the walk between the two is.
+  return {
+    primary: `${route.minutes} min · ${route.distanceText}`,
+    destination: `To ${end.name}`,
+    detail: `${latestDirectionSteps.length} steps from ${latestRoutePreview.start.name} · swipe the card at the top of the screen to preview each step`
+  };
+}
+
+function setRouteDockExpanded(expanded) {
+  if (!routeDock) {
+    return;
+  }
+
+  routeDock.dataset.dockState = expanded ? "expanded" : "collapsed";
+
+  if (routeDockHandle) {
+    routeDockHandle.setAttribute("aria-expanded", String(expanded));
+  }
+}
+
+function hideRouteDock() {
+  if (routeDock) {
+    routeDock.hidden = true;
+  }
+
+  document.body.classList.remove("route-dock-open");
+  setRouteDockExpanded(false);
+}
+
+function updateRouteDock() {
+  if (!routeDock) {
+    return;
+  }
+
+  const summary = getRouteDockSummary();
+
+  if (!summary) {
+    hideRouteDock();
+    return;
+  }
+
+  routeDock.hidden = false;
+  document.body.classList.add("route-dock-open");
+
+  setTextIfChanged(routeDockArrival, summary.primary);
+  setTextIfChanged(routeDockDestination, summary.destination);
+  setTextIfChanged(routeDockDetail, summary.detail);
+
+  if (routeDockArButton) {
+    routeDockArButton.hidden = !routeUsesCurrentLocation();
+  }
+}
+
+function initRouteDock() {
+  if (!routeDock || !routeDockHandle) {
+    return;
+  }
+
+  let dragStartY = 0;
+  let dragDeltaY = 0;
+  let isDragging = false;
+
+  routeDockHandle.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+    dragStartY = event.clientY;
+    dragDeltaY = 0;
+    routeDock.classList.add("is-dragging");
+    routeDockHandle.setPointerCapture?.(event.pointerId);
+  });
+
+  routeDockHandle.addEventListener("pointermove", (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    // Dragging follows the finger, clamped so the dock cannot fly off screen.
+    dragDeltaY = Math.max(-120, Math.min(60, event.clientY - dragStartY));
+    routeDock.style.setProperty("--dock-drag", `${dragDeltaY}px`);
+  });
+
+  const finishDrag = () => {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+    routeDock.classList.remove("is-dragging");
+    routeDock.style.removeProperty("--dock-drag");
+
+    if (dragDeltaY < -30) {
+      suppressDockClick = true;
+      setRouteDockExpanded(true);
+    } else if (dragDeltaY > 30) {
+      suppressDockClick = true;
+      setRouteDockExpanded(false);
+    }
+  };
+
+  routeDockHandle.addEventListener("pointerup", finishDrag);
+  routeDockHandle.addEventListener("pointercancel", finishDrag);
+
+  // A tap also opens the dock. A real drag sets the flag so it does not double-toggle.
+  routeDockHandle.addEventListener("click", () => {
+    if (suppressDockClick) {
+      suppressDockClick = false;
+      return;
+    }
+
+    setRouteDockExpanded(routeDock.dataset.dockState !== "expanded");
+  });
+
+  if (endRouteButton) {
+    endRouteButton.addEventListener("click", () => {
+      if (isLiveTracking) {
+        stopLiveTracking({ showStatus: false });
+      }
+
+      // clearRoute() already stops guided navigation and refreshes the dock.
+      clearRoute();
+    });
+  }
+
+  if (routeDockArButton) {
+    routeDockArButton.addEventListener("click", () => {
+      startArMode();
+    });
+  }
+}
+
 function getLocationErrorMessage(error) {
   if (error?.code === 1) {
     return "Location permission was blocked. In your browser settings, allow location access for this site, then try again.";
@@ -4509,6 +5183,8 @@ function updateCurrentLocation(position, mode) {
   if (mode === "live" && isMobilePanelEnabled()) {
     document.body.classList.toggle("directions-panel-open", panelStateBeforeMapRefresh !== "collapsed");
   }
+
+  updateRouteDock();
 
   if (isGuidedNavigationActive) {
     advanceGuidedNavigationIfNeeded();

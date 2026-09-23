@@ -14,7 +14,7 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,1,0">
-  <link rel="stylesheet" href="style.css?v=20260914-outlook-fallback">
+  <link rel="stylesheet" href="style.css?v=20260914-route-ui">
 </head>
 <body>
   <div id="appIntro" class="app-intro" role="status" aria-label="Opening JCSU Campus Navigation">
@@ -149,6 +149,10 @@
 
           <button id="getDirections" class="primary-button" type="button">Get Directions</button>
           <button id="clearRoute" class="secondary-button" type="button">Clear Route</button>
+          <button id="startArMode" class="secondary-button ar-launch-button" type="button" hidden>
+            <span class="material-symbols-outlined" aria-hidden="true">view_in_ar</span>
+            Start AR Mode
+          </button>
           <button id="reportCurrentRouteIssue" class="secondary-button route-report-button route-report-form-button" type="button" hidden>
             <span class="material-symbols-outlined" aria-hidden="true">feedback</span>
             Report Route Issue
@@ -198,6 +202,64 @@
       <span>Safety</span>
     </button>
   </nav>
+
+  <div id="arMode" class="ar-mode" role="dialog" aria-modal="true" aria-label="AR navigation mode" hidden>
+    <video id="arCamera" class="ar-camera" playsinline muted autoplay></video>
+    <div class="ar-scrim" aria-hidden="true"></div>
+
+    <div class="ar-top-bar">
+      <div class="ar-heading">
+        <span class="material-symbols-outlined" aria-hidden="true">view_in_ar</span>
+        <div>
+          <strong>AR Mode</strong>
+          <small id="arTargetName">Point your phone ahead</small>
+        </div>
+      </div>
+      <button id="closeArMode" class="ar-close-button" type="button" aria-label="Exit AR mode">x</button>
+    </div>
+
+    <div class="ar-arrow-stage">
+      <div id="arArrow" class="ar-arrow" aria-hidden="true">
+        <span class="material-symbols-outlined">arrow_upward</span>
+      </div>
+      <p id="arBearingText" class="ar-bearing-text">Looking for your location...</p>
+    </div>
+
+    <div class="ar-info-card">
+      <p id="arInstruction" class="ar-instruction">Choose a route with your current location as the starting point.</p>
+      <div class="ar-metrics">
+        <span id="arDistance">--</span>
+        <span id="arEta">--</span>
+      </div>
+      <p id="arStatus" class="ar-status" role="status" aria-live="polite" hidden></p>
+    </div>
+  </div>
+
+  <div id="routeDock" class="route-dock" data-dock-state="collapsed" hidden>
+    <div class="route-dock-shell">
+      <button id="routeDockHandle" class="route-dock-handle" type="button" aria-expanded="false" aria-controls="routeDockPanel">
+        <span class="route-dock-grip" aria-hidden="true"></span>
+        <span class="route-dock-summary">
+          <strong id="routeDockArrival">--</strong>
+          <small id="routeDockDestination">Destination</small>
+        </span>
+        <span class="route-dock-chevron material-symbols-outlined" aria-hidden="true">expand_less</span>
+      </button>
+      <div id="routeDockPanel" class="route-dock-panel">
+        <p id="routeDockDetail" class="route-dock-detail"></p>
+        <div class="route-dock-actions">
+          <button id="routeDockAr" class="route-dock-ar" type="button" hidden>
+            <span class="material-symbols-outlined" aria-hidden="true">view_in_ar</span>
+            AR View
+          </button>
+          <button id="endRoute" class="route-dock-end" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">stop_circle</span>
+            End Route
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 
@@ -340,9 +402,9 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260914-outlook-fallback"></script>
-  <script src="paths.js?v=20260914-outlook-fallback"></script>
-  <script src="navigation.js?v=20260914-outlook-fallback"></script>
-  <script src="script.js?v=20260914-outlook-fallback"></script>
+  <script src="locations.js?v=20260914-route-ui"></script>
+  <script src="paths.js?v=20260914-route-ui"></script>
+  <script src="navigation.js?v=20260914-route-ui"></script>
+  <script src="script.js?v=20260914-route-ui"></script>
 </body>
 </html>
