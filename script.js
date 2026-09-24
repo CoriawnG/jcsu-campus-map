@@ -798,14 +798,17 @@ let latestRoutePreview = null;
 let latestDirectionSteps = [];
 let routeInstructionPoints = [];
 let arModeActive = false;
+let arModeSessionId = 0;
 let arCameraStream = null;
 let arAnimationFrameId = 0;
 let arCompassHeading = null;
 let arHeadingReady = false;
+let arCompassHintTimer = 0;
 let arAddedBodyLock = false;
 let stepsScrollTimer = 0;
 let isSyncingCarousel = false;
 let suppressDockClick = false;
+let isRouteStepViewActive = false;
 let activeRouteStepIndex = 0;
 let isGuidedNavigationActive = false;
 let hasAnnouncedRouteArrival = false;
@@ -3243,6 +3246,9 @@ function renderRouteSuggestions(field, suggestionsBox, options = {}) {
       hideRouteSuggestions(suggestionsBox);
       shouldFitRouteToMap = true;
 
+      // Plain preview only: show the full route plus its time estimate with the
+      // Go/Steps button beside it. Entering the Go/Steps phase requires tapping
+      // that preview-card button (handleRouteAction).
       if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
         renderDirectionsPreview();
       } else {
@@ -3346,9 +3352,16 @@ function renderDirectionsPreview(options = {}) {
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
   const shouldShowStepNavigator = Boolean(options.showStepNavigator);
+  // The arrival dock belongs to the Go/Steps phase only. A plain route preview keeps the
+  // bottom sheet visible so the time estimate and the Go/Steps button can be read.
+  // Silent GPS refreshes must not flip the phase by themselves.
+  if (!options.silentRefresh) {
+    isRouteStepViewActive = shouldShowStepNavigator;
+  }
 
   openDirectionsPanel({ preservePanelState: options.preservePanelState, preserveView: options.silentRefresh });
   if (!start || !end) {
+    isRouteStepViewActive = false;
     latestRoutePreview = null;
     latestDirectionSteps = [];
     routeInstructionPoints = [];
@@ -3362,6 +3375,7 @@ function renderDirectionsPreview(options = {}) {
   }
 
   if (start.name === end.name) {
+    isRouteStepViewActive = false;
     latestRoutePreview = null;
     latestDirectionSteps = [];
     routeInstructionPoints = [];
@@ -3378,6 +3392,7 @@ function renderDirectionsPreview(options = {}) {
     const estimateText = walkingMinutes
       ? ` Estimated walking time: about ${walkingMinutes} minute${walkingMinutes === 1 ? "" : "s"}.`
       : "";
+    isRouteStepViewActive = false;
     latestRoutePreview = null;
     updateRouteIssueButton();
 
@@ -3399,6 +3414,7 @@ function renderDirectionsPreview(options = {}) {
   const route = window.CampusNavigation.findRoute(start, end, { preference: routePreference });
 
   if (!route.ok) {
+    isRouteStepViewActive = false;
     latestRoutePreview = null;
     latestDirectionSteps = [];
     routeInstructionPoints = [];
@@ -3494,6 +3510,11 @@ function renderDirectionsPreview(options = {}) {
         </div>
       </div>
 
+      <button id="routePreviewAction" class="primary-button route-preview-action" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">${isCurrentLocationStart ? "near_me" : "format_list_numbered"}</span>
+        ${isCurrentLocationStart ? "Go" : "Steps"}
+      </button>
+
       <p class="route-preference-card">${route.preferenceNote}</p>
 
       <details class="route-step-details" open>
@@ -3534,6 +3555,13 @@ function renderDirectionsPreview(options = {}) {
   directionsOutput.querySelector("#reportRouteIssue").addEventListener("click", () => {
     openRouteIssueReporter(route, routePreferenceLabel);
   });
+
+  // The Go/Steps button lives right beside the preview's time estimate.
+  const routePreviewActionButton = directionsOutput.querySelector("#routePreviewAction");
+
+  if (routePreviewActionButton) {
+    routePreviewActionButton.addEventListener("click", handleRouteAction);
+  }
 
   const stepButtons = Array.from(directionsOutput.querySelectorAll("[data-route-step]"));
 
@@ -3619,6 +3647,7 @@ function hideRouteStepNavigator() {
 
   routeStepNavigator.hidden = true;
   routeStepNavigator.innerHTML = "";
+  routeStepNavigator.classList.remove("is-active");
 }
 
 function focusRouteStepOnMap(index) {
@@ -4417,6 +4446,7 @@ function clearRoute() {
   shouldFitRouteToMap = true;
   latestRoutePreview = null;
   latestDirectionSteps = [];
+  isRouteStepViewActive = false;
   updateRouteIssueButton();
   routeInstructionPoints = [];
   activeRouteStepIndex = 0;
@@ -4564,22 +4594,38 @@ function detachArCompass() {
   window.removeEventListener("deviceorientation", handleArOrientation, true);
 }
 
-async function attachArCompass() {
+async function requestArMotionPermission() {
+  if (typeof window.DeviceOrientationEvent?.requestPermission !== "function") {
+    return "not-needed";
+  }
+
+  // iOS shows this prompt only while the tap is still "active", which is why
+  // AR mode asks for motion BEFORE the camera. Do not add arguments here:
+  // some Safari builds reject unknown arguments and report a denial the
+  // user never actually made.
+  try {
+    return await window.DeviceOrientationEvent.requestPermission();
+  } catch (error) {
+    return "denied";
+  }
+}
+
+async function attachArCompass(sessionId) {
   if (!window.DeviceOrientationEvent) {
     return "unavailable";
   }
 
-  // iOS 13+ needs an explicit permission ask from a tap, and absolute:true also requests the magnetometer.
   if (typeof window.DeviceOrientationEvent.requestPermission === "function") {
-    try {
-      const permission = await window.DeviceOrientationEvent.requestPermission(true);
+    const permission = await requestArMotionPermission();
 
-      if (permission !== "granted") {
-        return "denied";
-      }
-    } catch (error) {
+    if (permission !== "granted") {
       return "denied";
     }
+  }
+
+  // The user may have closed AR mode while the prompt was open.
+  if (!arModeActive || sessionId !== arModeSessionId) {
+    return "cancelled";
   }
 
   window.addEventListener("deviceorientationabsolute", handleArOrientation, true);
@@ -4740,6 +4786,7 @@ async function startArMode() {
   }
 
   arModeActive = true;
+  const sessionId = ++arModeSessionId;
   arCompassHeading = null;
   arHeadingReady = false;
 
@@ -4754,11 +4801,37 @@ async function startArMode() {
   setTextIfChanged(arTargetNameText, latestRoutePreview?.end?.name || "Destination");
   setTextIfChanged(arInstructionText, getArInstructionText());
 
+  // Ask for the compass FIRST, and await it BEFORE touching the camera. iOS only
+  // shows the motion prompt while this tap is still "active": awaiting the
+  // camera prompt first spends that activation, so DeviceOrientationEvent
+  // either has no gesture left (permission silently fails -> "denied" with
+  // no prompt shown) or its own prompt appears stacked behind the camera
+  // prompt. Compass first, camera second.
+  const compassResult = await attachArCompass(sessionId);
+
+  // The user may have closed and reopened AR while a permission prompt was open.
+  if (!arModeActive || sessionId !== arModeSessionId) {
+    return;
+  }
+
+  if (compassResult === "cancelled") {
+    stopArMode();
+    return;
+  }
+
   try {
-    arCameraStream = await navigator.mediaDevices.getUserMedia({
+    const cameraStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: "environment" } },
       audio: false
     });
+
+    // Permission can resolve after AR was closed. Never attach or retain that stream.
+    if (!arModeActive || sessionId !== arModeSessionId) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    arCameraStream = cameraStream;
 
     if (arCameraVideo) {
       arCameraVideo.srcObject = arCameraStream;
@@ -4767,25 +4840,42 @@ async function startArMode() {
       });
     }
   } catch (error) {
+    // A stale, cancelled request must not tear down a newer AR session.
+    if (sessionId !== arModeSessionId) {
+      return;
+    }
+
     stopArMode();
     setLocationStatus("Camera access was blocked, so AR mode cannot start. Allow camera access for this site, then try again.", { isError: true });
     return;
   }
 
-  const compassResult = await attachArCompass();
-
-  // The user may have closed AR mode while the permission prompts were open.
-  if (!arModeActive) {
+  if (!arModeActive || sessionId !== arModeSessionId) {
     return;
   }
 
   if (compassResult === "denied") {
     setArStatus("Compass permission was denied, so the arrow cannot point. The direction number still tells you which way to face.");
-  } else if (compassResult !== "ready") {
+  } else if (compassResult === "unavailable") {
     setArStatus("This device has no compass, so the arrow cannot point. The direction number still tells you which way to face.");
+  } else {
+    // Some phones need a moment (and a wiggle) before the magnetometer reports anything.
+    arCompassHintTimer = window.setTimeout(() => {
+      if (arModeActive && arCompassHeading === null) {
+        setArStatus("No compass reading yet. Hold the phone flat and slowly move it in a figure-8 to calibrate.");
+      }
+    }, 3200);
   }
 
   arAnimationFrameId = window.requestAnimationFrame(renderArFrame);
+
+  // Seed the overlay numbers immediately: GPS + compass update on their own
+  // schedules, so without this the distance/ETA read "--" until the first tick.
+  setTextIfChanged(arInstructionText, getArInstructionText());
+  const seedMeters = getArRemainingMeters();
+  const seedMinutes = getArRemainingMinutes(seedMeters);
+  setTextIfChanged(arDistanceText, Number.isFinite(seedMeters) ? `${formatArDistance(seedMeters)} to go` : "Waiting for GPS...");
+  setTextIfChanged(arEtaText, seedMinutes ? `~${seedMinutes} min walk` : "--");
 }
 
 function stopArMode() {
@@ -4797,6 +4887,8 @@ function stopArMode() {
   }
 
   detachArCompass();
+  window.clearTimeout(arCompassHintTimer);
+  arCompassHintTimer = 0;
   arCompassHeading = null;
   arHeadingReady = false;
 
@@ -4923,7 +5015,7 @@ function updateRouteDock() {
 
   const summary = getRouteDockSummary();
 
-  if (!summary) {
+  if (!summary || !isRouteStepViewActive) {
     hideRouteDock();
     return;
   }
@@ -5131,7 +5223,12 @@ function updateRouteActionButton() {
     return;
   }
 
-  getDirectionsButton.textContent = routeUsesCurrentLocation() ? "Go" : "Steps";
+  // The main form button only ever shows a preview. The Go/Steps action lives
+  // inside the preview card beside the time estimate, so typing a destination
+  // never jumps straight into navigation.
+  if (getDirectionsButton.textContent !== "Get Directions") {
+    getDirectionsButton.textContent = "Get Directions";
+  }
 }
 
 function shouldShowLiveLocationPin() {
@@ -5383,6 +5480,13 @@ feedbackModal.addEventListener("click", (event) => {
   }
 });
 
+function previewRouteFromForm() {
+  shouldFitRouteToMap = true;
+  // Plain preview: full route on the map plus the time estimate, with the
+  // Go/Steps action beside it. Never enters the Go/Steps phase by itself.
+  renderDirectionsPreview();
+}
+
 function handleRouteAction() {
   shouldFitRouteToMap = true;
   const usesCurrentLocation = routeUsesCurrentLocation();
@@ -5412,7 +5516,7 @@ document.addEventListener("keydown", (event) => {
     closeSafetyModal();
   }
 });
-getDirectionsButton.addEventListener("click", handleRouteAction);
+getDirectionsButton.addEventListener("click", previewRouteFromForm);
 
 function setupRouteSearchField(field, suggestionsBox, options = {}) {
   if (!field) {

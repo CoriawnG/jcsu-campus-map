@@ -4827,6 +4827,17 @@ body.is-offline .app-shell {
   background: #8d2c2c;
 }
 
+/* Go / Steps button inside the route preview card */
+.route-preview-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+
 @media (max-width: 860px) {
   /* While a route is running the bottom sheet and bottom nav give way to the arrival dock. */
   body.route-dock-open .sidebar,
