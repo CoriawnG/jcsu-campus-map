@@ -51,6 +51,7 @@ const routeDockHandle = document.querySelector("#routeDockHandle");
 const routeDockArrival = document.querySelector("#routeDockArrival");
 const routeDockDestination = document.querySelector("#routeDockDestination");
 const routeDockDetail = document.querySelector("#routeDockDetail");
+const routeDockSteps = document.querySelector("#routeDockSteps");
 const routeDockArButton = document.querySelector("#routeDockAr");
 const endRouteButton = document.querySelector("#endRoute");
 const mapLocationStatus = document.querySelector("#mapLocationStatus");
@@ -3621,9 +3622,15 @@ function renderDirectionsPreview(options = {}) {
     ? directionSteps
     : [{ instruction: `Continue to ${end.name}`, distance: route.distanceMeters || 1 }];
   routeInstructionPoints = buildRouteInstructionPoints(route, start, end, latestDirectionSteps);
-  activeRouteStepIndex = 0;
-  isGuidedNavigationActive = false;
-  hasAnnouncedRouteArrival = false;
+
+  // A silent live-GPS refresh must not restart the navigation session. Without
+  // this, the tick that lands right after the user arrives would clear
+  // hasAnnouncedRouteArrival and throw the dock back into "still walking" mode.
+  if (!options.silentRefresh) {
+    activeRouteStepIndex = 0;
+    isGuidedNavigationActive = false;
+    hasAnnouncedRouteArrival = false;
+  }
   // Refresh after the state above is settled, so the dock reads the new route's mode.
   updateRouteDock();
   const stepsMarkup = directionSteps
@@ -3859,6 +3866,8 @@ function setActiveRouteStep(index, options = {}) {
   if (options.focusMap !== false) {
     focusRouteStepOnMap(activeRouteStepIndex);
   }
+
+  syncRouteDockSteps();
 }
 
 function getGuidedStepMeters() {
@@ -4126,7 +4135,10 @@ function recalculateRouteFromCurrentPosition() {
   const preview = renderDirectionsPreview({ preservePanelState: true, showStepNavigator: true });
 
   if (preview) {
+    // Re-routing mid-walk keeps the user in the same full-screen feature.
+    document.body.classList.add("route-feature-active");
     startGuidedNavigation();
+    updateRouteDock();
   }
 }
 
@@ -4644,6 +4656,7 @@ function clearRoute() {
   updateRouteActionButton();
   hideRouteStepNavigator();
   hideLocationStatus();
+  document.body.classList.remove("route-feature-active");
 
   if (navigationRouteLayer) {
     navigationRouteLayer.clearLayers();
@@ -5142,22 +5155,34 @@ function getRouteDockSummary() {
     return null;
   }
 
-  // Go mode: the headline is the clock time the user will arrive.
-  if (isGuidedNavigationActive) {
+  // Go mode: distance and time are the headline, exactly as the user asked for
+  // the collapsed indicator. The live remaining distance/ETA is derived from
+  // the current GPS fix and updates on every tick via updateRouteDock().
+  if (routeUsesCurrentLocation()) {
     const remainingMeters = getArRemainingMeters();
     const remainingMinutes = getArRemainingMinutes(remainingMeters);
     const minutes = remainingMinutes || route.minutes;
+    const distanceText = Number.isFinite(remainingMeters)
+      ? formatArDistance(remainingMeters)
+      : route.distanceText;
+
+    // Arrival is over: stop suggesting a remaining walk time.
+    if (hasAnnouncedRouteArrival) {
+      return {
+        primary: "You have arrived",
+        destination: `At ${end.name}`,
+        detail: "Navigation is finished. End the route to clear it from the map, or keep exploring this building."
+      };
+    }
 
     return {
-      primary: `Arriving ~${getArrivalEtaText(minutes)}`,
-      destination: `To ${end.name}`,
-      detail: Number.isFinite(remainingMeters)
-        ? `${formatArDistance(remainingMeters)} left · about ${minutes} min to go`
-        : `${route.distanceText} total · about ${route.minutes} min`
+      primary: `${distanceText} · ${minutes} min`,
+      destination: `To ${end.name} · arriving ~${getArrivalEtaText(minutes)}`,
+      detail: "Following your live location. Tap or drag this bar up for AR View or to end the route."
     };
   }
 
-  // Arrived: navigation is over, so the dock should not suggest a remaining walk time.
+  // Arrived while previewing a building-to-building route.
   if (hasAnnouncedRouteArrival) {
     return {
       primary: "You have arrived",
@@ -5192,7 +5217,68 @@ function hideRouteDock() {
   }
 
   document.body.classList.remove("route-dock-open");
+  // Leaving the feature always restores the form, so a route edit (new
+  // preference, new endpoints, a failed reroute) can never strand the user on
+  // a blank full-screen map with the dock hidden.
+  document.body.classList.remove("route-feature-active");
   setRouteDockExpanded(false);
+
+  // The map reclaims the sidebar column as the grid reflows.
+  if (navigationMap) {
+    setTimeout(() => navigationMap.invalidateSize(), 0);
+  }
+}
+
+function renderRouteDockSteps() {
+  if (!routeDockSteps) {
+    return;
+  }
+
+  // The full list is a building-to-building affordance. Go mode already has a
+  // live-advancing banner at the top, so its dock stays compact. This keys off
+  // the route's start type rather than isGuidedNavigationActive, which flips to
+  // false on arrival and would pop the list open at the destination.
+  if (routeUsesCurrentLocation() || !latestDirectionSteps.length) {
+    routeDockSteps.hidden = true;
+    routeDockSteps.innerHTML = "";
+    return;
+  }
+
+  routeDockSteps.hidden = false;
+  routeDockSteps.innerHTML = latestDirectionSteps
+    .map((step, index) => `
+      <li class="route-dock-step ${index === activeRouteStepIndex ? "is-active" : ""}">
+        <button type="button" data-dock-step="${index}">
+          <span class="route-dock-step-number" aria-hidden="true">${index + 1}</span>
+          <span class="route-dock-step-copy">
+            <strong>${step.instruction}</strong>
+            <small>${formatRouteDistance(step.distance)}</small>
+          </span>
+        </button>
+      </li>
+    `)
+    .join("");
+
+  // Tapping a step in the expanded dock pans the map to that instruction and
+  // syncs the swipeable carousel at the top to the same step.
+  routeDockSteps.querySelectorAll("[data-dock-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveRouteStep(Number(button.dataset.dockStep), { focusMap: true });
+      setRouteDockExpanded(false);
+    });
+  });
+}
+
+// Lightweight highlight-only update so swiping the top carousel doesn't rebuild
+// the whole dock list (and doesn't fight the user's scroll position).
+function syncRouteDockSteps() {
+  if (!routeDockSteps || routeDockSteps.hidden) {
+    return;
+  }
+
+  routeDockSteps.querySelectorAll("[data-dock-step]").forEach((button) => {
+    button.parentElement.classList.toggle("is-active", Number(button.dataset.dockStep) === activeRouteStepIndex);
+  });
 }
 
 function updateRouteDock() {
@@ -5213,6 +5299,8 @@ function updateRouteDock() {
   setTextIfChanged(routeDockArrival, summary.primary);
   setTextIfChanged(routeDockDestination, summary.destination);
   setTextIfChanged(routeDockDetail, summary.detail);
+
+  renderRouteDockSteps();
 
   if (routeDockArButton) {
     routeDockArButton.hidden = !routeUsesCurrentLocation();
@@ -5702,19 +5790,53 @@ function previewRouteFromForm() {
   renderDirectionsPreview();
 }
 
-function handleRouteAction() {
-  shouldFitRouteToMap = true;
-  const usesCurrentLocation = routeUsesCurrentLocation();
-  const preview = renderDirectionsPreview({
-    preservePanelState: true,
-    showStepNavigator: true
-  });
+// Entering the directions feature is a pure state transition. It deliberately
+// does NOT re-run renderDirectionsPreview(): rebuilding the preview would reset
+// activeRouteStepIndex, clear isGuidedNavigationActive, and re-open the form
+// panel, which is why the old tap-to-enter flow looked like it did nothing.
+function enterRouteFeature() {
+  if (!latestRoutePreview || !latestDirectionSteps.length) {
+    return false;
+  }
 
-  if (preview && usesCurrentLocation) {
+  isRouteStepViewActive = true;
+  shouldFitRouteToMap = false;
+  activeRouteStepIndex = 0;
+
+  // Full-screen map: the form panel steps aside so the route line, the top
+  // step carousel (Steps) or guided banner (Go), and the bottom dock are all
+  // that remain on screen.
+  document.body.classList.add("route-feature-active");
+  sidebar.classList.remove("directions-detail-active");
+  setMobilePanelState("collapsed");
+
+  // Hiding the sidebar reflows the grid, so Leaflet has to re-measure before
+  // the map is panned to the first step.
+  if (navigationMap) {
+    navigationMap.invalidateSize();
+  }
+
+  if (routeUsesCurrentLocation()) {
     startGuidedNavigation();
-  } else if (preview) {
-    setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
-    setActiveRouteStep(0);
+  } else {
+    setActiveRouteStep(0, { focusMap: true });
+  }
+
+  updateRouteDock();
+  return true;
+}
+
+function handleRouteAction() {
+  if (enterRouteFeature()) {
+    return;
+  }
+
+  // No usable preview on screen yet (e.g. the card was replaced by an error
+  // message), so build one instead of letting the tap do nothing.
+  shouldFitRouteToMap = true;
+  renderDirectionsPreview();
+  if (needsCurrentGpsForForm()) {
+    requestPreviewGpsFix();
   }
 }
 

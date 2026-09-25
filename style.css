@@ -4761,8 +4761,12 @@ body.is-offline .app-shell {
   transform: rotate(180deg);
 }
 
+/* Column layout so the step list is the only element that flexes and scrolls.
+   As a grid with auto rows, the list pushed the actions row past max-height
+   and overflow:hidden clipped the End Route button. */
 .route-dock-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   max-height: 0;
   padding: 0 14px;
@@ -4772,22 +4776,94 @@ body.is-offline .app-shell {
 }
 
 .route-dock[data-dock-state="expanded"] .route-dock-panel {
-  max-height: 260px;
+  max-height: min(56vh, 420px);
   padding: 0 14px 14px;
   opacity: 1;
 }
 
 .route-dock-detail {
+  flex: 0 0 auto;
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.45;
 }
 
+/* Full step-by-step list revealed when the dock is dragged/tapped open
+   (building-to-building "Steps" mode). This is the only element allowed to
+   shrink, so it scrolls internally while the action buttons below it stay
+   fully visible. */
+.route-dock-steps {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+
+.route-dock-steps[hidden] {
+  display: none;
+}
+
+.route-dock-step > button {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  width: 100%;
+  padding: 9px 10px;
+  color: var(--text);
+  background: rgba(0, 45, 86, 0.04);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.route-dock-step.is-active > button {
+  background: rgba(255, 207, 1, 0.14);
+  border-color: rgba(255, 207, 1, 0.9);
+}
+
+.route-dock-step-number {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  color: #ffffff;
+  background: var(--blue);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  place-items: center;
+}
+
+.route-dock-step-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.route-dock-step-copy strong {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.route-dock-step-copy small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .route-dock-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+  /* Never let the scrolling step list squeeze End Route / AR View. */
+  flex: 0 0 auto;
 }
 
 .route-dock-actions > :only-child {
@@ -4825,6 +4901,27 @@ body.is-offline .app-shell {
 
 .route-dock-end:active {
   background: #8d2c2c;
+}
+
+/* The directions feature is a full-screen map: once Go/Steps is tapped the
+   form panel and bottom nav step aside at every breakpoint, leaving only the
+   route line, the top step carousel/banner, and the bottom dock. */
+body.route-feature-active .sidebar,
+body.route-feature-active .app-bottom-nav {
+  display: none;
+}
+
+/* The desktop shell is a two-column grid; with the sidebar hidden the map must
+   take the whole width rather than leaving an empty reserved column. */
+body.route-feature-active .app-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Directional help stays pinned to the top in the feature, clear of the dock
+   as it grows upward when dragged open. */
+body.route-feature-active .route-step-navigator {
+  top: 14px;
+  bottom: auto;
 }
 
 /* Go / Steps button inside the route preview card */
