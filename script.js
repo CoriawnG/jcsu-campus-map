@@ -1059,13 +1059,17 @@ function routeToSafetyLocation(locationName) {
   renderNavigationMarkers(getFilteredLocations());
   focusMapOnLocation(location);
 
-  if (fromLocationSelect.value) {
+  if (getLocationBySelectValue(fromLocationSelect.value)) {
     shouldFitRouteToMap = true;
-    renderDirectionsPreview();
-  } else {
-    directionsOutput.innerHTML = `<strong>Destination set:</strong> ${location.name}. Choose a starting point or tap Set My Location.`;
-    openDirectionsPanel();
+    // Safety destinations follow the same rule as the directions form: the
+    // preview pops on its own, and Current Location -> safety location asks
+    // for the GPS fix it needs before drawing the route.
+    previewAfterFieldSelection(null);
+    return;
   }
+
+  directionsOutput.innerHTML = `<strong>Destination set:</strong> ${location.name}. Choose a starting point or tap Set My Location.`;
+  openDirectionsPanel();
 }
 function openFeedbackModal(options = {}) {
   const selectedLocationName = activeLocationName || "";
@@ -1554,6 +1558,17 @@ function getEntranceSelectorForType(type) {
   return type === "start" ? fromEntranceOptions : toEntranceOptions;
 }
 
+function getSelectedEntranceIndex(type) {
+  const selector = getEntranceSelectorForType(type);
+
+  if (!selector) {
+    return 0;
+  }
+
+  const selectedIndex = Number(selector.dataset.selectedEntranceIndex || 0);
+  return Number.isFinite(selectedIndex) && selectedIndex >= 0 ? selectedIndex : 0;
+}
+
 function getSelectedEntrance(location, type) {
   const entrances = getLocationEntranceOptions(location);
   const selector = getEntranceSelectorForType(type);
@@ -1562,8 +1577,28 @@ function getSelectedEntrance(location, type) {
     return null;
   }
 
-  const selectedIndex = Number(selector.dataset.selectedEntranceIndex || 0);
-  return entrances[selectedIndex] || entrances[0];
+  return entrances[getSelectedEntranceIndex(type)] || entrances[0];
+}
+
+function getSelectedEntranceKey(type) {
+  const selector = getEntranceSelectorForType(type);
+
+  if (!selector || selector.hidden) {
+    return "default";
+  }
+
+  return String(getSelectedEntranceIndex(type));
+}
+
+function coordinatesMatch(first, second) {
+  if (!Number.isFinite(first?.lat) || !Number.isFinite(first?.lng)) {
+    return !Number.isFinite(second?.lat) && !Number.isFinite(second?.lng);
+  }
+
+  return Number.isFinite(second?.lat)
+    && Number.isFinite(second?.lng)
+    && Math.abs(first.lat - second.lat) < 0.00001
+    && Math.abs(first.lng - second.lng) < 0.00001;
 }
 
 function getRoutePointForEndpoint(location, type) {
@@ -3157,18 +3192,18 @@ function getRouteSuggestionScore(location, query) {
 
 function getRouteSuggestionMatches(value, options = {}) {
   const query = normalizeRouteInput(value);
-  const includeCurrentLocation = options.includeCurrentLocation && currentPosition;
+  const includeCurrentLocation = Boolean(options.includeCurrentLocation);
   const matches = [];
 
   if (includeCurrentLocation && (!query || "current location".includes(query))) {
     matches.push({
       label: "Current Location",
-      detail: "Use your live GPS position",
+      detail: currentPosition ? "Use your live GPS position" : "Use your live GPS position — tap to locate",
       value: "Current Location",
       location: {
         name: "Current Location",
-        lat: currentPosition.lat,
-        lng: currentPosition.lng
+        lat: currentPosition?.lat,
+        lng: currentPosition?.lng
       },
       score: query ? 0 : 90
     });
@@ -3241,21 +3276,18 @@ function renderRouteSuggestions(field, suggestionsBox, options = {}) {
       field.value = match.value;
       if (field === fromLocationSelect) {
         routeStartManuallyChanged = !isCurrentLocationInput(match.value);
+        resetEntranceSelectionForField(field);
+      } else if (field === toLocationSelect) {
+        resetEntranceSelectionForField(field);
       }
       updateRouteActionButton();
       hideRouteSuggestions(suggestionsBox);
       shouldFitRouteToMap = true;
 
-      // Plain preview only: show the full route plus its time estimate with the
-      // Go/Steps button beside it. Entering the Go/Steps phase requires tapping
-      // that preview-card button (handleRouteAction).
-      if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
-        renderDirectionsPreview();
-      } else {
-        syncCurrentLocationMarker({ centerMap: false });
-        const nextField = field === fromLocationSelect ? toLocationSelect : fromLocationSelect;
-        nextField?.focus();
-      }
+      // Auto-preview AFTER selecting 2 buildings / Current Location -> building.
+      // Then Get Directions / Go / Steps enters the directions feature.
+      const nextField = field === fromLocationSelect ? toLocationSelect : fromLocationSelect;
+      previewAfterFieldSelection(nextField);
     });
 
     suggestionsBox.appendChild(button);
@@ -3271,6 +3303,66 @@ function renderLocationOptions() {
 
 function isCurrentLocationInput(value) {
   return normalizeRouteInput(value) === "current location";
+}
+
+function hasRouteCoordinates(location) {
+  return Number.isFinite(location?.lat) && Number.isFinite(location?.lng);
+}
+
+function needsCurrentGpsForForm() {
+  return routeUsesCurrentLocation() && !hasRouteCoordinates(getLocationBySelectValue(fromLocationSelect.value));
+}
+
+function requestPreviewGpsFix() {
+  if (!canUseCurrentLocation()) {
+    return;
+  }
+  setLocationStatus("<strong>Finding your current location...</strong><br>Your browser may ask for permission.");
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      updateCurrentLocation(position, "fixed");
+      if (!isRouteStepViewActive
+        && getLocationBySelectValue(toLocationSelect.value)
+        && hasRouteCoordinates(getLocationBySelectValue(fromLocationSelect.value))) {
+        shouldFitRouteToMap = true;
+        renderDirectionsPreview();
+      }
+    },
+    (error) => {
+      setLocationStatus(getLocationErrorMessage(error), { isError: true });
+      expandMobilePanel();
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+  );
+}
+
+// Pops the route preview the moment both ends resolve to real locations, and
+// reports whether it did so callers can fall back to their own prompt.
+function previewAfterFieldSelection(fallbackField) {
+  const fromFilled = Boolean(fromLocationSelect.value.trim());
+  const toFilled = Boolean(toLocationSelect.value.trim());
+
+  // The preview pops as soon as both ends are chosen — two buildings, or
+  // Current Location -> building. A typed value alone is not enough: it must
+  // resolve to a real location first (otherwise the preview card flashes the
+  // "choose the closest matching suggestion" message on every keystroke).
+  const fromLocation = fromFilled ? getLocationBySelectValue(fromLocationSelect.value) : null;
+  const toLocation = toFilled ? getLocationBySelectValue(toLocationSelect.value) : null;
+
+  if (fromFilled && toFilled && fromLocation && toLocation) {
+    shouldFitRouteToMap = true;
+    // Current Location -> building: preview the prompt + route line now so the
+    // directions card pops, then GPS fills in the real start when it lands.
+    renderDirectionsPreview();
+    if (needsCurrentGpsForForm()) {
+      requestPreviewGpsFix();
+    }
+    return true;
+  }
+
+  syncCurrentLocationMarker({ centerMap: false });
+  fallbackField?.focus();
+  return false;
 }
 
 function getLocationBySelectValue(value) {
@@ -3309,6 +3401,47 @@ function estimateWalkingMinutes(start, end) {
   const campusPathEstimate = straightLineMiles * 1.25;
 
   return Math.max(1, Math.round((campusPathEstimate / 3) * 60));
+}
+
+function isPreviewCurrentForForm() {
+  if (!latestRoutePreview) {
+    return false;
+  }
+
+  if (!directionsOutput?.querySelector(".route-preview-card")) {
+    return false;
+  }
+
+  const startBase = getLocationBySelectValue(fromLocationSelect.value);
+  const endBase = getLocationBySelectValue(toLocationSelect.value);
+
+  if (!startBase || !endBase) {
+    return false;
+  }
+
+  const previewStart = latestRoutePreview.start;
+  const previewEnd = latestRoutePreview.end;
+
+  if (!previewStart || !previewEnd) {
+    return false;
+  }
+
+  const startEndpoint = getRoutePointForEndpoint(startBase, "start");
+  const endEndpoint = getRoutePointForEndpoint(endBase, "destination");
+
+  const startMatches = normalizeRouteInput(previewStart.name) === normalizeRouteInput(startEndpoint.name)
+    && (normalizeRouteInput(previewStart.name) === "current location" || coordinatesMatch(previewStart, startEndpoint));
+  const endMatches = normalizeRouteInput(previewEnd.name) === normalizeRouteInput(endEndpoint.name)
+    && (normalizeRouteInput(previewEnd.name) === "current location" || coordinatesMatch(previewEnd, endEndpoint));
+  const startEntranceMatches = !latestRoutePreview.startEntranceKey
+    || latestRoutePreview.startEntranceKey === getSelectedEntranceKey("start");
+  const endEntranceMatches = !latestRoutePreview.endEntranceKey
+    || latestRoutePreview.endEntranceKey === getSelectedEntranceKey("destination");
+  const preferenceMatches = !routePreferenceSelect
+    || (routePreferenceLabels[routePreferenceSelect.value] || routePreferenceSelect.value) === latestRoutePreview.routePreferenceLabel
+    || latestRoutePreview.routePreferenceLabel === undefined;
+
+  return startMatches && endMatches && startEntranceMatches && endEntranceMatches && preferenceMatches;
 }
 
 function getRouteSignature(start, end) {
@@ -3352,6 +3485,19 @@ function renderDirectionsPreview(options = {}) {
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
   const shouldShowStepNavigator = Boolean(options.showStepNavigator);
+  const canRouteWithoutGps = Boolean(
+    startBase
+    && endBase
+    && hasRouteCoordinates(startBase)
+    && hasRouteCoordinates(endBase)
+  );
+  const waitingOnGps = isCurrentLocationStart && !canRouteWithoutGps && !options.silentRefresh;
+  // Live GPS ticks must never pop, clear, or overwrite the panel on their own.
+  // If we still have no fix, keep whatever the user already sees.
+  if (options.silentRefresh && isCurrentLocationStart && !canRouteWithoutGps) {
+    updateRouteDock();
+    return latestRoutePreview;
+  }
   // The arrival dock belongs to the Go/Steps phase only. A plain route preview keeps the
   // bottom sheet visible so the time estimate and the Go/Steps button can be read.
   // Silent GPS refreshes must not flip the phase by themselves.
@@ -3360,7 +3506,7 @@ function renderDirectionsPreview(options = {}) {
   }
 
   openDirectionsPanel({ preservePanelState: options.preservePanelState, preserveView: options.silentRefresh });
-  if (!start || !end) {
+  if ((!start || !end) && !waitingOnGps && !(options.silentRefresh && latestRoutePreview)) {
     isRouteStepViewActive = false;
     latestRoutePreview = null;
     latestDirectionSteps = [];
@@ -3369,7 +3515,29 @@ function renderDirectionsPreview(options = {}) {
     hideRouteStepNavigator();
     directionsOutput.textContent = "Type a campus location and choose the closest matching suggestion for From and To.";
     updateRouteIssueButton();
+    refreshGetDirectionsButtonLabel();
     hideLocationStatus();
+    syncCurrentLocationMarker({ centerMap: false });
+    return null;
+  }
+
+  if (waitingOnGps) {
+    // Gated preview: keep the "waiting on GPS" prompt until a fix arrives.
+    // Get Directions explicitly asks for GPS (see previewRouteFromForm), so
+    // this message only sticks around while the lookup is in flight or the
+    // user denied/failed it. Auto-refresh paths never write to the panel.
+    isRouteStepViewActive = false;
+    if (!options.silentRefresh) {
+      hideRouteStepNavigator();
+      directionsOutput.innerHTML = `
+        <strong>Waiting for your current location...</strong>
+        <br>
+        Finding you now — your browser may ask for permission. If nothing appears, tap Set My Location or Start Live Tracking, then push Get Directions again.
+      `;
+      updateRouteIssueButton();
+      refreshGetDirectionsButtonLabel();
+      hideLocationStatus();
+    }
     syncCurrentLocationMarker({ centerMap: false });
     return null;
   }
@@ -3383,6 +3551,7 @@ function renderDirectionsPreview(options = {}) {
     hideRouteStepNavigator();
     directionsOutput.textContent = "Your starting point and destination are the same.";
     updateRouteIssueButton();
+    refreshGetDirectionsButtonLabel();
     syncCurrentLocationMarker({ centerMap: false });
     return null;
   }
@@ -3395,6 +3564,7 @@ function renderDirectionsPreview(options = {}) {
     isRouteStepViewActive = false;
     latestRoutePreview = null;
     updateRouteIssueButton();
+    refreshGetDirectionsButtonLabel();
 
     directionsOutput.innerHTML = `
       <strong>${start.name} to ${end.name}</strong>${estimateText}
@@ -3414,6 +3584,13 @@ function renderDirectionsPreview(options = {}) {
   const route = window.CampusNavigation.findRoute(start, end, { preference: routePreference });
 
   if (!route.ok) {
+    // A live GPS tick must never destroy an active Go/Steps session because of
+    // one transient fix (e.g. a missing coordinate). Keep the existing preview.
+    if (options.silentRefresh && latestRoutePreview) {
+      updateRouteDock();
+      return latestRoutePreview;
+    }
+
     isRouteStepViewActive = false;
     latestRoutePreview = null;
     latestDirectionSteps = [];
@@ -3426,6 +3603,7 @@ function renderDirectionsPreview(options = {}) {
       Choose another nearby starting point or destination.
     `;
     updateRouteIssueButton();
+    refreshGetDirectionsButtonLabel();
     if (isCurrentLocationStart) {
       syncCurrentLocationMarker({ centerMap: !isLiveTracking });
     } else {
@@ -3441,7 +3619,14 @@ function renderDirectionsPreview(options = {}) {
   shouldFitRouteToMap = false;
 
   const directionSteps = buildDirectionSteps(route.steps);
-  latestRoutePreview = { route, start, end, routePreferenceLabel };
+  latestRoutePreview = {
+    route,
+    start,
+    end,
+    routePreferenceLabel,
+    startEntranceKey: getSelectedEntranceKey("start"),
+    endEntranceKey: getSelectedEntranceKey("destination")
+  };
   updateRouteIssueButton();
   latestDirectionSteps = directionSteps.length
     ? directionSteps
@@ -3590,6 +3775,7 @@ function renderDirectionsPreview(options = {}) {
   } else {
     hideRouteStepNavigator();
   }
+  refreshGetDirectionsButtonLabel();
   switchMapView("navigationMapView");
 
   if (isCurrentLocationStart) {
@@ -4056,9 +4242,14 @@ function setRouteEndpoint(type, location, options = {}) {
 
   updateRouteActionButton();
 
-  if (fromLocationSelect.value && toLocationSelect.value) {
-    renderDirectionsPreview();
-  } else if (options.openDirections) {
+  // Same rule as the dropdown picks: the preview pops as soon as both ends are
+  // known — two buildings, or Current Location -> building. This click is a
+  // user gesture, so the GPS fix Current Location needs can be asked for here.
+  if (previewAfterFieldSelection(null)) {
+    return;
+  }
+
+  if (options.openDirections) {
     openDirectionsPanel();
   } else {
     expandMobilePanel();
@@ -5219,15 +5410,25 @@ function routeUsesCurrentLocation() {
 
 function updateRouteActionButton() {
   syncEntranceOptions();
+  refreshGetDirectionsButtonLabel();
+}
+
+function refreshGetDirectionsButtonLabel() {
   if (!getDirectionsButton) {
     return;
   }
 
-  // The main form button only ever shows a preview. The Go/Steps action lives
-  // inside the preview card beside the time estimate, so typing a destination
-  // never jumps straight into navigation.
-  if (getDirectionsButton.textContent !== "Get Directions") {
-    getDirectionsButton.textContent = "Get Directions";
+  // Two-tap flow: the form button first shows the preview, then flips to
+  // Go (live GPS start) or Steps (building to building) so the second tap
+  // enters the directions feature. It only falls back to "Get Directions"
+  // once the on-screen preview no longer matches the From/To fields (or when
+  // there is no preview at all).
+  const label = isPreviewCurrentForForm()
+    ? (routeUsesCurrentLocation() ? "Go" : "Steps")
+    : "Get Directions";
+
+  if (getDirectionsButton.textContent !== label) {
+    getDirectionsButton.textContent = label;
   }
 }
 
@@ -5481,6 +5682,24 @@ feedbackModal.addEventListener("click", (event) => {
 });
 
 function previewRouteFromForm() {
+  // Tap 1 = preview, tap 2 = directions. As soon as the preview for these
+  // exact inputs is on screen the tap means Go/Steps, and it stays inside the
+  // directions phase instead of falling back to a plain preview card.
+  if (isPreviewCurrentForForm()) {
+    handleRouteAction();
+    return;
+  }
+
+  // Current Location needs a one-shot GPS fix to draw anything. This tap is
+  // the user gesture browsers require, so ask for GPS now and render the
+  // preview when the fix lands (updateCurrentLocation re-renders it).
+  if (needsCurrentGpsForForm()) {
+    shouldFitRouteToMap = true;
+    renderDirectionsPreview();
+    requestPreviewGpsFix();
+    return;
+  }
+
   shouldFitRouteToMap = true;
   // Plain preview: full route on the map plus the time estimate, with the
   // Go/Steps action beside it. Never enters the Go/Steps phase by itself.
@@ -5556,11 +5775,10 @@ function setupRouteSearchField(field, suggestionsBox, options = {}) {
     }
     updateRouteActionButton();
 
-    if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
-      renderDirectionsPreview();
-    } else {
-      syncCurrentLocationMarker({ centerMap: false });
-    }
+    // Manual typing follows the same rule: the preview pops once both ends
+    // are known (buildings, or Current Location -> building). The change
+    // event is already a user gesture, so GPS can be requested here too.
+    previewAfterFieldSelection(null);
   });
 }
 
@@ -5570,8 +5788,17 @@ if (routePreferenceSelect) {
   routePreferenceSelect.addEventListener("change", () => {
     shouldFitRouteToMap = true;
 
-    if (getLocationBySelectValue(fromLocationSelect.value) && getLocationBySelectValue(toLocationSelect.value)) {
-      renderDirectionsPreview();
+    // Refresh a preview already on screen — or pop one if the form is now
+    // complete (two buildings, or Current Location -> building).
+    if (latestRoutePreview
+      && getLocationBySelectValue(fromLocationSelect.value)
+      && getLocationBySelectValue(toLocationSelect.value)) {
+      renderDirectionsPreview({ preservePanelState: true });
+      if (needsCurrentGpsForForm()) {
+        requestPreviewGpsFix();
+      }
+    } else {
+      previewAfterFieldSelection(null);
     }
   });
 }
