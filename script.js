@@ -1590,17 +1590,6 @@ function getSelectedEntranceKey(type) {
   return String(getSelectedEntranceIndex(type));
 }
 
-function coordinatesMatch(first, second) {
-  if (!Number.isFinite(first?.lat) || !Number.isFinite(first?.lng)) {
-    return !Number.isFinite(second?.lat) && !Number.isFinite(second?.lng);
-  }
-
-  return Number.isFinite(second?.lat)
-    && Number.isFinite(second?.lng)
-    && Math.abs(first.lat - second.lat) < 0.00001
-    && Math.abs(first.lng - second.lng) < 0.00001;
-}
-
 function getRoutePointForEndpoint(location, type) {
   const selectedEntrance = getSelectedEntrance(location, type);
 
@@ -3403,6 +3392,19 @@ function estimateWalkingMinutes(start, end) {
   return Math.max(1, Math.round((campusPathEstimate / 3) * 60));
 }
 
+// Every input that changes what the preview would look like. Comparing this
+// single string is deterministic: it cannot drift the way re-deriving endpoints
+// and re-reading DOM entrance state at click time did.
+function getRouteFormStateKey() {
+  return [
+    normalizeRouteInput(fromLocationSelect.value),
+    normalizeRouteInput(toLocationSelect.value),
+    getSelectedEntranceKey("start"),
+    getSelectedEntranceKey("destination"),
+    routePreferenceSelect?.value || "fastest"
+  ].join("|");
+}
+
 function isPreviewCurrentForForm() {
   if (!latestRoutePreview) {
     return false;
@@ -3412,36 +3414,7 @@ function isPreviewCurrentForForm() {
     return false;
   }
 
-  const startBase = getLocationBySelectValue(fromLocationSelect.value);
-  const endBase = getLocationBySelectValue(toLocationSelect.value);
-
-  if (!startBase || !endBase) {
-    return false;
-  }
-
-  const previewStart = latestRoutePreview.start;
-  const previewEnd = latestRoutePreview.end;
-
-  if (!previewStart || !previewEnd) {
-    return false;
-  }
-
-  const startEndpoint = getRoutePointForEndpoint(startBase, "start");
-  const endEndpoint = getRoutePointForEndpoint(endBase, "destination");
-
-  const startMatches = normalizeRouteInput(previewStart.name) === normalizeRouteInput(startEndpoint.name)
-    && (normalizeRouteInput(previewStart.name) === "current location" || coordinatesMatch(previewStart, startEndpoint));
-  const endMatches = normalizeRouteInput(previewEnd.name) === normalizeRouteInput(endEndpoint.name)
-    && (normalizeRouteInput(previewEnd.name) === "current location" || coordinatesMatch(previewEnd, endEndpoint));
-  const startEntranceMatches = !latestRoutePreview.startEntranceKey
-    || latestRoutePreview.startEntranceKey === getSelectedEntranceKey("start");
-  const endEntranceMatches = !latestRoutePreview.endEntranceKey
-    || latestRoutePreview.endEntranceKey === getSelectedEntranceKey("destination");
-  const preferenceMatches = !routePreferenceSelect
-    || (routePreferenceLabels[routePreferenceSelect.value] || routePreferenceSelect.value) === latestRoutePreview.routePreferenceLabel
-    || latestRoutePreview.routePreferenceLabel === undefined;
-
-  return startMatches && endMatches && startEntranceMatches && endEntranceMatches && preferenceMatches;
+  return latestRoutePreview.formStateKey === getRouteFormStateKey();
 }
 
 function getRouteSignature(start, end) {
@@ -3484,7 +3457,13 @@ function renderDirectionsPreview(options = {}) {
   const isCurrentLocationStart = isCurrentLocationInput(fromLocationSelect.value);
   const routePreference = routePreferenceSelect?.value || "fastest";
   const routePreferenceLabel = routePreferenceLabels[routePreference] || "Fastest route";
-  const shouldShowStepNavigator = Boolean(options.showStepNavigator);
+  // A silent live-GPS refresh must never close the step navigator: "Steps"
+  // mode depends on the swipeable carousel staying on screen while the user
+  // walks, and the automatic live tracking that starts on page load ticks
+  // every few seconds.
+  const shouldShowStepNavigator = options.silentRefresh
+    ? isRouteStepViewActive
+    : Boolean(options.showStepNavigator);
   const canRouteWithoutGps = Boolean(
     startBase
     && endBase
@@ -3492,6 +3471,17 @@ function renderDirectionsPreview(options = {}) {
     && hasRouteCoordinates(endBase)
   );
   const waitingOnGps = isCurrentLocationStart && !canRouteWithoutGps && !options.silentRefresh;
+  // Live tracking auto-starts on page load and ticks every few seconds. For a
+  // fixed building-to-building route none of that can change the preview, so
+  // skip the rebuild and leave the card, step carousel, and dock untouched.
+  if (options.silentRefresh
+    && !isCurrentLocationStart
+    && latestRoutePreview
+    && latestRoutePreview.formStateKey === getRouteFormStateKey()) {
+    updateRouteDock();
+    return latestRoutePreview;
+  }
+
   // Live GPS ticks must never pop, clear, or overwrite the panel on their own.
   // If we still have no fix, keep whatever the user already sees.
   if (options.silentRefresh && isCurrentLocationStart && !canRouteWithoutGps) {
@@ -3624,8 +3614,7 @@ function renderDirectionsPreview(options = {}) {
     start,
     end,
     routePreferenceLabel,
-    startEntranceKey: getSelectedEntranceKey("start"),
-    endEntranceKey: getSelectedEntranceKey("destination")
+    formStateKey: getRouteFormStateKey()
   };
   updateRouteIssueButton();
   latestDirectionSteps = directionSteps.length
@@ -4149,6 +4138,13 @@ function startGuidedNavigation() {
   isGuidedNavigationActive = true;
   hasAnnouncedRouteArrival = false;
   offRouteFixCount = 0;
+  // The map only follows the user while live tracking is feeding positions in.
+  // If it was stopped (or auto-start was denied earlier), turn it back on now
+  // so the guided phase actually advances as the user walks.
+  if (!isLiveTracking) {
+    toggleLiveTracking();
+  }
+
   offRouteAnnounced = false;
   setMobilePanelState("collapsed");
   setActiveRouteStep(0, { focusMap: false });
