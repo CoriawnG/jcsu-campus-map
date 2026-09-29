@@ -3850,6 +3850,12 @@ body.is-offline .app-shell {
   box-shadow: 0 0 0 4px rgba(255, 207, 1, 0.18);
 }
 
+.venue-hours-row + .venue-hours-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0, 45, 86, 0.18);
+}
+
 /* Faculty office hours */
 .detail-faculty-section {
   border-color: rgba(0, 45, 86, 0.16);

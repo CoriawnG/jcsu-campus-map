@@ -158,11 +158,20 @@ const locationContacts = {
     { label: "New Residence Hall", phone: "704.378.6819", description: "Residence hall contact" }
   ]
 };
+const DORM_LAYERS = new Set(["Housing", "Former / Inactive Housing"]);
+
 const locationHours = {
   "Administrative Cottage #4 (Campus Police)": {
     label: "Campus Police",
     alwaysOpen: true,
-    source: "JCSU lists Campus Police as operating 24 hours a day, 7 days a week."
+    weekly: {
+      Monday: [["8:30 AM", "4:30 PM"]],
+      Tuesday: [["8:30 AM", "4:30 PM"]],
+      Wednesday: [["8:30 AM", "4:30 PM"]],
+      Thursday: [["8:30 AM", "4:30 PM"]],
+      Friday: [["8:30 AM", "4:30 PM"]]
+    },
+    source: "Campus Police are on duty 24/7. Office hours are Monday-Friday, 8:30 a.m.-4:30 p.m.; after office hours call the Campus Police number (704.378.1003)."
   },
   "Administrative Cottage #3 (Counseling Center)": {
     label: "Counseling Center",
@@ -201,11 +210,220 @@ const locationHours = {
   },
   "Henry J. Biddle Hall": {
     label: "Admissions / Financial Aid / Student Accounts",
-    source: "Office hours were not confirmed in the app data. Call the office before visiting."
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "William F. Johnson & James W. Seabrook Hall": {
+    label: "Seabrook Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Henry Lawrence McCrorey Memorial Hall": {
+    label: "McCrorey Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Dorothy Cowser Yancy Technology Center": {
+    label: "Yancy Technology Center",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "New Science Center (STEM)": {
+    label: "New Science Center",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "George E. Davis Hall": {
+    label: "Davis Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Rufus R. Perry Hall": {
+    label: "Perry Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Old Science Building": {
+    label: "Old Science",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Andrew Carnegie Hall": {
+    label: "Carnegie Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Lionel H. Newsom Humanities Hall": {
+    label: "Newsom Humanities Hall",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Student Athlete Achievement Center": {
+    label: "SAAC",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Metropolitan College": {
+    label: "Metropolitan College",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Irwin Belk Complex": {
+    label: "Irwin Belk Complex (IBC)",
+    weekly: {
+      Monday: [["9:00 AM", "5:00 PM"]],
+      Tuesday: [["9:00 AM", "5:00 PM"]],
+      Wednesday: [["9:00 AM", "5:00 PM"]],
+      Thursday: [["9:00 AM", "5:00 PM"]],
+      Friday: [["9:00 AM", "5:00 PM"]]
+    },
+    source: "Office hours Monday-Friday, 9 a.m.-5 p.m."
+  },
+  "Jack S. Brayboy Gymnasium": {
+    label: "Brayboy Gym",
+    weekly: {
+      Monday: [["8:00 AM", "9:00 PM"]],
+      Tuesday: [["8:00 AM", "9:00 PM"]],
+      Wednesday: [["8:00 AM", "9:00 PM"]],
+      Thursday: [["8:00 AM", "9:00 PM"]],
+      Friday: [["8:00 AM", "5:00 PM"]],
+      Sunday: [["2:00 PM", "6:00 PM"]]
+    },
+    source: "Brayboy Gym hours: Monday-Thursday 8 a.m.-9 p.m.; Friday 8 a.m.-5 p.m.; Sunday 2-6 p.m.; closed Saturday."
+  },
+  "Jack S. Brayboy HealthPlex": {
+    label: "JCSU HealthPlex",
+    weekly: {
+      Monday: [["6:30 AM", "8:00 PM"]],
+      Tuesday: [["6:30 AM", "8:00 PM"]],
+      Wednesday: [["6:30 AM", "8:00 PM"]],
+      Thursday: [["6:30 AM", "8:00 PM"]],
+      Friday: [["6:30 AM", "8:00 PM"]]
+    },
+    source: "HealthPlex hours: Monday-Friday 6:30 a.m.-8 p.m.; closed Saturday and Sunday."
+  },
+  "Sustainability Village (Aquaponics Garden)": {
+    label: "Sustainability Village (Aquaponics Garden)",
+    weekly: {
+      Monday: [["8:00 AM", "9:00 PM"]],
+      Tuesday: [["8:00 AM", "9:00 PM"]],
+      Wednesday: [["8:00 AM", "9:00 PM"]],
+      Thursday: [["8:00 AM", "9:00 PM"]],
+      Sunday: [["2:00 PM", "6:00 PM"]]
+    },
+    source: "Sustainability Village hours: Monday-Thursday 8 a.m.-9 p.m.; Sunday 2-6 p.m.; closed Friday and Saturday."
+  },
+  "Sustainability Village (Community Garden)": {
+    label: "Sustainability Village (Community Garden)",
+    weekly: {
+      Monday: [["8:00 AM", "9:00 PM"]],
+      Tuesday: [["8:00 AM", "9:00 PM"]],
+      Wednesday: [["8:00 AM", "9:00 PM"]],
+      Thursday: [["8:00 AM", "9:00 PM"]],
+      Sunday: [["2:00 PM", "6:00 PM"]]
+    },
+    source: "Sustainability Village hours: Monday-Thursday 8 a.m.-9 p.m.; Sunday 2-6 p.m.; closed Friday and Saturday."
   },
   "Mary Joyce Taylor Crisp Memorial Student Union": {
     label: "Student Union dining and services",
-    source: "Food, lounge, bookstore, and student-service hours may vary by semester. Check posted campus hours."
+    source: "Food, lounge, bookstore, and student-service hours may vary by semester. Check posted campus hours.",
+    venues: {
+      bookstore: {
+        name: "Campus Bookstore",
+        label: "Campus Bookstore",
+        weekly: {
+          Monday: [["9:00 AM", "5:00 PM"]],
+          Tuesday: [["9:00 AM", "5:00 PM"]],
+          Wednesday: [["9:00 AM", "5:00 PM"]],
+          Thursday: [["9:00 AM", "5:00 PM"]],
+          Friday: [["9:00 AM", "4:00 PM"]]
+        },
+        source: "Bookstore hours: Monday-Thursday 9 a.m.-5 p.m.; Friday 9 a.m.-4 p.m.; closed Saturday and Sunday. Located inside the Student Union."
+      },
+      laurenes: {
+        name: "Laurene's",
+        label: "Laurene's Dining",
+        weekly: {
+          Tuesday: [["12:30 PM", "2:30 PM"], ["5:00 PM", "7:00 PM"]],
+          Wednesday: [["12:30 PM", "2:30 PM"]],
+          Thursday: [["12:30 PM", "2:30 PM"], ["5:00 PM", "7:00 PM"]],
+          Friday: [["12:30 PM", "2:30 PM"]]
+        },
+        source: "Laurene's hours: closed Monday, Saturday, and Sunday; Tuesday lunch 12:30-2:30 p.m. and dinner 5-7 p.m.; Wednesday lunch only 12:30-2:30 p.m.; Thursday lunch 12:30-2:30 p.m. and dinner 5-7 p.m.; Friday lunch only 12:30-2:30 p.m. Located inside the Student Union."
+      }
+    }
   },
   "Cafeteria": {
     label: "Cafeteria",
@@ -213,7 +431,14 @@ const locationHours = {
   },
   "KoKoMo's Coffeehouse": {
     label: "KoKoMo's Coffeehouse",
-    source: "Coffeehouse hours may vary by semester. Check posted campus dining hours."
+    weekly: {
+      Monday: [["8:00 AM", "4:00 PM"]],
+      Tuesday: [["8:00 AM", "4:00 PM"]],
+      Wednesday: [["8:00 AM", "4:00 PM"]],
+      Thursday: [["8:00 AM", "4:00 PM"]],
+      Friday: [["8:00 AM", "4:00 PM"]]
+    },
+    source: "KoKoMo's hours: Monday-Friday 8 a.m.-4 p.m.; closed Saturday and Sunday."
   }
 };
 
@@ -815,6 +1040,11 @@ let isGuidedNavigationActive = false;
 let hasAnnouncedRouteArrival = false;
 let offRouteFixCount = 0;
 let offRouteAnnounced = false;
+let navigationRouteLine = null;
+let navigationStartMarker = null;
+let guidedRouteProgress = 0;
+let lastAutoRerouteAt = 0;
+let lastFasterRouteCheckAt = 0;
 let routeStartManuallyChanged = false;
 
 let introDismissTimer = null;
@@ -1431,6 +1661,9 @@ function getShortDescription(text, maxLength = 118) {
 function renderLocationPreview(location) {
   const isFavorite = isFavoriteLocation(location);
   const hoursStatus = getLocationHoursStatus(location);
+  const hoursBadgeMarkup = hoursStatus.hideBadge
+    ? ""
+    : `<span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>`;
 
   setActiveBottomNav("explore");
   sidebar.classList.remove("directions-detail-active");
@@ -1444,7 +1677,7 @@ function renderLocationPreview(location) {
           <h2>${location.name}</h2>
           <div class="detail-meta place-preview-meta">
             <span class="tag">${location.category}</span>
-            <span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>
+            ${hoursBadgeMarkup}
           </div>
         </div>
         <button id="closeLocationPreview" class="icon-button" type="button" aria-label="Back to search">x</button>
@@ -2405,8 +2638,33 @@ function formatHoursWindows(windows) {
     .join(", ");
 }
 
+function isDormLocation(location) {
+  return Boolean(location && DORM_LAYERS.has(location.layer));
+}
+
+function parseHoursStatusWindows(weekly, date) {
+  const day = date.getDay();
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+  const windows = normalizeWeeklySchedule(weekly)[day] || [];
+  const activeWindow = windows.find(([start, end]) => nowMinutes >= start && nowMinutes < end);
+  const nextWindow = windows.find(([start]) => nowMinutes < start);
+
+  return { windows, activeWindow, nextWindow };
+}
+
 function getLocationHoursStatus(location, date = new Date()) {
   const profile = getLocationHoursProfile(location);
+
+  if (isDormLocation(location)) {
+    return {
+      label: "",
+      className: "hidden",
+      heading: profile?.label || location.name,
+      today: "",
+      note: "",
+      hideBadge: true
+    };
+  }
 
   if (!profile) {
     return {
@@ -2428,6 +2686,18 @@ function getLocationHoursStatus(location, date = new Date()) {
     };
   }
 
+  if (profile.venues && !profile.weekly) {
+    const { venueSummaries, anyOpen } = getVenueGroupStatus(profile, date);
+
+    return {
+      label: anyOpen ? "Open Now" : "Closed",
+      className: anyOpen ? "open" : "closed",
+      heading: profile.label,
+      today: venueSummaries.map(({ venue, status }) => `${venue.label || venue.name}: ${status.today}`).join("; "),
+      note: profile.source
+    };
+  }
+
   if (!profile.weekly) {
     return {
       label: "Hours Unknown",
@@ -2438,11 +2708,7 @@ function getLocationHoursStatus(location, date = new Date()) {
     };
   }
 
-  const day = date.getDay();
-  const nowMinutes = date.getHours() * 60 + date.getMinutes();
-  const windows = normalizeWeeklySchedule(profile.weekly)[day] || [];
-  const activeWindow = windows.find(([start, end]) => nowMinutes >= start && nowMinutes < end);
-  const nextWindow = windows.find(([start]) => nowMinutes < start);
+  const { windows, activeWindow, nextWindow } = parseHoursStatusWindows(profile.weekly, date);
 
   return {
     label: activeWindow ? "Open Now" : "Closed",
@@ -2477,10 +2743,73 @@ function getBuildingWeeklyMarkup(profile) {
       `;
 }
 
+function getVenueGroupStatus(profile, date = new Date()) {
+  const venueSummaries = Object.values(profile.venues || {}).map((venue) => ({
+    venue,
+    status: getVenueHoursStatus(venue, date)
+  }));
+  const anyOpen = venueSummaries.some(({ status }) => status.className === "open");
+
+  return { venueSummaries, anyOpen };
+}
+
+function getVenueHoursStatus(venue, date = new Date()) {
+  if (!venue || !venue.weekly) {
+    return {
+      label: "Hours Unknown",
+      className: "unknown",
+      today: "Hours need to be verified.",
+      note: venue?.source || ""
+    };
+  }
+
+  const { windows, activeWindow, nextWindow } = parseHoursStatusWindows(venue.weekly, date);
+
+  return {
+    label: activeWindow ? "Open Now" : "Closed",
+    className: activeWindow ? "open" : "closed",
+    heading: venue.label || venue.name,
+    today: `${formatHoursWindows(windows)}${!activeWindow && nextWindow ? `; opens at ${formatHoursTime(nextWindow[0])}` : ""}`,
+    note: venue.source || ""
+  };
+}
+
+function getVenueWeeklyMarkup(venue) {
+  if (!venue || !venue.weekly) {
+    return "";
+  }
+
+  return getBuildingWeeklyMarkup(venue);
+}
+
+function getVenueHoursMarkup(venue) {
+  const status = getVenueHoursStatus(venue);
+
+  return `
+    <div class="venue-hours-row">
+      <div class="hours-status-row">
+        <span class="hours-status-dot ${status.className}" aria-hidden="true"></span>
+        <strong>${status.heading}</strong>
+      </div>
+      <p><strong>Today:</strong> ${status.today}</p>
+      ${getVenueWeeklyMarkup(venue)}
+      <p>${status.note}</p>
+    </div>
+  `;
+}
+
 function getLocationHoursMarkup(location) {
   const profile = getLocationHoursProfile(location);
   const status = getLocationHoursStatus(location);
+
+  if (isDormLocation(location)) {
+    return "";
+  }
+
   const weeklyMarkup = profile && profile.weekly ? getBuildingWeeklyMarkup(profile) : "";
+  const venuesMarkup = profile && profile.venues
+    ? Object.values(profile.venues).map(getVenueHoursMarkup).join("")
+    : "";
 
   return `
     <section class="detail-section detail-hours-section">
@@ -2492,6 +2821,7 @@ function getLocationHoursMarkup(location) {
       <p><strong>Today:</strong> ${status.today}</p>
       ${weeklyMarkup}
       <p>${status.note}</p>
+      ${venuesMarkup}
     </section>
   `;
 }
@@ -3014,6 +3344,9 @@ function renderSelectedLocation(location) {
   const hoursMarkup = getLocationHoursMarkup(location);
   const facultyHoursMarkup = getFacultyHoursMarkup(location);
   const hoursStatus = getLocationHoursStatus(location);
+  const hoursBadgeMarkup = hoursStatus.hideBadge
+    ? ""
+    : `<span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>`;
   const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
   sidebar.classList.remove("directions-detail-active", "location-preview-active");
@@ -3029,7 +3362,7 @@ function renderSelectedLocation(location) {
     <div class="detail-meta">
       <span class="tag">${location.layer}</span>
       <span class="tag">${location.category}</span>
-      <span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>
+      ${hoursBadgeMarkup}
     </div>
     <section class="detail-section detail-about-section">
       <h3>About</h3>
@@ -3119,6 +3452,22 @@ function renderSelectedLocation(location) {
 }
 
 function isLocationOpenNow(location) {
+  if (isDormLocation(location)) {
+    return true;
+  }
+
+  const profile = getLocationHoursProfile(location);
+
+  if (profile?.venues) {
+    const { anyOpen } = getVenueGroupStatus(profile);
+
+    if (profile.weekly) {
+      return getLocationHoursStatus(location).className === "open" || anyOpen;
+    }
+
+    return anyOpen;
+  }
+
   return getLocationHoursStatus(location).className === "open";
 }
 
@@ -3630,6 +3979,15 @@ function renderDirectionsPreview(options = {}) {
     activeRouteStepIndex = 0;
     isGuidedNavigationActive = false;
     hasAnnouncedRouteArrival = false;
+    guidedRouteProgress = 0;
+  } else if (isGuidedNavigationActive && latestRoutePreview) {
+    // During guided "Go" the walked line is trimmed in place (see
+    // trimGuidedRouteLine). A full silent rebuild would redraw the whole
+    // line from scratch every GPS tick and undo that progress, so keep the
+    // existing preview and just refresh the live readout.
+    trimGuidedRouteLine();
+    updateRouteDock();
+    return latestRoutePreview;
   }
   // Refresh after the state above is settled, so the dock reads the new route's mode.
   updateRouteDock();
@@ -4023,11 +4381,17 @@ function advanceGuidedNavigationIfNeeded() {
     navigationMap.setView([currentPosition.lat, currentPosition.lng], 19, { animate: true });
   }
 
+  // Walk the line off behind the user before checking anything else, so the
+  // part already covered never comes back on a later wobble. The line's head
+  // and the green start dot both track the live fix.
+  trimGuidedRouteLine();
+  updateGuidedRouteDrawing();
+
   // Keep the "36 m to go · Then: ..." line live as the user walks.
   refreshGuidedBanner();
 
   const nextPoint = routeInstructionPoints[Math.min(activeRouteStepIndex + 1, routeInstructionPoints.length - 1)];
-  const distanceMeters = getDistanceBetweenPoints(currentPosition, nextPoint) * 1609.344;
+  const distanceMeters = metersBetweenPoints(currentPosition, nextPoint);
   const isLastStep = activeRouteStepIndex === latestDirectionSteps.length - 1;
 
   if (isLastStep) {
@@ -4047,15 +4411,254 @@ function advanceGuidedNavigationIfNeeded() {
 
   const wentOffRoute = updateOffRouteTracking(getMetersToRoutePath(currentPosition));
 
+  // A short detour just shows the banner with a manual Recalculate button. A
+  // sustained one (3+ fixes) rebuilds the route automatically instead. And even
+  // on the path, a meaningfully faster alternative from the live fix wins.
   if (wentOffRoute || offRouteAnnounced) {
+    if (maybeAutoRerouteFromOffRoute()) {
+      return;
+    }
+
     showOffRouteBanner();
     return;
   }
+
+  maybeAdoptFasterRoute();
 
   if (distanceMeters < 18) {
     setActiveRouteStep(activeRouteStepIndex + 1, { focusMap: false });
     navigator.vibrate?.(50);
   }
+}
+
+function metersBetweenPoints(pointA, pointB) {
+  return getDistanceBetweenPoints(pointA, pointB) * 1609.344;
+}
+
+function metersToSegment(point, segmentStart, segmentEnd) {
+  // Equirectangular projection in a campus-local frame. Good enough for
+  // sub-100m segments and lets us clip to the segment instead of the vertex.
+  const toMeters = (lat, lng) => ({
+    x: lng * 69 * Math.cos((point.lat * Math.PI) / 180) * 1609.344,
+    y: lat * 69 * 1609.344
+  });
+  const p = toMeters(point.lat, point.lng);
+  const a = toMeters(segmentStart.lat, segmentStart.lng);
+  const b = toMeters(segmentEnd.lat, segmentEnd.lng);
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const lengthSquared = abx * abx + aby * aby;
+
+  if (lengthSquared === 0) {
+    return { distance: metersBetweenPoints(point, segmentStart), fraction: 0 };
+  }
+
+  const fraction = Math.max(0, Math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSquared));
+  const distance = Math.hypot(p.x - (a.x + abx * fraction), p.y - (a.y + aby * fraction));
+  return { distance, fraction };
+}
+
+// The full ordered line the current preview was drawn from: start, every
+// route vertex, then the destination.
+function getFullRouteCoordinates() {
+  const preview = latestRoutePreview;
+
+  if (!preview?.route?.path?.length || !preview.start || !preview.end) {
+    return [];
+  }
+
+  return [preview.start, ...preview.route.path, preview.end];
+}
+
+// Clip the walked portion off the drawn polyline in place. Progress only ever
+// moves forward along the line: the nearest segment is searched from the last
+// known position onward, so GPS jitter behind the user cannot regrow the tail.
+function trimGuidedRouteLine() {
+  if (!isGuidedNavigationActive || !currentPosition || !navigationRouteLine) {
+    return;
+  }
+
+  const fullLine = getFullRouteCoordinates();
+
+  if (fullLine.length < 2) {
+    return;
+  }
+
+  // Ignore noisy fixes: a 60m+ accuracy spike could otherwise jump progress.
+  const trustedAccuracy = Number(currentPosition.accuracy || gpsAccuracyThresholds.maxTrusted);
+
+  if (trustedAccuracy > gpsAccuracyThresholds.maxTrusted) {
+    return;
+  }
+
+  let bestIndex = guidedRouteProgress;
+  let bestFraction = 0;
+  let bestDistance = Infinity;
+
+  for (let index = guidedRouteProgress; index < fullLine.length - 1; index += 1) {
+    const { distance, fraction } = metersToSegment(currentPosition, fullLine[index], fullLine[index + 1]);
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+      bestFraction = fraction;
+    }
+  }
+
+  // Far from the remaining line: leave the drawing alone and let the
+  // off-route tracker handle the re-route decision.
+  if (!Number.isFinite(bestDistance) || bestDistance > 45) {
+    return;
+  }
+
+  const nextIndex = bestIndex + (bestFraction > 0.98 ? 1 : 0);
+
+  // Only advance once the user is within ~25m of the next vertex. This keeps
+  // the trim stable instead of snapping the line on every GPS wobble.
+  if (nextIndex <= guidedRouteProgress) {
+    return;
+  }
+
+  const upcoming = fullLine[nextIndex];
+
+  if (upcoming && metersBetweenPoints(currentPosition, upcoming) > 25) {
+    return;
+  }
+
+  guidedRouteProgress = Math.min(nextIndex, fullLine.length - 2);
+
+  updateGuidedRouteDrawing();
+}
+
+// Redraw only the remaining head of the guided line: the user's live position
+// followed by whatever of the computed route is still ahead. Both the polyline
+// and the green "Start" dot move, so the origin never sits stale behind them.
+function updateGuidedRouteDrawing() {
+  if (!isGuidedNavigationActive || !navigationRouteLine || !currentPosition) {
+    return;
+  }
+
+  const fullLine = getFullRouteCoordinates();
+
+  if (fullLine.length < 2) {
+    return;
+  }
+
+  const clampedProgress = Math.max(0, Math.min(guidedRouteProgress, fullLine.length - 2));
+  const remaining = [
+    [currentPosition.lat, currentPosition.lng],
+    ...fullLine.slice(clampedProgress + 1).map((point) => [point.lat, point.lng])
+  ];
+
+  if (remaining.length >= 2) {
+    navigationRouteLine.setLatLngs(remaining);
+  }
+
+  if (navigationStartMarker?.setLatLng) {
+    navigationStartMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
+  }
+}
+
+// A sustained departure (not one GPS spike) re-routes from the user's actual
+// position back to the same destination, at most once every 20 seconds so GPS
+// noise cannot thrash the map with rebuilds.
+function maybeAutoRerouteFromOffRoute() {
+  if (!isGuidedNavigationActive || !currentPosition || !latestRoutePreview) {
+    return false;
+  }
+
+  if (offRouteFixCount < 3 || Date.now() - lastAutoRerouteAt < 20000) {
+    return false;
+  }
+
+  lastAutoRerouteAt = Date.now();
+  recalculateRouteFromCurrentPosition();
+  setLocationStatus("<strong>Re-routing...</strong><br>You left the highlighted path, so the route was rebuilt from your current location.");
+  return true;
+}
+
+// Even while the user is on the path, their actual position can open up a
+// meaningfully faster way to the destination (a shortcut, a parallel walk).
+// Check at most every 15 seconds and only switch when the fresh route is at
+// least 10% (and 20m+) shorter than what is left of the current one.
+function maybeAdoptFasterRoute() {
+  if (!isGuidedNavigationActive || !currentPosition || !latestRoutePreview?.end) {
+    return false;
+  }
+
+  if (offRouteAnnounced || Date.now() - lastFasterRouteCheckAt < 15000) {
+    return false;
+  }
+
+  const routePreference = routePreferenceSelect?.value || "fastest";
+  const liveStart = { name: "Current Location", lat: currentPosition.lat, lng: currentPosition.lng };
+  const candidate = window.CampusNavigation?.findRoute(liveStart, latestRoutePreview.end, { preference: routePreference });
+
+  lastFasterRouteCheckAt = Date.now();
+
+  if (!candidate?.ok || !Number.isFinite(candidate.distanceMeters)) {
+    return false;
+  }
+
+  const remainingMeters = getGuidedRemainingMeters();
+
+  if (!Number.isFinite(remainingMeters) || remainingMeters < 30) {
+    return false;
+  }
+
+  const savingsMeters = remainingMeters - candidate.distanceMeters;
+
+  if (savingsMeters < 20 || savingsMeters < remainingMeters * 0.1) {
+    return false;
+  }
+
+  latestRoutePreview = {
+    ...latestRoutePreview,
+    route: candidate,
+    start: liveStart
+  };
+  guidedRouteProgress = 0;
+  offRouteFixCount = 0;
+  offRouteAnnounced = false;
+  lastAutoRerouteAt = Date.now();
+  const steps = buildDirectionSteps(candidate.steps);
+  latestDirectionSteps = steps.length
+    ? steps
+    : [{ instruction: `Continue to ${latestRoutePreview.end.name}`, distance: candidate.distanceMeters || 1 }];
+  routeInstructionPoints = buildRouteInstructionPoints(candidate, liveStart, latestRoutePreview.end, latestDirectionSteps);
+  drawNavigationRoute(candidate, liveStart, latestRoutePreview.end, { fitBounds: false });
+  updateGuidedRouteDrawing();
+  activeRouteStepIndex = 0;
+  renderRouteStepNavigator();
+  refreshGuidedBanner();
+  syncRouteDockSteps();
+  updateRouteDock();
+  navigator.vibrate?.(50);
+  setLocationStatus("<strong>Found a faster way.</strong><br>The route was updated from your current location.");
+  return true;
+}
+
+// What is still left to walk: from the live fix, through the guided head,
+// then along every untouched vertex to the destination.
+function getGuidedRemainingMeters() {
+  if (!isGuidedNavigationActive || !currentPosition) {
+    return null;
+  }
+
+  const fullLine = getFullRouteCoordinates();
+
+  if (fullLine.length < 2) {
+    return null;
+  }
+
+  const clampedProgress = Math.max(0, Math.min(guidedRouteProgress, fullLine.length - 2));
+  let totalMeters = metersBetweenPoints(currentPosition, fullLine[clampedProgress + 1]);
+
+  for (let index = clampedProgress + 1; index < fullLine.length - 1; index += 1) {
+    totalMeters += metersBetweenPoints(fullLine[index], fullLine[index + 1]);
+  }
+
+  return totalMeters;
 }
 
 function getMetersToRoutePath(point) {
@@ -4067,7 +4670,7 @@ function getMetersToRoutePath(point) {
 
   let nearest = Infinity;
   pathPoints.forEach((vertex) => {
-    const distanceMeters = getDistanceBetweenPoints(point, vertex) * 1609.344;
+    const distanceMeters = metersBetweenPoints(point, vertex);
 
     if (distanceMeters < nearest) {
       nearest = distanceMeters;
@@ -4111,7 +4714,7 @@ function showOffRouteBanner() {
       <div class="route-step-copy" aria-live="polite">
         <span>Off route</span>
         <strong>You left the highlighted path</strong>
-        <small>Walk back toward the gold line, or recalculate from where you are now.</small>
+        <small>Keep going and the route will rebuild automatically, or recalculate from where you are now.</small>
       </div>
       <div class="route-step-controls">
         <button class="route-step-control route-recalc-button" type="button" data-recalc-route>Recalculate</button>
@@ -4129,6 +4732,8 @@ function recalculateRouteFromCurrentPosition() {
 
   offRouteFixCount = 0;
   offRouteAnnounced = false;
+  guidedRouteProgress = 0;
+  lastFasterRouteCheckAt = 0;
   fromLocationSelect.value = "Current Location";
   routeStartManuallyChanged = false;
 
@@ -4137,12 +4742,12 @@ function recalculateRouteFromCurrentPosition() {
   if (preview) {
     // Re-routing mid-walk keeps the user in the same full-screen feature.
     document.body.classList.add("route-feature-active");
-    startGuidedNavigation();
+    startGuidedNavigation({ keepStep: true });
     updateRouteDock();
   }
 }
 
-function startGuidedNavigation() {
+function startGuidedNavigation(options = {}) {
   if (!latestRoutePreview || !routeUsesCurrentLocation()) {
     return;
   }
@@ -4158,9 +4763,15 @@ function startGuidedNavigation() {
   }
 
   offRouteAnnounced = false;
+  guidedRouteProgress = 0;
+  lastFasterRouteCheckAt = 0;
   setMobilePanelState("collapsed");
-  setActiveRouteStep(0, { focusMap: false });
+  setActiveRouteStep(options.keepStep === true ? activeRouteStepIndex : 0, { focusMap: false });
   updateRouteDock();
+  // Rebuilds redraw the full line, so immediately clip off anything behind the
+  // current fix instead of flashing the walked portion back on screen.
+  trimGuidedRouteLine();
+  updateGuidedRouteDrawing();
   showCurrentLocationMarker({ centerMap: true });
   const accuracy = Math.round(rawCurrentPosition?.accuracy || currentPosition?.accuracy || 0);
   const accuracyGuidance = getAccuracyGuidance(rawCurrentPosition?.accuracy || currentPosition?.accuracy);
@@ -4611,8 +5222,10 @@ function drawNavigationRoute(route, start, end, options = {}) {
     weight: 5,
     opacity: 0.9
   }).addTo(navigationRouteLayer);
+  navigationRouteLine = routeLine;
+  guidedRouteProgress = 0;
 
-  L.circleMarker([start.lat, start.lng], {
+  navigationStartMarker = L.circleMarker([start.lat, start.lng], {
     radius: 7,
     color: "#24745b",
     weight: 3,
@@ -4653,6 +5266,11 @@ function clearRoute() {
   hasAnnouncedRouteArrival = false;
   offRouteFixCount = 0;
   offRouteAnnounced = false;
+  navigationRouteLine = null;
+  navigationStartMarker = null;
+  guidedRouteProgress = 0;
+  lastAutoRerouteAt = 0;
+  lastFasterRouteCheckAt = 0;
   updateRouteActionButton();
   hideRouteStepNavigator();
   hideLocationStatus();
@@ -4871,6 +5489,17 @@ function getArInstructionText() {
 }
 
 function getArRemainingMeters() {
+  // Guided "Go" already tracks exactly what is left: the live fix plus every
+  // untouched vertex. Reuse it so the dock, the banner, and the faster-route
+  // comparison all read the same number.
+  if (isGuidedNavigationActive && currentPosition) {
+    const guidedRemaining = getGuidedRemainingMeters();
+
+    if (Number.isFinite(guidedRemaining)) {
+      return guidedRemaining;
+    }
+  }
+
   if (!currentPosition || !routeInstructionPoints.length) {
     return null;
   }
@@ -4884,10 +5513,10 @@ function getArRemainingMeters() {
     return null;
   }
 
-  let totalMeters = getDistanceBetweenPoints(currentPosition, remainingPoints[0]) * 1609.344;
+  let totalMeters = metersBetweenPoints(currentPosition, remainingPoints[0]);
 
   for (let index = 1; index < remainingPoints.length; index += 1) {
-    totalMeters += getDistanceBetweenPoints(remainingPoints[index - 1], remainingPoints[index]) * 1609.344;
+    totalMeters += metersBetweenPoints(remainingPoints[index - 1], remainingPoints[index]);
   }
 
   return totalMeters;
