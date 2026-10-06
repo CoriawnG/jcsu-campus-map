@@ -1,5 +1,451 @@
 ﻿const mapId = "1DIEHzvOP7u9UehtaCniXFbs5FMT0C3w";
 const defaultMapUrl = `https://www.google.com/maps/d/embed?mid=${mapId}`;
+
+/* ==================================================================
+   CAMPUS LINKS  >>>  PASTE YOUR LINKS HERE  <<<
+   ------------------------------------------------------------------
+   Put the full web address between the quotes after  url:
+   Example:  url: "https://www.jcsu.edu/athletics"
+
+   Rules:
+   - Must start with http:// or https://  (anything else stays hidden)
+   - Leave url: "" and that button does not show up at all,
+     so you can fill them in one at a time.
+   - label / note / icon are optional extras you can rename freely.
+     Icons are Google Material Symbols names (style.css uses them too).
+   ================================================================== */
+const campusLinks = [
+  {
+    label: "JCSU Loyalty Song",
+    note: "Hear and sing along with the official JCSU loyalty song.",
+    icon: "music_note",
+    url: "https://goldenbullsports.com/sports/2013/12/11/GEN_1211135827.aspx"
+  },
+  {
+    label: "JCSU Athletics",
+    note: "Scores, schedules, and teams for the Golden Lions.",
+    icon: "sports",
+    url: "https://goldenbullsports.com/index.aspx"
+  },
+  {
+    label: "National Alumni Association",
+    note: "Connect with JCSU alumni chapters and benefits.",
+    icon: "diversity_1",
+    url: "https://jcsunaa.org/"
+  },
+  {
+    label: "JCSU Bookstore",
+    note: "Textbooks, supplies, and Golden Bull gear in the Student Union.",
+    icon: "store",
+    url: "https://www.jcsushop.com"
+  }
+];
+
+
+/* ==================================================================
+   JCSU FOOTBALL FEED (ESPN, automatic)
+   ------------------------------------------------------------------
+   - Live Now: checks ESPN about once a minute while the Football page
+     is open and shows the in-progress score automatically.
+   - Upcoming / Previous: pulled from ESPN's schedule automatically,
+     so when next season's schedule is released it appears by itself.
+   - Your FOOTBALL SCOREBOARD list below acts as an OVERRIDE layer:
+     richer venue/event detail, plus games ESPN doesn't know about.
+   Leave enabled: true.
+   ================================================================== */
+const liveScoreFeed = {
+  enabled: true,
+  teamId: "2304",
+  season: 0, // 0 = auto-detect the season every year (Aug-Dec = this year, Jan-Jul = last year)
+  autoSchedule: true, // pull Upcoming/Previous games from ESPN automatically
+  manualSeason: 2026, // season your FOOTBALL SCOREBOARD list belongs to; bump to 2027 when you add next year's games
+  refreshMinutes: 1
+};
+let liveScoreRefreshTimer = null;
+let espnScheduleGames = null; // parsed ESPN schedule; null = not fetched yet
+
+function getLiveScoreSeason() {
+  const override = Number(liveScoreFeed.season);
+  if (Number.isFinite(override) && override >= 2000) {
+    return override;
+  }
+
+  // College football season: August through December belong to this
+  // year's season; January through July belong to last year's season.
+  const now = new Date();
+  return now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+function getLiveScoreUrls(season) {
+  return [
+    `https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/${liveScoreFeed.teamId}/schedule?season=${season}`,
+    `https://site.web.api.espn.com/apis/common/v3/sports/football/college-football/statistics/teams/${liveScoreFeed.teamId}?season=${season}`
+  ];
+}
+
+function isLiveScoreGame(event) {
+  const state = event?.competitions?.[0]?.status?.type?.state;
+  return state === "in";
+}
+
+// ESPN's team-schedule endpoint returns completed-game scores as objects
+// ({ value, displayValue }) while other feeds use plain strings — normalize
+// both to a display string so cards never render "[object Object]".
+function normalizeEspnScore(raw) {
+  if (raw && typeof raw === "object") {
+    return String(raw.displayValue ?? raw.value ?? "").trim();
+  }
+
+  return raw === null || raw === undefined ? "" : String(raw).trim();
+}
+
+function getLiveCompetition(espnEvent) {
+  const competition = espnEvent?.competitions?.[0];
+  if (!competition) {
+    return null;
+  }
+
+  const competitors = Array.isArray(competition.competitors) ? competition.competitors : [];
+  const home = competitors.find((team) => team.homeAway === "home") || {};
+  const away = competitors.find((team) => team.homeAway === "away") || {};
+  const status = competition.status || {};
+  const detail = status.type?.shortDetail || status.type?.detail || status.displayClock || "";
+
+  return {
+    homeName: home.team?.displayName || home.team?.shortDisplayName || "Home",
+    awayName: away.team?.displayName || away.team?.shortDisplayName || "Away",
+    homeScore: normalizeEspnScore(home.score) || "0",
+    awayScore: normalizeEspnScore(away.score) || "0",
+    detail: detail ? String(detail) : "Live now",
+    isJcsuHome: /johnson c\.? smith/i.test(home.team?.displayName || "") || /johnson c\.? smith/i.test(home.team?.shortDisplayName || "")
+  };
+}
+
+function getLiveScoreCardMarkup(liveGame) {
+  const homeFirst = liveGame.isJcsuHome
+    ? `JCSU Golden Bulls ${liveGame.homeScore}, ${liveGame.awayName} ${liveGame.awayScore}`
+    : `${liveGame.awayName} ${liveGame.awayScore}, JCSU Golden Bulls ${liveGame.homeScore}`;
+  return `
+    <article class="home-sports-card is-live">
+      <div class="home-sports-top">
+        <span class="home-sports-status">Live</span>
+        <span class="home-sports-date">${escapeCampusLinkText(liveGame.detail)} • auto-updating</span>
+      </div>
+      <p class="home-sports-matchup">${escapeCampusLinkText(liveGame.awayName)} at ${escapeCampusLinkText(liveGame.homeName)}</p>
+      <p class="home-sports-score">${escapeCampusLinkText(homeFirst)}</p>
+      <p class="home-sports-detail">Live from ESPN. Your manual cards below stay as backup.</p>
+    </article>
+  `;
+}
+
+function renderLiveScoreList(liveGames, message) {
+  if (!sportsLiveList) {
+    return;
+  }
+
+  if (liveGames.length) {
+    sportsLiveList.innerHTML = liveGames.map(getLiveScoreCardMarkup).join("");
+    return;
+  }
+
+  sportsLiveList.innerHTML = `<p class="home-sports-empty">${message}</p>`;
+}
+
+function collectEspnEvents(payload) {
+  if (!payload) {
+    return [];
+  }
+
+  if (Array.isArray(payload.events)) {
+    return payload.events;
+  }
+
+  if (Array.isArray(payload?.team?.schedule?.events)) {
+    return payload.team.schedule.events;
+  }
+
+  if (Array.isArray(payload?.team?.events)) {
+    return payload.team.events;
+  }
+
+  if (Array.isArray(payload?.schedule?.events)) {
+    return payload.schedule.events;
+  }
+
+  return [];
+}
+
+function getEspnScheduledGame(event) {
+  const competition = event?.competitions?.[0];
+  if (!competition) {
+    return null;
+  }
+
+  const competitors = Array.isArray(competition.competitors) ? competition.competitors : [];
+  if (competitors.length < 2) {
+    return null;
+  }
+
+  const jcsuSide = competitors.find((team) =>
+    String(team?.team?.id) === String(liveScoreFeed.teamId) ||
+    /johnson c\.? smith/i.test(team?.team?.displayName || "")
+  );
+  const opponentSide = competitors.find((team) => team !== jcsuSide);
+  if (!jcsuSide || !opponentSide) {
+    return null;
+  }
+
+  const state = competition.status?.type?.state;
+  const status = state === "post" ? "final" : state === "in" ? "live" : "upcoming";
+  const jcsuIsHome = jcsuSide.homeAway === "home";
+  const homeAway = competition.neutralSite ? "neutral" : jcsuIsHome ? "vs." : "at";
+
+  let dateLabel = "";
+  let timeLabel = "";
+  if (event.date) {
+    const when = new Date(event.date);
+    if (!Number.isNaN(when.getTime())) {
+      dateLabel = when.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      timeLabel = when.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    }
+  }
+
+  const venue = competition.venue || {};
+  const address = venue.address || {};
+  const locationBits = [
+    venue.fullName,
+    [address.city, address.state].filter(Boolean).join(", ")
+  ].filter(Boolean);
+
+  let score = "";
+  if (status !== "upcoming") {
+    const jcsuScore = normalizeEspnScore(jcsuSide.score);
+    const opponentScore = normalizeEspnScore(opponentSide.score);
+    const opponentShort = opponentSide.team?.shortDisplayName || opponentSide.team?.abbreviation || "Opponent";
+
+    if (jcsuScore || opponentScore) {
+      score = `JCSU ${jcsuScore || "0"}, ${opponentShort} ${opponentScore || "0"}`;
+    }
+  }
+
+  return {
+    status,
+    homeAway,
+    opponent: opponentSide.team?.displayName || opponentSide.team?.shortDisplayName || "TBD",
+    date: dateLabel,
+    time: timeLabel,
+    location: locationBits.length ? locationBits.join(" • ") : "TBA",
+    score,
+    detail: competition.notes?.[0]?.headline || "",
+    source: "espn"
+  };
+}
+
+async function refreshLiveScores(reason) {
+  if (!liveScoreFeed.enabled || !sportsLiveList) {
+    return;
+  }
+
+  const season = getLiveScoreSeason();
+  const urls = getLiveScoreUrls(season);
+  let checkedFeed = false;
+
+  for (const url of urls) {
+    let response = null;
+
+    try {
+      response = await fetch(url, { mode: "cors" });
+    } catch (error) {
+      continue;
+    }
+
+    if (!response || !response.ok) {
+      continue;
+    }
+
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      continue;
+    }
+
+    const events = collectEspnEvents(payload);
+
+    if (!events.length) {
+      continue;
+    }
+
+    checkedFeed = true;
+
+    if (liveScoreFeed.autoSchedule) {
+      espnScheduleGames = events.map(getEspnScheduledGame).filter(Boolean);
+      renderScheduleLists();
+    }
+
+    const liveGames = events.filter(isLiveScoreGame).map(getLiveCompetition).filter(Boolean);
+    renderLiveScoreList(liveGames, "No Golden Bulls game is live right now. Check back on game day.");
+    return;
+  }
+
+  renderLiveScoreList([], checkedFeed
+    ? "No Golden Bulls game is live right now. Check back on game day."
+    : "Live scores are unavailable right now. Your manual cards below are still current.");
+}
+
+function startLiveScoreRefresh() {
+  if (!liveScoreFeed.enabled) {
+    return;
+  }
+
+  window.clearInterval(liveScoreRefreshTimer);
+  refreshLiveScores("open");
+  liveScoreRefreshTimer = window.setInterval(() => {
+    if (sportsPage && !sportsPage.hidden && document.visibilityState === "visible") {
+      refreshLiveScores("interval");
+    }
+  }, Math.max(1, Number(liveScoreFeed.refreshMinutes) || 1) * 60 * 1000);
+}
+
+/* ==================================================================
+   FOOTBALL SCOREBOARD  >>>  YOUR OVERRIDE / EXTRA GAMES  <<<
+   ------------------------------------------------------------------
+   The schedule and finals are pulled from ESPN automatically (see the
+   JCSU FOOTBALL FEED block at the top of this file), so next season's
+   schedule appears here on its own when it is released.
+
+   This list still matters because it adds what ESPN leaves out:
+   stadium + city, event names ("Homecoming", "Pink Game"), and any
+   game ESPN doesn't list. A manual entry matches an ESPN game by
+   opponent name and overrides its details.
+
+   After a game you normally do NOT need to touch this list — ESPN
+   flips the game to Final on its own. Only edit a card if you want
+   to correct something.
+
+   status options:
+   - "final": finished game with a score
+   - "upcoming": scheduled game, no score yet
+   - "live": game happening now (shows in green)
+
+   homeAway options:
+   - "vs.": home game in Charlotte (JCSU is listed first)
+   - "at": away game (opponent is listed first)
+   - "neutral": neutral-site game
+
+   Field examples:
+   opponent: "Benedict College"
+   date: "Sat, Aug 29"
+   time: "5:00 PM"
+   location: "Charlie W. Johnson Stadium • Columbia, SC"
+   score: "JCSU 10, Benedict 32"  (final and live games only)
+   detail: "Battle of the Border" or "CIAA • Homecoming"
+   ================================================================== */
+const footballGames = [
+  {
+    status: "final",
+    homeAway: "at",
+    opponent: "Benedict College",
+    date: "Sat, Aug 29",
+    time: "5:00 PM",
+    location: "Charlie W. Johnson Stadium • Columbia, SC",
+    score: "JCSU 10, Benedict 32",
+    detail: "Battle of the Border"
+  },
+  {
+    status: "final",
+    homeAway: "neutral",
+    opponent: "Albany State University",
+    date: "Sun, Sep 6",
+    time: "4:00 PM",
+    location: "Tom Benson Hall of Fame Stadium • Canton, Ohio",
+    score: "JCSU 27, Albany State 7",
+    detail: "Black College Football Hall of Fame Classic"
+  },
+  {
+    status: "final",
+    homeAway: "at",
+    opponent: "Winston-Salem State University",
+    date: "Sat, Sep 12",
+    time: "11:00 AM",
+    location: "Bowman Gray Stadium • Winston-Salem, NC",
+    score: "JCSU 31, Winston-Salem State 6",
+    detail: "CIAA"
+  },
+  {
+    status: "final",
+    homeAway: "vs.",
+    opponent: "Fayetteville State University",
+    date: "Sat, Sep 19",
+    time: "1:00 PM",
+    location: "Irwin Belk Complex • Charlotte, NC",
+    score: "JCSU 20, Fayetteville State 14",
+    detail: "Eddie McGirt Classic / Hall of Fame Weekend"
+  },
+  {
+    status: "upcoming",
+    homeAway: "at",
+    opponent: "Bluefield State University",
+    date: "Sat, Oct 3",
+    time: "1:00 PM",
+    location: "Bluefield, WV",
+    score: "",
+    detail: "CIAA"
+  },
+  {
+    status: "upcoming",
+    homeAway: "vs.",
+    opponent: "Shaw University",
+    date: "Sat, Oct 10",
+    time: "1:00 PM",
+    location: "Irwin Belk Complex • Charlotte, NC",
+    score: "",
+    detail: "CIAA • Pink Game / Open House"
+  },
+  {
+    status: "upcoming",
+    homeAway: "vs.",
+    opponent: "Lincoln University (Pa.)",
+    date: "Sat, Oct 17",
+    time: "2:00 PM",
+    location: "Irwin Belk Complex • Charlotte, NC",
+    score: "",
+    detail: "CIAA • Homecoming"
+  },
+  {
+    status: "upcoming",
+    homeAway: "at",
+    opponent: "Bowie State University",
+    date: "Sat, Oct 24",
+    time: "1:00 PM",
+    location: "Bulldogs Stadium • Bowie, MD",
+    score: "",
+    detail: "CIAA"
+  },
+  {
+    status: "upcoming",
+    homeAway: "vs.",
+    opponent: "Virginia State University",
+    date: "Sat, Oct 31",
+    time: "1:00 PM",
+    location: "Irwin Belk Complex • Charlotte, NC",
+    score: "",
+    detail: "CIAA • Military / Camo / Senior Day"
+  },
+  {
+    status: "upcoming",
+    homeAway: "at",
+    opponent: "Livingstone College",
+    date: "Sat, Nov 7",
+    time: "2:00 PM",
+    location: "Alumni Memorial Stadium • Salisbury, NC",
+    score: "",
+    detail: "CIAA • Commemorative Classic"
+  }
+];
+/* ================= END OF FOOTBALL SCOREBOARD ===================== */
+
 const appIntro = document.querySelector("#appIntro");
 const offlineBanner = document.querySelector("#offlineBanner");
 const searchInput = document.querySelector("#locationSearch");
@@ -66,8 +512,29 @@ const helpButton = document.querySelector("#helpButton");
 const helpModal = document.querySelector("#helpModal");
 const closeHelpButton = document.querySelector("#closeHelp");
 const finishHelpButton = document.querySelector("#finishHelp");
+const homeButton = document.querySelector("#homeButton");
+const homePanel = document.querySelector("#homePanel");
+const linksPage = document.querySelector("#linksPage");
+const linksPageList = document.querySelector("#linksPageList");
+const facultyPage = document.querySelector("#facultyPage");
+const facultySearchInput = document.querySelector("#facultySearch");
+const facultyPageList = document.querySelector("#facultyPageList");
+const facultyCount = document.querySelector("#facultyCount");
+const homeFacultySummary = document.querySelector("#homeFacultySummary");
+const sportsPage = document.querySelector("#sportsPage");
+const sportsLiveList = document.querySelector("#sportsLiveList");
+const sportsUpcomingList = document.querySelector("#sportsUpcomingList");
+const sportsPreviousList = document.querySelector("#sportsPreviousList");
+const homeSportsSummary = document.querySelector("#homeSportsSummary");
 const safetyButton = document.querySelector("#safetyButton");
 const openSafetyPanelMapButton = document.querySelector("#openSafetyPanelMap");
+const gpsStatsButton = document.querySelector("#gpsStatsButton");
+const gpsStatsModal = document.querySelector("#gpsStatsModal");
+const closeGpsStatsButton = document.querySelector("#closeGpsStats");
+const gpsStatsContent = document.querySelector("#gpsStatsContent");
+const gpsGuidanceNotice = document.querySelector("#gpsGuidanceNotice");
+const mapStatsBar = document.querySelector("#mapStatsBar");
+const closeGpsGuidanceButton = document.querySelector("#closeGpsGuidance");
 const safetyModal = document.querySelector("#safetyModal");
 const closeSafetyButton = document.querySelector("#closeSafety");
 const safetyRouteButtons = document.querySelectorAll("[data-safety-route]");
@@ -427,7 +894,16 @@ const locationHours = {
   },
   "Cafeteria": {
     label: "Cafeteria",
-    source: "Dining hours vary by semester and meal period. Check posted campus dining hours."
+    weekly: {
+      Monday: [["7:00 AM", "9:00 AM"], ["11:30 AM" , "1:00 PM"], ["5:00 PM","7:00 PM"]],
+      Tuesday: [["7:00 AM", "9:00 AM"], ["11:30 AM" , "1:00 PM"], ["5:00 PM","7:00 PM"]],
+      Wednesday: [["7:00 AM", "9:00 AM"], ["11:30 AM" , "1:00 PM"], ["5:00 PM","7:00 PM"]],
+      Thursday: [["7:00 AM", "9:00 AM"], ["11:30 AM" , "1:00 PM"], ["5:00 PM","7:00 PM"]],
+      Friday: [["7:00 AM", "9:00 AM"], ["11:30 AM" , "1:00 PM"], ["5:00 PM","7:00 PM"]],
+      Saturday: [["10:30 AM", "2:00 PM"], ["4:30 PM", "6:00 PM"]],
+      Sunday: [["10:30 AM", "2:00 PM"], ["4:30 PM", "6:00 PM"]]
+    },
+    source: "The Cafeteria hours: Monday-Friday Breakfast 7 am - 9 am, Lunch 11 am - 1 pm, Dinner 5 pm - 7 pm. Saturday-Sunday Brunch 10:30 am - 2 pm, Dinner 4:30 pm - 6 pm."
   },
   "KoKoMo's Coffeehouse": {
     label: "KoKoMo's Coffeehouse",
@@ -997,6 +1473,8 @@ let activeLayer = "All";
 let activeOpenNowFilter = false;
 let currentPosition = null;
 let rawCurrentPosition = null;
+let lastLocationStatusHtml = "";
+let gpsGuidanceDismissed = false;
 let recentGpsPositions = [];
 let liveTrackingWatchId = null;
 let isLiveTracking = false;
@@ -1137,11 +1615,445 @@ function markHelpSeen() {
   }
 }
 
+function getSafeCampusLinkUrl(url) {
+  const value = String(url || "").trim();
+
+  if (!/^https?:\/\//i.test(value)) {
+    return "";
+  }
+
+  return value.replace(/"/g, "%22");
+}
+
+function escapeCampusLinkText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getConfiguredCampusLinks() {
+  return campusLinks
+    .map((link) => ({
+      ...link,
+      safeUrl: getSafeCampusLinkUrl(link.url)
+    }))
+    .filter((link) => link.safeUrl && link.label);
+}
+
+function renderCampusLinksInto(container) {
+  if (!container) {
+    return;
+  }
+
+  const links = getConfiguredCampusLinks();
+
+  if (!links.length) {
+    container.innerHTML = '<p class="campus-links-empty">Links are coming soon. The site owner adds them in script.js under CAMPUS LINKS.</p>';
+    return;
+  }
+
+  container.innerHTML = links
+    .map((link) => {
+      const note = link.note ? `<small>${escapeCampusLinkText(link.note)}</small>` : "";
+      const icon = link.icon ? `<span class="material-symbols-outlined campus-link-icon" aria-hidden="true">${escapeCampusLinkText(link.icon)}</span>` : "";
+      const card = `
+        <a class="campus-link-card" href="${link.safeUrl}" target="_blank" rel="noopener noreferrer">
+          ${icon}
+          <span class="campus-link-copy">
+            <strong>${escapeCampusLinkText(link.label)}</strong>
+            ${note}
+          </span>
+          <span class="material-symbols-outlined campus-link-launch" aria-hidden="true">open_in_new</span>
+        </a>`;
+      return card;
+    })
+    .join("");
+}
+
+function renderCampusLinks() {
+  renderCampusLinksInto(linksPageList);
+}
+
+function getAllFacultyEntries(date = new Date()) {
+  const entries = [];
+
+  Object.entries(facultyOfficeHours).forEach(([buildingName, profile]) => {
+    (profile.faculty || []).forEach((faculty) => {
+      entries.push({
+        faculty,
+        buildingName,
+        status: getFacultyAvailabilityStatus(faculty, date),
+        next: getNextFacultyScheduledText(faculty, date)
+      });
+    });
+  });
+
+  return entries.sort((a, b) => (b.status.isAvailable === a.status.isAvailable
+    ? a.faculty.name.localeCompare(b.faculty.name)
+    : (b.status.isAvailable ? 1 : 0) - (a.status.isAvailable ? 1 : 0)));
+}
+
+function renderFacultyPage() {
+  if (!facultyPageList) {
+    return;
+  }
+
+  const query = facultySearchInput ? facultySearchInput.value.trim().toLowerCase() : "";
+  const entries = getAllFacultyEntries().filter((entry) => {
+    if (!query) {
+      return true;
+    }
+
+    const haystack = `${entry.faculty.name} ${entry.faculty.room || ""} ${entry.faculty.email || ""} ${entry.buildingName}`.toLowerCase();
+    return haystack.includes(query);
+  });
+  const availableCount = getAllFacultyEntries().filter((entry) => entry.status.isAvailable).length;
+  const totalCount = getAllFacultyEntries().length;
+
+  if (facultyCount) {
+    facultyCount.textContent = query ? `${entries.length}/${totalCount}` : `${availableCount}/${totalCount}`;
+  }
+
+  if (homeFacultySummary) {
+    homeFacultySummary.textContent = totalCount
+      ? `${availableCount} of ${totalCount} faculty available now. Tap to search.`
+      : "See who is available right now.";
+  }
+
+  if (!entries.length) {
+    facultyPageList.innerHTML = query
+      ? '<p class="home-faculty-empty">No faculty match that search. Try a name, room, or email.</p>'
+      : '<p class="home-faculty-empty">Faculty hours have not been added yet.</p>';
+    return;
+  }
+
+  facultyPageList.innerHTML = entries.map((entry) => {
+    const emailRow = entry.faculty.email ? `<button class="faculty-hours-email" type="button" data-faculty-email="${entry.faculty.email}">${entry.faculty.email}</button>` : "";
+    const nextRow = !entry.status.isAvailable && entry.next ? `<p class="faculty-hours-next"><strong>Next:</strong> ${entry.next}</p>` : "";
+    return `
+    <div class="faculty-hours-item${entry.status.isAvailable ? " is-available" : ""}">
+      <div class="faculty-hours-top">
+        <span class="faculty-hours-dot${entry.status.isAvailable ? " open" : ""}" aria-hidden="true"></span>
+        <strong>${entry.faculty.name}</strong>
+        <span class="faculty-hours-room">${entry.faculty.room || entry.buildingName}</span>
+      </div>
+      <p class="faculty-hours-today"><strong>Today:</strong> ${entry.status.today}</p>
+      ${nextRow}
+      ${emailRow}
+    </div>
+  `;
+  }).join("");
+
+  facultyPageList.querySelectorAll("[data-faculty-email]").forEach((button) => {
+    button.addEventListener("click", () => {
+      openFacultyEmailCompose({ email: button.dataset.facultyEmail });
+    });
+  });
+}
+
+function renderHomeFaculty() {
+  const entries = getAllFacultyEntries();
+  const availableCount = entries.filter((entry) => entry.status.isAvailable).length;
+
+  if (homeFacultySummary) {
+    homeFacultySummary.textContent = entries.length
+      ? `${availableCount} of ${entries.length} faculty available now. Tap to search.`
+      : "See who is available right now.";
+  }
+}
+
+function getFootballStatusLabel(status) {
+  if (status === "live") {
+    return "Live";
+  }
+
+  if (status === "final") {
+    return "Final";
+  }
+
+  return "Upcoming";
+}
+
+function getFootballMatchup(game) {
+  const opponent = escapeCampusLinkText(game.opponent || "TBD");
+  const where = String(game.homeAway || "vs.").toLowerCase().startsWith("at")
+    ? "at"
+    : String(game.homeAway || "").toLowerCase().startsWith("neutral")
+      ? "vs. (neutral site)"
+      : "vs.";
+
+  if (where === "at") {
+    return `JCSU Golden Bulls at ${opponent}`;
+  }
+
+  if (where === "vs. (neutral site)") {
+    return `JCSU Golden Bulls vs. ${opponent} (neutral site)`;
+  }
+
+  return `JCSU Golden Bulls vs. ${opponent}`;
+}
+
+function getFootballWhenWhere(game) {
+  return [game.date, game.time, game.location].filter(Boolean).map((part) => escapeCampusLinkText(part)).join(" • ");
+}
+
+function getFootballCardMarkup(game) {
+  const liveClass = game.status === "live" ? " is-live" : "";
+  const dateRow = getFootballWhenWhere(game) ? `<span class="home-sports-date">${getFootballWhenWhere(game)}</span>` : "";
+  const scoreRow = game.score
+    ? `<p class="home-sports-score">${escapeCampusLinkText(game.score)}</p>`
+    : game.status === "final"
+      ? `<p class="home-sports-score">Score unavailable. Check the athletics site for details.</p>`
+      : "";
+  const detailRow = game.detail ? `<p class="home-sports-detail">${escapeCampusLinkText(game.detail)}</p>` : "";
+  return `
+    <article class="home-sports-card${liveClass}">
+      <div class="home-sports-top">
+        <span class="home-sports-status">${getFootballStatusLabel(game.status)}</span>
+        ${dateRow}
+      </div>
+      <p class="home-sports-matchup">${getFootballMatchup(game)}</p>
+      ${scoreRow}
+      ${detailRow}
+    </article>
+  `;
+}
+
+function renderSportsListInto(container, games, emptyText) {
+  if (!container) {
+    return;
+  }
+
+  if (!games.length) {
+    container.innerHTML = `<p class="home-sports-empty">${emptyText}</p>`;
+    return;
+  }
+
+  container.innerHTML = games.map(getFootballCardMarkup).join("");
+}
+
+const footballStatusRank = { upcoming: 0, live: 1, final: 2 };
+
+function getOpponentMatchTokens(name) {
+  const generic = ["university", "college", "state", "of", "the", "and", "at", "vs"];
+  const cleaned = String(name || "").replace(/\([^)]*\)/g, " ").toLowerCase();
+  return (cleaned.match(/[a-z0-9]+/g) || []).filter((token) => !generic.includes(token));
+}
+
+function doOpponentsMatch(manualName, espnName) {
+  const manualTokens = getOpponentMatchTokens(manualName);
+  const espnTokens = getOpponentMatchTokens(espnName);
+  if (!manualTokens.length || !espnTokens.length) {
+    return false;
+  }
+  return manualTokens.some((token) => espnTokens.includes(token));
+}
+
+function combineHybridGame(espnGame, manualGame) {
+  const manualRank = footballStatusRank[manualGame.status] ?? 0;
+  const espnRank = footballStatusRank[espnGame.status] ?? 0;
+  const keepEspnStatus = espnRank > manualRank;
+
+  return {
+    ...espnGame,
+    ...manualGame,
+    status: keepEspnStatus ? espnGame.status : manualGame.status,
+    score: manualGame.score || espnGame.score || "",
+    source: "hybrid"
+  };
+}
+
+function getMergedFootballGames() {
+  const manual = Array.isArray(footballGames) ? footballGames : [];
+  const espnGames = Array.isArray(espnScheduleGames) && espnScheduleGames.length
+    ? espnScheduleGames
+    : null;
+
+  // ESPN not fetched yet (offline, blocked, or still loading): the manual
+  // list is the whole truth, exactly as it worked before.
+  if (!espnGames || !liveScoreFeed.autoSchedule) {
+    return manual;
+  }
+
+  const manualIsCurrent = Number(liveScoreFeed.manualSeason) === getLiveScoreSeason();
+
+  // Last year's manual list, new season on ESPN: show the new schedule
+  // only, so next year's games appear automatically with no editing.
+  if (!manualIsCurrent) {
+    return espnGames;
+  }
+
+  const merged = [];
+  const usedManualIndexes = new Set();
+
+  espnGames.forEach((espnGame) => {
+    let matchIndex = -1;
+    manual.forEach((manualGame, index) => {
+      if (matchIndex === -1 && !usedManualIndexes.has(index) && doOpponentsMatch(manualGame.opponent, espnGame.opponent)) {
+        matchIndex = index;
+      }
+    });
+
+    if (matchIndex >= 0) {
+      usedManualIndexes.add(matchIndex);
+      merged.push(combineHybridGame(espnGame, manual[matchIndex]));
+    } else {
+      merged.push(espnGame);
+    }
+  });
+
+  // Manual extras ESPN doesn't list (special games, corrections).
+  manual.forEach((manualGame, index) => {
+    if (!usedManualIndexes.has(index)) {
+      merged.push(manualGame);
+    }
+  });
+
+  return merged;
+}
+
+function renderScheduleLists() {
+  const games = getMergedFootballGames();
+  const liveGames = games.filter((game) => game.status === "live");
+  const upcomingGames = games.filter((game) => game.status === "upcoming" || game.status === "live");
+  const previousGames = games.filter((game) => game.status === "final");
+
+  if (homeSportsSummary) {
+    homeSportsSummary.textContent = games.length
+      ? liveGames.length
+        ? `LIVE NOW: ${liveGames.length} game update${liveGames.length === 1 ? "" : "s"}. Tap for scores.`
+        : `${upcomingGames.length} upcoming, ${previousGames.length} previous. Tap for scores.`
+      : "Scores, stats, and live updates.";
+  }
+
+  renderSportsListInto(sportsUpcomingList, upcomingGames, "No upcoming games yet. Check back when the schedule is released.");
+  renderSportsListInto(sportsPreviousList, previousGames, "No previous games yet.");
+}
+
+function renderHomeSports() {
+  renderScheduleLists();
+  renderLiveScoreList([], "Checking for a live Golden Bulls game...");
+  startLiveScoreRefresh();
+}
+
+function renderHomePanel() {
+  renderCampusLinksInto(linksPageList);
+  renderHomeFaculty();
+  renderFacultyPage();
+  renderHomeSports();
+}
+
+function setHomeViewActive(isActive) {
+  const nowActive = Boolean(isActive);
+  document.body.classList.toggle("home-view-open", nowActive);
+
+  // Collapsing the full-page home view reflows the grid back to sidebar +
+  // map, so Leaflet re-measures the container once the layout settles.
+  if (!nowActive && typeof navigationMap !== "undefined" && navigationMap) {
+    setTimeout(() => navigationMap.invalidateSize(), 60);
+  }
+}
+
+function hideHomeSubpages() {
+  [linksPage, facultyPage, sportsPage].forEach((page) => {
+    if (page) {
+      page.hidden = true;
+    }
+  });
+
+  sidebar.classList.remove("links-page-active", "faculty-page-active", "sports-page-active");
+}
+
+function openHomeSubpage(page, activeClass, render) {
+  setHomeViewActive(true);
+  setActiveBottomNav("home");
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "directions-detail-active", "saved-panel-active", "home-panel-active");
+  hideHomeSubpages();
+
+  if (page) {
+    page.hidden = false;
+  }
+
+  sidebar.classList.add(activeClass);
+
+  if (render) {
+    render();
+  }
+
+  if (isMobilePanelEnabled()) {
+    setMobilePanelState("full");
+  }
+
+  scrollPanelToTop();
+}
+
+function openLinksPage() {
+  openHomeSubpage(linksPage, "links-page-active", () => renderCampusLinksInto(linksPageList));
+}
+
+function openFacultyPage() {
+  if (facultySearchInput) {
+    facultySearchInput.value = "";
+  }
+
+  openHomeSubpage(facultyPage, "faculty-page-active", renderFacultyPage);
+}
+
+function openSportsPage() {
+  openHomeSubpage(sportsPage, "sports-page-active", renderHomeSports);
+}
+
+function openHomeView() {
+  setHomeViewActive(true);
+  setActiveBottomNav("home");
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "directions-detail-active", "saved-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  sidebar.classList.add("home-panel-active");
+  hideHomeSubpages();
+
+  if (homePanel) {
+    homePanel.hidden = false;
+  }
+
+  renderHomePanel();
+
+  if (isMobilePanelEnabled()) {
+    setMobilePanelState("full");
+  }
+
+  scrollPanelToTop();
+}
+
+function handleHomeMenuAction(event) {
+  const action = event.currentTarget.dataset.homeAction;
+
+  if (action === "map") {
+    openExploreView();
+    return;
+  }
+
+  if (action === "links") {
+    openLinksPage();
+    return;
+  }
+
+  if (action === "faculty") {
+    openFacultyPage();
+    return;
+  }
+
+  if (action === "sports") {
+    openSportsPage();
+  }
+}
+
 function openHelpModal(options = {}) {
   if (!helpModal) {
     return;
   }
 
+  renderCampusLinks();
   helpModal.hidden = false;
   document.body.classList.add("modal-open");
 
@@ -1178,6 +2090,82 @@ function closeSafetyModal() {
   document.body.classList.remove("modal-open");
 }
 
+function openGpsStatsModal() {
+  gpsStatsModal.hidden = false;
+  document.body.classList.add("modal-open");
+  renderGpsStats();
+  closeGpsStatsButton.focus();
+}
+
+function closeGpsStatsModal() {
+  gpsStatsModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function renderGpsStats() {
+  if (!gpsStatsContent || !gpsStatsModal || gpsStatsModal.hidden) {
+    return;
+  }
+
+  const hasFix = Boolean(rawCurrentPosition);
+  const accuracy = Math.round(rawCurrentPosition?.accuracy || 0);
+  const level = hasFix ? getGpsAccuracyLevel(rawCurrentPosition.accuracy) : null;
+  const positionText = hasFix
+    ? `${rawCurrentPosition.lat.toFixed(5)}, ${rawCurrentPosition.lng.toFixed(5)}`
+    : "Waiting for a fix...";
+
+  gpsStatsContent.innerHTML = `
+    <div class="gps-stats-row">
+      <span>Accuracy</span>
+      <strong>${hasFix ? `${accuracy} m · ${level.label}` : "Waiting for GPS..."}</strong>
+    </div>
+    <div class="gps-stats-row">
+      <span>Live tracking</span>
+      <strong>${isLiveTracking ? "On" : "Off"}</strong>
+    </div>
+    <div class="gps-stats-row">
+      <span>Position</span>
+      <strong>${positionText}</strong>
+    </div>
+    ${lastLocationStatusHtml ? `<p class="gps-stats-status">${lastLocationStatusHtml}</p>` : ""}
+  `;
+}
+
+function maybeShowGpsGuidance() {
+  const barHidden = (hidden) => {
+    if (gpsGuidanceNotice) {
+      gpsGuidanceNotice.hidden = hidden;
+    }
+    // Keep the empty wrapper out of the layout so the map shows literally
+    // nothing until the precision tip itself is needed.
+    if (mapStatsBar) {
+      mapStatsBar.hidden = hidden;
+    }
+  };
+
+  if (!gpsGuidanceNotice) {
+    return;
+  }
+
+  if (!rawCurrentPosition) {
+    barHidden(true);
+    return;
+  }
+
+  const isReliable = getGpsAccuracyLevel(rawCurrentPosition.accuracy).isReliable;
+
+  if (isReliable) {
+    // GPS recovered — hide the tip and allow it to appear again
+    // the next time accuracy drops.
+    gpsGuidanceDismissed = false;
+    barHidden(true);
+    return;
+  }
+
+  // Weak GPS: show only if the user hasn't closed it for this episode.
+  barHidden(gpsGuidanceDismissed);
+}
+
 function getDistanceBetweenPoints(pointA, pointB) {
   const milesPerDegreeLat = 69;
   const milesPerDegreeLng = 69 * Math.cos((pointA.lat * Math.PI) / 180);
@@ -1207,32 +2195,21 @@ function getGpsAccuracyLevel(accuracy) {
 }
 
 function updateGpsAccuracyBadge() {
-  if (!gpsAccuracyBadge) {
-    return;
-  }
-
-  if (!rawCurrentPosition) {
+  // Map overlay shows nothing but the guidance tip. The badge is kept hidden
+  // so only "For better precision..." appears when GPS is weak.
+  if (gpsAccuracyBadge) {
     gpsAccuracyBadge.hidden = true;
     gpsAccuracyBadge.textContent = "";
-    return;
   }
 
-  const accuracy = Math.round(rawCurrentPosition.accuracy || 0);
-  const level = getGpsAccuracyLevel(accuracy);
-  gpsAccuracyBadge.hidden = false;
-  gpsAccuracyBadge.classList.remove("is-good", "is-usable", "is-weak", "is-poor", "is-waiting");
-  gpsAccuracyBadge.classList.add(level.className);
-  gpsAccuracyBadge.innerHTML = `<strong>${level.label}</strong><span>${accuracy}m GPS</span>`;
+  maybeShowGpsGuidance();
+  renderGpsStats();
 }
 
 function getAccuracyGuidance(accuracy) {
-  const level = getGpsAccuracyLevel(accuracy);
-
-  if (level.isReliable) {
-    return "";
-  }
-
-  return "<br>For better precision, step outside or near a window and wait a few seconds.";
+  // The floating guidance notice already shows this tip when GPS is weak,
+  // so status messages no longer duplicate it.
+  return "";
 }
 
 function getNearestSafetyLocation(type) {
@@ -1449,17 +2426,18 @@ function setMapButtonContent(button, iconName, label) {
 function setLocationStatus(message, options = {}) {
   directionsOutput.innerHTML = message;
 
-  if (!mapLocationStatus) {
-    return;
+  // Map shows nothing but the GPS precision tip. Keep the old map status
+  // bubble permanently hidden so status text only lives in the panel.
+  if (mapLocationStatus) {
+    mapLocationStatus.innerHTML = "";
+    mapLocationStatus.hidden = true;
+    mapLocationStatus.classList.remove("is-error");
   }
-
-  mapLocationStatus.innerHTML = message;
-  mapLocationStatus.hidden = false;
-  mapLocationStatus.classList.toggle("is-error", Boolean(options.isError));
 }
 
 function hideLocationStatus() {
   if (mapLocationStatus) {
+    mapLocationStatus.innerHTML = "";
     mapLocationStatus.hidden = true;
     mapLocationStatus.classList.remove("is-error");
   }
@@ -1666,7 +2644,9 @@ function renderLocationPreview(location) {
     : `<span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>`;
 
   setActiveBottomNav("explore");
-  sidebar.classList.remove("directions-detail-active");
+  sidebar.classList.remove("directions-detail-active", "home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  setHomeViewActive(false);
+  hideHomeSubpages();
   sidebar.classList.add("location-detail-active", "location-preview-active");
   selectedLocation.innerHTML = `
     <article class="place-preview-card" aria-label="${location.name} preview">
@@ -2289,7 +3269,7 @@ function setMobilePanelState(state) {
 
 function setActiveBottomNav(target) {
   if (bottomNav) {
-    bottomNav.classList.remove("is-explore-active", "is-directions-active", "is-saved-active", "is-safety-active");
+    bottomNav.classList.remove("is-home-active", "is-explore-active", "is-directions-active", "is-saved-active", "is-safety-active");
     bottomNav.classList.add(`is-${target}-active`);
   }
 
@@ -2318,6 +3298,8 @@ function scrollPanelToSavedPlaces() {
 
 function openExploreView() {
   setActiveBottomNav("explore");
+  sidebar.classList.remove("home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  hideHomeSubpages();
   showSearchPanel();
   setMobilePanelState(isMobilePanelEnabled() ? "half" : "full");
   scrollPanelToTop();
@@ -2325,7 +3307,9 @@ function openExploreView() {
 
 function openSavedView() {
   setActiveBottomNav("saved");
-  sidebar.classList.remove("location-detail-active", "location-preview-active", "directions-detail-active");
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "directions-detail-active", "home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  setHomeViewActive(false);
+  hideHomeSubpages();
   sidebar.classList.add("saved-panel-active");
   renderSavedPanel();
   setMobilePanelState("full");
@@ -2340,6 +3324,11 @@ function openDirectionsView() {
 
 function handleBottomNavigation(event) {
   const target = event.currentTarget.dataset.appNav;
+
+  if (target === "home") {
+    openHomeView();
+    return;
+  }
 
   if (target === "explore") {
     openExploreView();
@@ -2391,7 +3380,9 @@ function openDirectionsPanel(options = {}) {
   setActiveBottomNav("directions");
   renderDirectionQuickPicks();
   sidebar.classList.add("directions-detail-active");
-  sidebar.classList.remove("location-detail-active", "location-preview-active", "saved-panel-active");
+  sidebar.classList.remove("location-detail-active", "location-preview-active", "saved-panel-active", "home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  setHomeViewActive(false);
+  hideHomeSubpages();
 
   if (options.preservePanelState && isMobilePanelEnabled()) {
     const currentPanelState = sidebar.dataset.panelState || "full";
@@ -2430,10 +3421,10 @@ function getPanelStateTranslate(state) {
   }
 
   if (state === "half") {
-    return Math.min(window.innerHeight * 0.38, panelHeight - 54);
+    return Math.min(window.innerHeight * 0.38, panelHeight - 88);
   }
 
-  return panelHeight - 54;
+  return panelHeight - 88;
 }
 
 function getCurrentPanelTranslate() {
@@ -2530,6 +3521,12 @@ function startSheetSwipe(event) {
     return;
   }
 
+  // The bottom pill lives inside the sheet; taps and drags on it must not
+  // start a sheet swipe (pointer capture would swallow the button click).
+  if (event.target instanceof Element && event.target.closest(".app-bottom-nav")) {
+    return;
+  }
+
   const point = getSwipePoint(event);
   sheetSwipeStartY = point.clientY;
   sheetSwipeStartX = point.clientX;
@@ -2592,7 +3589,9 @@ function focusMapOnLocation(location) {
 
 function showSearchPanel() {
   setActiveBottomNav("explore");
-  sidebar.classList.remove("location-detail-active", "directions-detail-active", "location-preview-active", "saved-panel-active");
+  sidebar.classList.remove("location-detail-active", "directions-detail-active", "location-preview-active", "saved-panel-active", "home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  setHomeViewActive(false);
+  hideHomeSubpages();
   activeLocationName = "";
   activeLocationIndex = -1;
   renderLocations(getFilteredLocations());
@@ -3349,7 +4348,9 @@ function renderSelectedLocation(location) {
     : `<span class="tag hours-badge ${hoursStatus.className}">${hoursStatus.label}</span>`;
   const personalActionsMarkup = getPersonalActionMarkup(location, isHomeDorm, isMainClass);
 
-  sidebar.classList.remove("directions-detail-active", "location-preview-active");
+  sidebar.classList.remove("directions-detail-active", "location-preview-active", "home-panel-active", "links-page-active", "faculty-page-active", "sports-page-active");
+  setHomeViewActive(false);
+  hideHomeSubpages();
   sidebar.classList.add("location-detail-active");
   selectedLocation.innerHTML = `
     <div class="details-heading-row">
@@ -6337,6 +7338,22 @@ if (helpButton) {
   helpButton.addEventListener("click", () => openHelpModal({ markSeen: false }));
 }
 
+if (homeButton) {
+  homeButton.addEventListener("click", openHomeView);
+}
+
+document.querySelectorAll(".home-menu-card").forEach((card) => {
+  card.addEventListener("click", handleHomeMenuAction);
+});
+
+document.querySelectorAll("[data-home-back]").forEach((button) => {
+  button.addEventListener("click", openHomeView);
+});
+
+if (facultySearchInput) {
+  facultySearchInput.addEventListener("input", renderFacultyPage);
+}
+
 if (closeHelpButton) {
   closeHelpButton.addEventListener("click", closeHelpModal);
 }
@@ -6393,6 +7410,35 @@ feedbackModal.addEventListener("click", (event) => {
     closeFeedbackModal();
   }
 });
+
+if (gpsStatsButton) {
+  gpsStatsButton.addEventListener("click", openGpsStatsModal);
+}
+
+if (closeGpsStatsButton) {
+  closeGpsStatsButton.addEventListener("click", closeGpsStatsModal);
+}
+
+if (gpsStatsModal) {
+  gpsStatsModal.addEventListener("click", (event) => {
+    if (event.target === gpsStatsModal) {
+      closeGpsStatsModal();
+    }
+  });
+}
+
+if (closeGpsGuidanceButton) {
+  closeGpsGuidanceButton.addEventListener("click", () => {
+    gpsGuidanceDismissed = true;
+
+    if (gpsGuidanceNotice) {
+      gpsGuidanceNotice.hidden = true;
+    }
+    if (mapStatsBar) {
+      mapStatsBar.hidden = true;
+    }
+  });
+}
 
 function previewRouteFromForm() {
   // Tap 1 = preview, tap 2 = directions. As soon as the preview for these
@@ -6481,6 +7527,10 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && safetyModal && !safetyModal.hidden) {
     closeSafetyModal();
   }
+
+  if (event.key === "Escape" && gpsStatsModal && !gpsStatsModal.hidden) {
+    closeGpsStatsModal();
+  }
 });
 getDirectionsButton.addEventListener("click", previewRouteFromForm);
 
@@ -6553,18 +7603,8 @@ clearRouteButton.addEventListener("click", clearRoute);
 if (reportCurrentRouteIssueButton) {
   reportCurrentRouteIssueButton.addEventListener("click", () => reportLatestRouteIssue());
 }
-sidebar.addEventListener("pointerdown", startSheetSwipe);
-sidebar.addEventListener("pointermove", moveSheetSwipe);
-sidebar.addEventListener("pointerup", endSheetSwipe);
-sidebar.addEventListener("pointercancel", () => {
-  sheetSwipeStartedAt = 0;
-  sheetSwipeMoved = false;
-  sidebar.classList.remove("is-dragging");
-  sidebar.style.transform = "";
-});
-sidebar.addEventListener("touchstart", startSheetSwipe, { passive: true });
-sidebar.addEventListener("touchmove", moveSheetSwipe, { passive: false });
-sidebar.addEventListener("touchend", endSheetSwipe, { passive: true });
+// The sheet's content scrolls natively in every state (including half); drag
+// or tap the handle to resize the panel.
 mobilePanelToggle.addEventListener("pointerdown", startPanelDrag);
 mobilePanelToggle.addEventListener("pointermove", updatePanelDrag);
 mobilePanelToggle.addEventListener("pointerup", endPanelDrag);
@@ -6607,10 +7647,16 @@ renderLocationOptions();
 updateRouteActionButton();
 renderLocations(locations);
 renderSavedPanel();
-setActiveBottomNav("explore");
+renderCampusLinks();
+renderHomePanel();
+openHomeView();
 initializeNavigationMap();
 switchMapView("navigationMapView");
-setMobilePanelState("half");
+requestAnimationFrame(() => {
+  if (typeof navigationMap !== "undefined" && navigationMap) {
+    navigationMap.invalidateSize();
+  }
+});
 if ("serviceWorker" in navigator) {
   let refreshingForUpdate = false;
 

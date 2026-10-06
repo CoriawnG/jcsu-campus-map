@@ -14,7 +14,7 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,1,0">
-  <link rel="stylesheet" href="style.css?v=20260925-route-feature">
+  <link rel="stylesheet" href="style.css?v=20261003-gps-page">
 </head>
 <body>
   <div id="appIntro" class="app-intro" role="status" aria-label="Opening JCSU Campus Navigation">
@@ -39,7 +39,9 @@
   </div>
   <header class="app-header">
     <div class="brand-lockup">
-      <img class="brand-mark" src="icons/golden-bull-logo.png" alt="JCSU Golden Bull logo">
+      <button id="homeButton" class="brand-home-button" type="button" aria-label="Go to JCSU main menu" title="Main menu">
+        <img class="brand-mark" src="icons/golden-bull-logo.png" alt="JCSU Golden Bull logo">
+      </button>
       <div>
         <p class="eyebrow">Johnson C. Smith University</p>
         <h1>Campus Navigation</h1>
@@ -47,8 +49,8 @@
     </div>
     <div class="header-actions">
       <button id="helpButton" class="feedback-button help-button" type="button"><span class="material-symbols-outlined" aria-hidden="true">help</span><span>Help</span></button>
-      <button id="safetyButton" class="safety-button" type="button"><span class="material-symbols-outlined" aria-hidden="true">health_and_safety</span><span>Safety</span></button>
       <button id="feedbackButton" class="feedback-button" type="button"><span class="material-symbols-outlined" aria-hidden="true">feedback</span><span>Feedback</span></button>
+      <button id="gpsStatsButton" class="feedback-button stats-button" type="button" aria-label="GPS stats"><span class="material-symbols-outlined" aria-hidden="true">gps_fixed</span><span>Stats</span></button>
     </div>
   </header>
 
@@ -61,9 +63,33 @@
   </div>
   <main class="app-shell">
     <aside class="sidebar sheet-half" aria-label="Campus location search" data-panel-state="half">
-      <button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-expanded="true" aria-label="Change search and directions panel size">
-        Search and Directions
-      </button>
+      <div class="sheet-handle-row">
+        <button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-expanded="true" aria-label="Change search and directions panel size">
+          Search and Directions
+        </button>
+        <nav class="app-bottom-nav" aria-label="Primary app navigation">
+          <button class="bottom-nav-button is-active" type="button" data-app-nav="home" aria-label="Open main menu">
+            <span class="material-symbols-outlined" aria-hidden="true">home</span>
+            <span>Home</span>
+          </button>
+          <button class="bottom-nav-button" type="button" data-app-nav="explore" aria-label="Explore campus">
+            <span class="material-symbols-outlined" aria-hidden="true">explore</span>
+            <span>Explore</span>
+          </button>
+          <button class="bottom-nav-button" type="button" data-app-nav="directions" aria-label="Open directions">
+            <span class="material-symbols-outlined" aria-hidden="true">directions</span>
+            <span>Directions</span>
+          </button>
+          <button class="bottom-nav-button" type="button" data-app-nav="saved" aria-label="Open saved places">
+            <span class="material-symbols-outlined" aria-hidden="true">bookmark</span>
+            <span>Saved</span>
+          </button>
+          <button class="bottom-nav-button safety-bottom-nav" type="button" data-app-nav="safety" aria-label="Open safety tools">
+            <span class="material-symbols-outlined" aria-hidden="true">health_and_safety</span>
+            <span>Safety</span>
+          </button>
+        </nav>
+      </div>
       <section class="search-panel">
         <label for="locationSearch">Find a building or place</label>
         <input
@@ -108,6 +134,105 @@
           <span id="savedCount">0</span>
         </div>
         <div id="savedPanelContent" class="saved-panel-content"></div>
+      </section>
+
+      <section id="homePanel" class="home-panel" aria-label="JCSU main menu" aria-live="polite" hidden>
+        <div class="home-hero">
+          <img class="home-hero-mark" src="icons/golden-bull-logo-transparent.png" alt="JCSU Golden Bull logo">
+          <div>
+            <p class="eyebrow">Johnson C. Smith University</p>
+            <h2>Golden Bull Central</h2>
+            <p class="home-hero-subtitle">Pick where to go: campus map, campus links, faculty hours, or Sports.</p>
+          </div>
+        </div>
+
+        <div class="home-menu-grid" aria-label="Main menu">
+          <button class="home-menu-card" type="button" data-home-action="map">
+            <span class="material-symbols-outlined" aria-hidden="true">map</span>
+            <strong>Open the Campus Map</strong>
+            <small>Search buildings, save places, and get walking directions.</small>
+          </button>
+          <button class="home-menu-card" type="button" data-home-action="links">
+            <span class="material-symbols-outlined" aria-hidden="true">links</span>
+            <strong>Campus Links</strong>
+            <small>Loyalty song, athletics, bookstore, and alumni.</small>
+          </button>
+          <button class="home-menu-card" type="button" data-home-action="faculty">
+            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+            <strong>Faculty Hours</strong>
+            <small id="homeFacultySummary">See who is available right now.</small>
+          </button>
+          <button class="home-menu-card" type="button" data-home-action="sports">
+            <span class="material-symbols-outlined" aria-hidden="true">sports_football</span>
+            <strong>Golden Bulls Football</strong>
+            <small id="homeSportsSummary">Scores, stats, and live updates.</small>
+          </button>
+        </div>
+      </section>
+
+      <section id="linksPage" class="home-subpage" aria-labelledby="linksPageTitle" aria-live="polite" hidden>
+        <button class="secondary-button home-back-button" type="button" data-home-back>
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          Back to Main Menu
+        </button>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Golden Bull Central</p>
+            <h2 id="linksPageTitle">Campus Links</h2>
+          </div>
+        </div>
+        <div id="linksPageList" class="campus-links-list"></div>
+      </section>
+
+      <section id="facultyPage" class="home-subpage" aria-labelledby="facultyPageTitle" aria-live="polite" hidden>
+        <button class="secondary-button home-back-button" type="button" data-home-back>
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          Back to Main Menu
+        </button>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">College of STEM</p>
+            <h2 id="facultyPageTitle">Faculty Hours</h2>
+          </div>
+          <span id="facultyCount" class="home-faculty-count">0</span>
+        </div>
+        <div class="home-search-field">
+          <label for="facultySearch">Search faculty</label>
+          <input id="facultySearch" type="search" placeholder="Search name, room, or email..." autocomplete="off">
+        </div>
+        <div id="facultyPageList" class="faculty-hours-list"></div>
+      </section>
+
+      <section id="sportsPage" class="home-subpage" aria-labelledby="sportsPageTitle" aria-live="polite" hidden>
+        <button class="secondary-button home-back-button" type="button" data-home-back>
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          Back to Main Menu
+        </button>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Golden Bulls Football</p>
+            <h2 id="sportsPageTitle">Scores and Live Updates</h2>
+          </div>
+        </div>
+        <p class="home-sports-note">Update scores in script.js under FOOTBALL SCOREBOARD. Live scores also load from the athletics scoreboard below; if it is blocked, use the athletics link instead.</p>
+        <div class="home-sports-board">
+          <iframe
+            id="footballScoreFrame"
+            title="Golden Bulls football schedule and scores"
+            src="https://goldenbullsports.com/sports/football/schedule"
+            loading="lazy"
+          ></iframe>
+        </div>
+        <h3 class="home-sports-group-title">Live Now</h3>
+        <div id="sportsLiveList" class="home-sports-list"></div>
+        <h3 class="home-sports-group-title">Upcoming Games</h3>
+        <div id="sportsUpcomingList" class="home-sports-list"></div>
+        <h3 class="home-sports-group-title">Previous Games</h3>
+        <div id="sportsPreviousList" class="home-sports-list"></div>
+        <a class="secondary-button home-sports-link" href="https://goldenbullsports.com/sports/football/schedule" target="_blank" rel="noopener noreferrer">
+          <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+          Open full football schedule and stats
+        </a>
       </section>
 
 
@@ -168,9 +293,13 @@
       <div class="map-view is-active" id="navigationMapView" role="region" aria-label="Navigation Map">
         <div id="navigationMap" class="navigation-map" aria-label="Custom campus navigation map"></div>
         <div id="routeStepNavigator" class="route-step-navigator" hidden></div>
-        <div id="gpsAccuracyBadge" class="map-action-button gps-accuracy-badge" aria-live="polite" hidden></div>
+        <div id="mapStatsBar" class="map-stats-bar" aria-label="Location stats" hidden>
+          <div id="gpsGuidanceNotice" class="gps-guidance-notice" hidden>
+            <p>For better precision, step outside or near a window and wait a few seconds.</p>
+            <button id="closeGpsGuidance" class="gps-guidance-close" type="button" aria-label="Dismiss GPS tip">x</button>
+          </div>
+        </div>
         <div class="map-floating-actions" aria-label="Navigation map actions">
-          <div id="mapLocationStatus" class="map-action-button map-status" aria-live="polite" hidden></div>
           <label class="basemap-picker" for="basemapSelect">
             <span class="material-symbols-outlined" aria-hidden="true">layers</span>
             <select id="basemapSelect" aria-label="Choose map style">
@@ -184,24 +313,6 @@
       </div>
     </section>
   </main>
-  <nav class="app-bottom-nav" aria-label="Primary app navigation">
-    <button class="bottom-nav-button is-active" type="button" data-app-nav="explore" aria-label="Explore campus">
-      <span class="material-symbols-outlined" aria-hidden="true">explore</span>
-      <span>Explore</span>
-    </button>
-    <button class="bottom-nav-button" type="button" data-app-nav="directions" aria-label="Open directions">
-      <span class="material-symbols-outlined" aria-hidden="true">directions</span>
-      <span>Directions</span>
-    </button>
-    <button class="bottom-nav-button" type="button" data-app-nav="saved" aria-label="Open saved places">
-      <span class="material-symbols-outlined" aria-hidden="true">bookmark</span>
-      <span>Saved</span>
-    </button>
-    <button class="bottom-nav-button safety-bottom-nav" type="button" data-app-nav="safety" aria-label="Open safety tools">
-      <span class="material-symbols-outlined" aria-hidden="true">health_and_safety</span>
-      <span>Safety</span>
-    </button>
-  </nav>
 
   <div id="arMode" class="ar-mode" role="dialog" aria-modal="true" aria-label="AR navigation mode" hidden>
     <video id="arCamera" class="ar-camera" playsinline muted autoplay></video>
@@ -316,6 +427,18 @@
       </div>
     </div>
   </div>
+  <div id="gpsStatsModal" class="feedback-modal gps-stats-modal" hidden>
+    <div class="feedback-dialog gps-stats-dialog" role="dialog" aria-modal="true" aria-labelledby="gpsStatsTitle">
+      <div class="feedback-header">
+        <div>
+          <p class="eyebrow">Location</p>
+          <h2 id="gpsStatsTitle">GPS Stats</h2>
+        </div>
+        <button id="closeGpsStats" class="icon-button" type="button" aria-label="Close GPS stats">x</button>
+      </div>
+      <div id="gpsStatsContent" class="gps-stats-content"></div>
+    </div>
+  </div>
   <div id="safetyModal" class="feedback-modal safety-modal" hidden>
     <div class="feedback-dialog safety-dialog" role="dialog" aria-modal="true" aria-labelledby="safetyTitle">
       <div class="feedback-header">
@@ -403,9 +526,9 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="locations.js?v=20260925-route-feature"></script>
-  <script src="paths.js?v=20260925-route-feature"></script>
-  <script src="navigation.js?v=20260925-route-feature"></script>
-  <script src="script.js?v=20260925-route-feature"></script>
+  <script src="locations.js?v=20261003-pill-no-squish"></script>
+  <script src="paths.js?v=20261003-pill-no-squish"></script>
+  <script src="navigation.js?v=20261003-pill-no-squish"></script>
+  <script src="script.js?v=20261003-gps-page"></script>
 </body>
 </html>

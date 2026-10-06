@@ -85,6 +85,12 @@ body.modal-open {
   display: none;
 }
 
+/* Desktop lays the sheet out as a plain grid of sections, so the handle-row
+   wrapper dissolves into its parent; mobile turns it into the sticky row. */
+.sheet-handle-row {
+  display: contents;
+}
+
 .search-panel,
 .results-panel,
 .details-panel,
@@ -1032,7 +1038,7 @@ textarea:focus,
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -10px 28px rgba(29, 36, 51, 0.18);
     transform: translateY(calc(100% - 54px));
-    transition: transform 220ms ease;
+    transition: transform 220ms ease, padding 220ms ease;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1052,7 +1058,12 @@ textarea:focus,
 
 
   .sidebar.sheet-half {
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* This state translates the sheet down 34vh, so the last 34vh of the
+       scrollport sits below the screen; the matching padding lets the final
+       content (location cards and blocks) scroll fully into view. */
+    padding-bottom: calc(34vh + 12px + env(safe-area-inset-bottom));
     pointer-events: auto;
     transform: translateY(34vh);
   }
@@ -1092,6 +1103,7 @@ textarea:focus,
     background: #aab3c2;
     border-radius: 999px;
     content: "";
+    transition: height 220ms ease, margin 220ms ease, opacity 220ms ease;
   }
 
   .search-panel,
@@ -2916,6 +2928,92 @@ body.intro-running .app-shell {
   display: inline;
 }
 
+/* Campus links cards, used on the Campus Links page */
+.campus-links-list {
+  display: grid;
+  gap: 8px;
+}
+
+.campus-link-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  color: inherit;
+  font-family: inherit;
+  text-decoration: none;
+  background: #ffffff;
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(16, 32, 51, 0.07);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.campus-link-card:hover,
+.campus-link-card:active {
+  transform: translateY(-1px);
+  border-color: rgba(255, 207, 1, 0.75);
+}
+
+.campus-link-card:focus-visible {
+  outline: 3px solid rgba(0, 45, 86, 0.24);
+  outline-offset: 2px;
+}
+
+.campus-link-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.55);
+  border-radius: 999px;
+  font-size: 1.2rem;
+}
+
+.campus-link-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.campus-link-copy strong {
+  color: var(--blue);
+  font-size: 0.95rem;
+}
+
+.campus-link-copy small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.36;
+}
+
+.campus-link-launch {
+  color: var(--muted);
+  font-size: 1.15rem;
+}
+
+.campus-links-empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.42;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed rgba(0, 45, 86, 0.18);
+  border-radius: 8px;
+}
+
+@media (max-width: 860px) {
+  .campus-link-card {
+    gap: 8px;
+    padding: 9px;
+  }
+}
+
 @media (max-width: 860px) {
   .help-dialog {
     max-height: 86vh;
@@ -4015,6 +4113,398 @@ body.is-offline .app-shell {
   color: var(--muted);
 }
 
+/* JCSU main menu home panel */
+.brand-home-button {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.brand-home-button:focus-visible {
+  outline: 3px solid rgba(255, 207, 1, 0.85);
+  outline-offset: 3px;
+}
+
+.home-panel {
+  display: none;
+  gap: 14px;
+  overflow: auto;
+}
+
+.sidebar.home-panel-active .search-panel,
+.sidebar.home-panel-active .results-panel,
+.sidebar.home-panel-active .details-panel,
+.sidebar.home-panel-active .directions-panel,
+.sidebar.home-panel-active .saved-panel {
+  display: none;
+}
+
+.sidebar.home-panel-active .home-panel {
+  display: grid;
+}
+
+.home-subpage {
+  display: none;
+  gap: 12px;
+  overflow: auto;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.sidebar.links-page-active .search-panel,
+.sidebar.links-page-active .results-panel,
+.sidebar.links-page-active .details-panel,
+.sidebar.links-page-active .directions-panel,
+.sidebar.links-page-active .saved-panel,
+.sidebar.links-page-active .home-panel,
+.sidebar.faculty-page-active .search-panel,
+.sidebar.faculty-page-active .results-panel,
+.sidebar.faculty-page-active .details-panel,
+.sidebar.faculty-page-active .directions-panel,
+.sidebar.faculty-page-active .saved-panel,
+.sidebar.faculty-page-active .home-panel,
+.sidebar.sports-page-active .search-panel,
+.sidebar.sports-page-active .results-panel,
+.sidebar.sports-page-active .details-panel,
+.sidebar.sports-page-active .directions-panel,
+.sidebar.sports-page-active .saved-panel,
+.sidebar.sports-page-active .home-panel {
+  display: none;
+}
+
+.sidebar.links-page-active #linksPage,
+.sidebar.faculty-page-active #facultyPage,
+.sidebar.sports-page-active #sportsPage {
+  display: grid;
+}
+
+/* ===== Home as its own page, outside the map ==========================
+   While the main menu or one of its sub-pages is open, the body carries
+   .home-view-open. The sidebar expands into a single centered page that
+   fills the app shell, and the map panel is hidden behind it. The map keeps
+   its box (visibility, not display) so Leaflet stays correctly measured. */
+body.home-view-open .app-shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+body.home-view-open .sidebar {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: clamp(14px, 2.4vw, 30px);
+  background: linear-gradient(180deg, #f6f9fd 0%, #edf2f9 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+body.home-view-open .sidebar > section {
+  flex: 0 0 auto;
+  width: min(100%, 980px);
+}
+
+/* While turn-by-turn guidance is running the route UI must stay visible,
+   so the map is only hidden when no route feature is active. */
+body.home-view-open:not(.route-feature-active) .map-panel {
+  grid-row: 1;
+  grid-column: 1;
+  visibility: hidden;
+}
+
+.home-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  justify-self: start;
+}
+
+.home-search-field label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.home-search-field input[type="search"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: var(--panel-soft);
+  border: 1px solid rgba(0, 45, 86, 0.18);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.home-sports-group-title {
+  margin: 4px 0 0;
+  color: var(--blue);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(255, 207, 1, 0.34) 0, rgba(255, 207, 1, 0) 190px),
+    radial-gradient(circle at 6% 92%, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0) 170px),
+    linear-gradient(135deg, #002d56 0%, #0f3f70 62%, #123a68 100%);
+  border: 1px solid rgba(255, 207, 1, 0.36);
+  border-radius: 12px;
+  box-shadow: 0 16px 34px rgba(0, 45, 86, 0.24);
+}
+
+.home-hero-mark {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid rgba(255, 207, 1, 0.9);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.home-hero .eyebrow {
+  color: var(--gold);
+}
+
+.home-hero h2 {
+  margin: 2px 0 0;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.home-hero-subtitle {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.home-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-menu-card {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 13px 12px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-left: 5px solid var(--blue);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.home-menu-card:nth-child(2n) {
+  border-left-color: var(--gold);
+}
+
+.home-menu-card:hover,
+.home-menu-card:active {
+  transform: translateY(-2px);
+  border-color: rgba(255, 207, 1, 0.72);
+  box-shadow: 0 14px 28px rgba(0, 45, 86, 0.16);
+}
+
+.home-menu-card:focus-visible {
+  outline: 3px solid rgba(0, 45, 86, 0.24);
+  outline-offset: 2px;
+}
+
+.home-menu-card .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.55);
+  border-radius: 999px;
+  font-size: 1.3rem;
+}
+
+.home-menu-card strong {
+  color: var(--blue);
+  font-size: 0.95rem;
+}
+
+.home-menu-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.home-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 10px;
+}
+
+.home-faculty-count {
+  min-width: 34px;
+  padding: 4px 8px;
+  color: var(--blue);
+  background: var(--gold-soft);
+  border: 1px solid rgba(255, 207, 1, 0.55);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.home-faculty-empty,
+.home-sports-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.home-sports-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.home-sports-board {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(0, 45, 86, 0.14);
+  border-radius: 10px;
+}
+
+.home-sports-board iframe {
+  display: block;
+  width: 100%;
+  min-height: 520px;
+  border: 0;
+  background: #ffffff;
+}
+
+.home-sports-list {
+  display: grid;
+  gap: 8px;
+}
+
+.home-sports-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--gold-soft) 145%);
+  border: 1px solid rgba(0, 45, 86, 0.13);
+  border-radius: 10px;
+}
+
+.home-sports-card.is-live {
+  border-color: rgba(24, 102, 79, 0.48);
+}
+
+.home-sports-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-sports-status {
+  padding: 3px 8px;
+  color: #ffffff;
+  background: var(--blue);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.home-sports-card.is-live .home-sports-status {
+  background: var(--green);
+}
+
+.home-sports-date {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.home-sports-matchup {
+  margin: 0;
+  color: var(--blue);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.home-sports-score {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.84rem;
+}
+
+.home-sports-detail {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.home-sports-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .home-hero {
+    grid-template-columns: 62px minmax(0, 1fr);
+    padding: 13px;
+  }
+
+  .home-hero-mark {
+    width: 62px;
+    height: 62px;
+  }
+
+  .home-sports-board iframe {
+    min-height: 460px;
+  }
+}
+
 /* Dedicated saved places screen */
 .saved-panel {
   display: none;
@@ -4151,13 +4641,9 @@ body.is-offline .app-shell {
 @media (max-width: 860px) {
   .app-bottom-nav {
     --nav-index: 0;
-    position: fixed;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    left: 10px;
-    z-index: 980;
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
     padding: 7px;
     background: rgba(255, 255, 255, 0.94);
@@ -4173,7 +4659,7 @@ body.is-offline .app-shell {
     top: 7px;
     bottom: 7px;
     left: 7px;
-    width: calc((100% - 26px) / 4);
+    width: calc((100% - 34px) / 5);
     content: "";
     background: var(--gold-soft);
     border: 1px solid rgba(255, 207, 1, 0.5);
@@ -4182,16 +4668,24 @@ body.is-offline .app-shell {
     transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), background 200ms ease, border-color 200ms ease;
   }
 
-  .app-bottom-nav.is-directions-active {
+  .app-bottom-nav.is-home-active {
+    --nav-index: 0;
+  }
+
+  .app-bottom-nav.is-explore-active {
     --nav-index: 1;
   }
 
-  .app-bottom-nav.is-saved-active {
+  .app-bottom-nav.is-directions-active {
     --nav-index: 2;
   }
 
-  .app-bottom-nav.is-safety-active {
+  .app-bottom-nav.is-saved-active {
     --nav-index: 3;
+  }
+
+  .app-bottom-nav.is-safety-active {
+    --nav-index: 4;
   }
 
   .app-bottom-nav.is-safety-active::before {
@@ -4216,7 +4710,7 @@ body.is-offline .app-shell {
     font: inherit;
     font-size: 0.72rem;
     font-weight: 800;
-    transition: color 180ms ease, transform 180ms ease;
+    transition: color 180ms ease, transform 180ms ease, min-height 220ms ease, padding 220ms ease;
   }
 
   .bottom-nav-button .material-symbols-outlined {
@@ -4243,11 +4737,17 @@ body.is-offline .app-shell {
   }
 
   .sidebar {
-    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 
   .sidebar.sheet-collapsed {
-    transform: translateY(calc(100% - 142px));
+    transform: translateY(calc(100% - 88px));
+  }
+
+  /* The map view force-peeks too, but the pill-only stub wins when the sheet
+     was collapsed from a map tab (switching tabs collapses the panel). */
+  body.navigation-map-active:not(.directions-panel-open) .sidebar.sheet-collapsed {
+    transform: translateY(calc(100% - 88px));
   }
 
   body.navigation-map-active:not(.directions-panel-open) .sidebar {
@@ -4965,4 +5465,267 @@ body.route-feature-active .route-step-navigator {
 
 
 
+
+
+/* ===== Mobile: while the home page is open it fills the screen below the
+   header instead of sitting as a bottom sheet over the map. This block is
+   last so it wins over the sheet and navigation-map-active rules above. ==== */
+@media (max-width: 860px) {
+  body.home-view-open .sidebar,
+  body.home-view-open .sidebar.sheet-half,
+  body.home-view-open .sidebar.sheet-full,
+  body.home-view-open .sidebar.sheet-collapsed {
+    height: calc(100dvh - 84px);
+    max-height: none;
+    transform: translateY(0);
+    overflow-x: hidden;
+    overflow-y: auto;
+    pointer-events: auto;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, #f6f9fd 0%, #edf2f9 100%);
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 28px rgba(29, 36, 51, 0.18);
+  }
+
+  body.home-view-open .mobile-panel-toggle {
+    display: none;
+  }
+}
+
+
+/* ===== The pill lives in the sheet's sticky handle row: one compact bar with
+   "Search and Directions" on the left and the five nav icons on the right.
+   The row sticks to the top of the sheet so both stay visible while the panel
+   scrolls; on the main menu the whole row is hidden. ==== */
+@media (max-width: 860px) {
+  .sheet-handle-row {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 54px;
+    background: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    padding-right: 188px; /* reserved space for the inline pill */
+    transition: padding-right 220ms ease, min-height 220ms ease;
+  }
+
+  /* The wrapper dissolves on desktop (base rule); on mobile the handle joins
+     the row and yields its own sticky positioning and bottom border. */
+  .sheet-handle-row .mobile-panel-toggle {
+    position: static;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    border-bottom: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.84rem;
+    transition: font-size 220ms ease;
+  }
+
+  /* Compact icon-only pill beside the handle (labels are hidden; each button
+     keeps its aria-label for screen readers). It is absolute so it can slide
+     down into the peek's blank area when the sheet collapses. */
+  .sheet-handle-row .app-bottom-nav {
+    position: absolute;
+    top: 4px;
+    left: calc(100% - 182px);
+    width: 182px; /* 5 x 30px buttons + 4 gaps + padding + border */
+    box-shadow: none;
+    transition: top 220ms ease, left 220ms ease, width 220ms ease;
+  }
+
+  .sheet-handle-row .bottom-nav-button {
+    min-height: 30px;
+    min-width: 30px;
+    padding: 4px 2px;
+  }
+
+  .sheet-handle-row .bottom-nav-button > span:not(.material-symbols-outlined) {
+    display: none;
+  }
+
+  /* sheet-collapsed hides the sheet from pointer events; the handle row must
+     stay usable in the 142px peek. */
+  .sidebar.sheet-collapsed .sheet-handle-row,
+  .sidebar.sheet-collapsed .app-bottom-nav {
+    pointer-events: auto;
+  }
+
+  /* Collapsed stub shows only the pill, edge to edge: no side padding (so no
+     grey strips), the handle text and grab bar fade out, and the handle stays
+     as an invisible tap/drag layer behind the pill. */
+  .sidebar.sheet-collapsed {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar.sheet-collapsed .sheet-handle-row {
+    min-height: 88px;
+    padding-right: 0;
+  }
+
+  .sidebar.sheet-collapsed .sheet-handle-row .mobile-panel-toggle {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    min-height: 0;
+    background: transparent;
+    border-bottom: 0;
+    font-size: 0;
+    overflow: hidden;
+  }
+
+  .sidebar.sheet-collapsed .mobile-panel-toggle::before {
+    height: 0;
+    margin: 0;
+    opacity: 0;
+  }
+
+  /* The pill spreads across the stub and shows its labels again. */
+  .sidebar.sheet-collapsed .sheet-handle-row .app-bottom-nav {
+    top: 6px;
+    left: 10px;
+    width: calc(100% - 20px);
+    z-index: 2;
+  }
+
+  .sidebar.sheet-collapsed .sheet-handle-row .bottom-nav-button {
+    min-height: 54px;
+    padding: 7px 4px 6px;
+  }
+
+  .sidebar.sheet-collapsed .sheet-handle-row .bottom-nav-button > span:not(.material-symbols-outlined) {
+    display: block;
+  }
+
+  /* The main menu owns the whole screen; the whole handle row belongs to the
+     campus map only. */
+  body.home-view-open .sheet-handle-row {
+    display: none;
+  }
+
+  body.home-view-open .app-bottom-nav {
+    display: none;
+  }
+}
+
+/* ===== GPS accuracy and the live-tracking status share one quiet section at
+   the map's top-left, away from the floating controls on the right. ==== */
+.map-stats-bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 28px);
+}
+
+.map-stats-bar[hidden] {
+  display: none;
+}
+
+.map-stats-bar .gps-accuracy-badge {
+  position: static;
+  right: auto;
+  bottom: auto;
+}
+
+.map-stats-bar .map-action-button {
+  max-width: 100%;
+}
+
+/* The GPS tip lives in its own small, dismissible window under the stats. */
+.gps-guidance-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: min(300px, calc(100vw - 28px));
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(16, 32, 51, 0.12);
+}
+
+.gps-guidance-notice[hidden] {
+  display: none;
+}
+
+.gps-guidance-notice p {
+  flex: 1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.gps-guidance-close {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* GPS stats page content. */
+.gps-stats-content {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.gps-stats-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(0, 45, 86, 0.04);
+  border: 1px solid rgba(0, 45, 86, 0.08);
+  border-radius: 8px;
+}
+
+.gps-stats-row span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.gps-stats-row strong {
+  color: var(--blue);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.gps-stats-status {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 860px) {
+  .map-stats-bar {
+    top: 84px;
+    left: 12px;
+  }
+}
 

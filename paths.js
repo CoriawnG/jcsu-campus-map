@@ -1407,7 +1407,7 @@ window.pathSegments = [
     ]
   },
   {
-    "name": "Athletic Support Hall",
+    "name": "Athletic Coaches Offices",
     "coordinates": [
       {
         "lat": 35.2424747,

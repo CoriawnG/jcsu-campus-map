@@ -1,12 +1,12 @@
-const CACHE_NAME = "jcsu-campus-map-v20260925-route-feature";
+const CACHE_NAME = "jcsu-campus-map-v20261003-gps-page";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20260925-route-feature",
-  "./locations.js?v=20260925-route-feature",
-  "./paths.js?v=20260925-route-feature",
-  "./navigation.js?v=20260925-route-feature",
-  "./script.js?v=20260925-route-feature",
+  "./style.css?v=20261003-gps-page",
+  "./locations.js?v=20261003-pill-no-squish",
+  "./paths.js?v=20261003-pill-no-squish",
+  "./navigation.js?v=20261003-pill-no-squish",
+  "./script.js?v=20261003-gps-page",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -40,6 +40,24 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
   if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
+  // Page navigations are network-first so a reload always picks up the latest
+  // HTML (and its versioned asset URLs); the cache only answers when offline.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((cachedResponse) => cachedResponse || caches.match("./index.html")))
+    );
     return;
   }
 
