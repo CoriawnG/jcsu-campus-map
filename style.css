@@ -4386,6 +4386,39 @@ body.home-view-open:not(.route-feature-active) .map-panel {
   text-align: center;
 }
 
+/* Guest lock: office hours require a JCSU login (Phase 2 on Azure). */
+.faculty-login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 45, 86, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(16, 32, 51, 0.12);
+}
+
+.faculty-login-prompt .material-symbols-outlined {
+  color: var(--blue);
+}
+
+.faculty-login-prompt p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.faculty-login-prompt .primary-button {
+  width: 100%;
+}
+
+.faculty-login-note {
+  font-size: 0.78rem !important;
+  opacity: 0.85;
+}
+
 .home-faculty-empty,
 .home-sports-empty {
   margin: 0;

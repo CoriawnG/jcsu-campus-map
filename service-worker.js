@@ -1,12 +1,13 @@
-const CACHE_NAME = "jcsu-campus-map-v20261003-gps-page";
+const CACHE_NAME = "jcsu-campus-map-v20261012-faculty-auth";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=20261003-gps-page",
+  "./style.css?v=20261012-faculty-auth",
   "./locations.js?v=20261003-pill-no-squish",
   "./paths.js?v=20261003-pill-no-squish",
   "./navigation.js?v=20261003-pill-no-squish",
-  "./script.js?v=20261003-gps-page",
+  "./script.js?v=20261012-faculty-auth",
+  "./data/faculty-hours.json",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -40,6 +41,12 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
   if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
+  // Never cache auth or API responses: gated faculty hours must not linger
+  // in the cache after logout, and a 401 must reach the page untouched.
+  if (requestUrl.pathname.startsWith("/api/") || requestUrl.pathname.startsWith("/.auth/")) {
     return;
   }
 

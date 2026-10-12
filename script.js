@@ -918,346 +918,14 @@ const locationHours = {
   }
 };
 
-const facultyOfficeHours = {
-  "New Science Center (STEM)": {
-    label: "College of STEM Faculty",
-    source: "College of STEM office hours collected for the JCSU Map senior project. Times can change during breaks and exams.",
-    faculty: [
-      {
-        name: "Dr. Jason Tarkington",
-        room: "NSC 231",
-        email: "jtarkington@JCSU.EDU",
-        weekly: {
-          Monday: [["10:00 AM","12:00 PM"]],
-          Tuesday: [["11:00 AM","12:00 PM"],["1:00 AM", "3:00 PM"]],
-          Wednesday: [["10:00 AM","12:00 PM"]],
-          Friday: [["10:00 AM","12:00 PM"]],
-
-        },
-        note: "Appointment email to schedule."
-      },
-      {
-        name: "Dr. Alexa von Dohlen",
-        room: "NSC 232",
-        email: "acrosypal@jcsu.edu",
-        weekly:{
-          Monday: [["10:30 AM", "11:00 AM"], ["1:00 PM", "3:00 PM"]],
-          Wednesday: [["10:30 AM", "11:00 AM"], ["1:00 PM", "3:00 PM"]],
-        },
-        appointment: {
-          Tuesday: [["8:00 AM", "11:00 AM"]],
-          Thursday: [["9:00 AM", "11:00 AM"]],
-        }
-      },
-
-      {
-        name: "Dr. Tracy Fox-Brown",
-        room: "NSC 306",
-        email: "tbrown2@JCSU.EDU",
-        weekly: {
-          Monday: [["9:00 AM", "10:00 AM"]],
-          Wednesday: [["9:00 AM", "10:00 AM"]],
-          Thursday: [["9:00", "12:00 PM"]],
-          Friday: [["9:00 AM", "10:00 AM"]],
-
-        },
-        appointment: {
-          Monday: [["8:00 AM", "9:00 AM"]],
-          Wednesday: [["8:00 AM", "9:00 AM"]],
-          Thursday: [["8:00 AM", "9:00 AM"]],
-          Friday: [["8:00 AM", "9:00 AM"]],
-
-        }
-
-      },
-      {
-        name: "Dr. Debra Terrell",
-        room: "NSC 223B",
-        email: "dterrell@jcsu.edu",
-        weekly: {
-          Tuesday: [["11:00 AM", "3:00 PM"]],
-          Thursday: [["11:00 AM", "3:00 PM"]],
-
-        },
-        note: "Friday by Appointment Only."
-
-      },
-      {
-        name: "Ms. Rashawna Huntley",
-        room: "NSC 223C",
-        email: "rhuntley@JCSU.EDU",
-        weekly: {
-          Monday: [["8:00 AM", "12:00 PM"], ["1:00 PM", "5:00 PM"]],
-          Wednesday: [["8:00 AM", "12:00 PM"], ["1:00 PM", "5:00 PM"]],
-          Thursday: [["12:00 PM", "5:00 PM"]],
-          Friday: [["9:00 AM", "1:30 PM"]],
-
-        },
-      
-      },
-      
-      {
-        name: "Dr. Mark Dugo",
-        room: "NSC 223E",
-        email: "mdugo@jcsu.edu",
-        weekly: {
-          Monday: [["1:00 PM", "2:00 PM"], ["3:00 PM", "5:00 PM"]],
-          Wednesday: [["1:00 PM", "2:00 PM"], ["3:00 PM", "5:00 PM"]],
-          Friday: [["1:00 PM", "2:00 PM"]]
-        },
-        appointment: {
-          Monday: [["11:00 AM", "12:00 PM"]],
-          Wednesday: [["11:00 AM", "12:00 PM"]],
-          Thursday: [["11:00 AM", "1:00 PM"]],
-          Friday: [["11:00 AM", "12:00 PM"]]
-        }
-      },
-      {
-        name: "Dr. Sunil Gupta",
-        room: "NSC 354",
-        email: "sgupta@jcsu.edu",
-        weekly: {
-          Monday: [["10:00 AM", "12:00 PM"]],
-          Wednesday: [["10:00 AM", "12:00 PM"]],
-          Friday: [["10:00 AM", "12:00 PM"]]
-        },
-        note: "Appointments: email to schedule."
-      },
-      {
-        name: "Dr. Jasmine Hamlehary",
-        room: "NSC 345",
-        email: "jhamlehdary@jcsu.edu",
-        weekly: {
-          Friday: [["10:00 AM", "12:00 PM"]]
-        },
-        note: "Appointments: email to schedule."
-      },
-      {
-        name: "Ms. Nakoria Strong",
-        room: "NSC 341",
-        email: "nstrong@jcsu.edu",
-        weekly: {
-          Monday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]],
-          Wednesday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]],
-          Friday: [["9:00 AM", "10:00 AM"], ["1:00 PM", "2:00 PM"]]
-        },
-        appointment: {
-          Monday: [["10:30 AM", "11:30 AM"], ["2:30 PM", "4:00 PM"]],
-          Tuesday: [["10:00 AM", "11:30 AM"], ["1:30 PM", "4:30 PM"]],
-          Wednesday: [["10:30 AM", "11:30 AM"], ["2:30 PM", "4:00 PM"]],
-          Thursday: [["10:00 AM", "11:30 AM"], ["1:30 PM", "4:30 PM"]]
-        },
-        note: "Appointments: email to schedule."
-      },
-      {
-        name: "Dr. Thomas Fleming",
-        room: "NSC 346",
-        email: "tfleming@jcsu.edu",
-        weekly: {
-          Monday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]],
-          Wednesday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]],
-          Friday: [["9:00 AM", "10:00 AM"], ["2:30 PM", "4:00 PM"]]
-        },
-        appointment: {
-          Tuesday: [["8:00 AM", "11:00 AM"], ["3:00 PM", "5:00 PM"]]
-        }
-      },
-      {
-        name: "Dr. Willie Fleming",
-        room: "NSC 337",
-        email: "wfleming@JCSU.EDU",
-        weekly: {
-          Tuesday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "12:00 PM"], ["3:30 PM", "4:30 PM"]],
-          Wednesday: [["9:00 AM", "12:00 PM"]],
-          Thursday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "12:00 PM"], ["3:30 PM", "4:30 PM"]]
-        },
-        note: "Appointments: as needed."
-      },
-      {
-        name: "Dr. Thipwiwatpotjana Phantipa (Yim)",
-        room: "NSC 334",
-        email: "pthipwiwatpotjana@JCSU.EDU",
-        weekly: {
-          Monday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]],
-          Wednesday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]],
-          Friday: [["7:00 AM", "8:50 AM"], ["10:00 AM", "10:50 AM"], ["2:00 PM", "3:00 PM"]]
-        },
-        appointment: {
-          Tuesday: [["11:00 AM", "12:30 PM"]],
-          Thursday: [["11:00 AM", "12:30 PM"]]
-        },
-        note: "Tuesday/Thursday appointment slots meet on Microsoft Teams."
-      },
-      {
-        name: "Dr. Jason Tarkington",
-        room: "NSC 208",
-        email: "jtarkington@JCSU.EDU",
-        weekly: {
-          Monday: [["1:00 PM", "2:00 PM"]],
-          Tuesday: [["11:00 AM", "12:00 PM"], ["1:00 PM", "3:00 PM"]],
-          Wednesday: [["1:00 PM", "2:00 PM"]],
-          Friday: [["1:00 PM", "2:00 PM"]]
-        },
-        note: "Appointments: email to schedule."
-      },
-      {
-        name: "Dr. Brian Hunt",
-        room: "NSC 336",
-        email: "bjhunt@jcsu.edu",
-        weekly: {
-          Monday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
-          Wednesday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
-          Friday: [["12:00 PM", "1:00 PM"]]
-        },
-        appointment: {
-          Monday: [["9:00 AM", "11:00 AM"]],
-          Wednesday: [["9:00 AM", "10:00 AM"]],
-          Friday: [["9:00 AM", "11:00 AM"]]
-        }
-      },
-      {
-        name: "Dr. Douglas Cooper",
-        room: "NSC 340",
-        email: "dpcooper@jcsu.edu",
-        weekly: {
-          Monday: [["4:00 PM", "5:00 PM"]],
-          Tuesday: [["1:00 PM", "3:00 PM"]],
-          Wednesday: [["2:00 PM", "5:00 PM"]],
-          Thursday: [["1:00 PM", "3:00 PM"]],
-          Friday: [["2:00 PM", "5:00 PM"]]
-        },
-        note: "Tuesday and Thursday times are virtual only; Monday, Wednesday, and Friday are walk-in and virtual."
-      },
-      {
-        name: "Dr. Vijaya Gompa",
-        room: "NSC 348",
-        email: "vgompa@JCSU.EDU",
-        weekly: {
-          Monday: [["2:00 PM", "3:45 PM"]],
-          Wednesday: [["2:00 PM", "3:45 PM"]],
-          Friday: [["2:00 PM", "3:45 PM"]]
-        },
-        appointment: {
-          Monday: [["8:00 AM", "9:00 AM"]],
-          Wednesday: [["8:00 AM", "9:00 AM"]],
-          Friday: [["8:00 AM", "9:00 AM"]]
-        },
-        note: "The PDF printed 'MWF 2-3:45PM / 2:00-3:00PM'; entered as 2-3:45 p.m. Verify with the department."
-      }
-    ]
-  },
-  "Dorothy Cowser Yancy Technology Center": {
-    label: "College of STEM Faculty (Yancy)",
-    faculty: [
-      {
-        name: "Dr. Suraydip Chakraborty",
-        room: "Yancy (TC) 317",
-        email: "schakraborty@JCSU.EDU",
-        weekly: {
-          Monday: [["2:00 PM", "3:00 PM"]],
-          Wednesday: [["2:00 PM", "3:00 PM"]],
-          Thursday: [["9:30 AM", "11:00 AM"]], 
-
-        },
-        appointment: {
-          Monday: [["12:00 PM", "2:00 PM"]],
-          Tuesday: [["11:00 AM", "12:00 PM"]],
-          Thursday: [["3:00 PM", "4:00 PM"]],
-
-        }
-
-      },
-      {
-        name: "Dr. Felesia Stukes",
-        room: "Yancy (TC) 209 ",
-        email: "fstukes@JCSU.EDU",
-        weekly: {
-          Thursday: [["8:30 AM", "9:30 AM"], ["10:45 AM", "11:45 AM"], ["2:45 PM", "3:45 PM"]],
-
-        },
-        appointment: {
-          Monday: [["8:00 AM", "9:30 AM"], ["2:45 PM", "3:45 PM"]],
-          Wednesday: [["8:00 AM", "9:30 AM"], ["2:45 PM", "3:45 PM"]]
-          
-        }
-
-      },
-      {
-        name: "Dr. Vanessa Figgers",
-        room: "Yancy (TC) 314",
-        email: "vfiggers@jcsu.edu",
-        weekly: {
-          Monday: [["9:00 AM", "10:00 AM"], ["11:00 AM", "12:00 PM"]],
-          Wednesday: [["9:00 AM", "10:00 AM"], ["11:00 AM", "12:00 PM"]],
-          Friday: [["9:00 AM", "10:00 AM"]]
-        },
-        appointment: {
-          Monday: [["12:00 PM", "2:30 PM"]],
-          Wednesday: [["12:00 PM", "2:30 PM"]]
-        }
-      },
-      {
-        name: "Dr. Awatif Amin",
-        room: "Yancy (TC) 113",
-        email: "aamin@jcsu.edu",
-        weekly: {
-          Monday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]],
-          Tuesday: [["11:00 AM", "1:30 PM"]],
-          Wednesday: [["12:00 PM", "1:00 PM"]],
-          Thursday: [["11:00 AM", "1:30 PM"]],
-          Friday: [["12:00 PM", "1:00 PM"], ["2:00 PM", "3:00 PM"]]
-        }
-      },
-      {
-        name: "Dr. Sabina Otienoburu",
-        room: "Yancy (TC) 312",
-        email: "sotienoburu@JCSU.EDU",
-        weekly: {
-          Monday: [["10:00 AM", "12:00 PM"]],
-          Friday: [["10:00 AM", "12:00 PM"]]
-        },
-        appointment: {
-          Tuesday: [["10:00 AM", "3:00 PM"]]
-        },
-        note: "NSC 130 Lab, 1:00-2:00 p.m."
-      },
-      {
-        name: "Professor Raymond Scriven",
-        room: "Yancy (TC) 112",
-        email: "rscriven@JCSU.EDU",
-        weekly: {
-          Monday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]],
-          Tuesday: [["9:00 AM", "12:00 PM"]],
-          Wednesday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]],
-          Thursday: [["9:00 AM", "12:00 PM"]],
-          Friday: [["10:00 AM", "11:00 AM"], ["12:00 PM", "1:00 PM"]]
-        },
-        appointment: {
-          Monday: [["3:00 PM", "4:00 PM"]],
-          Tuesday: [["3:00 PM", "4:00 PM"]],
-          Wednesday: [["3:00 PM", "4:00 PM"]],
-          Thursday: [["3:00 PM", "4:00 PM"]],
-          Friday: [["3:00 PM", "4:00 PM"]]
-        }
-      },
-      {
-        name: "Dr. Sonya Worrell",
-        room: "Yancy (TC) 214",
-        email: "sworrell@JCSU.EDU",
-        weekly: {
-          Monday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]],
-          Tuesday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]],
-          Wednesday: [["8:00 AM", "9:00 AM"], ["11:00 AM", "12:00 PM"], ["2:00 PM", "3:00 PM"]]
-        },
-        appointment: {
-          Tuesday: [["10:00 AM", "2:00 PM"]],
-          Thursday: [["10:00 AM", "2:00 PM"]]
-        }
-      }
-    ],
-    source: "College of STEM faculty located in Yancy Technology Center, collected with the same office hours list. Times can change during breaks and exams."
-  }
-};
+// FACULTY OFFICE HOURS
+// The data now lives in data/faculty-hours.json so an API can gate it behind
+// JCSU Microsoft login later (Phase 2). Until then it loads at startup.
+// Append ?lockFaculty=1 to the URL to preview the locked guest view.
+const FACULTY_HOURS_ENDPOINT = "data/faculty-hours.json";
+let facultyOfficeHours = {};
+let facultyHoursState = "loading"; // "loading" | "ready" | "locked" | "error"
+let authRole = "guest"; // "guest" | "jcsu" | "admin" - decided by the backend in Phase 2
 
 const locationDetailProfiles = {
   "Band and Music Hall": {
@@ -1676,6 +1344,37 @@ function renderCampusLinks() {
   renderCampusLinksInto(linksPageList);
 }
 
+async function loadFacultyHours() {
+  // Phase 2 swaps FACULTY_HOURS_ENDPOINT to "/api/faculty-hours", which
+  // returns 401 for guests - the same "locked" state as the preview flag.
+  const lockPreview = new URLSearchParams(window.location.search).has("lockFaculty");
+  if (lockPreview) {
+    facultyOfficeHours = {};
+    facultyHoursState = "locked";
+    renderHomeFaculty();
+    renderFacultyPage();
+    return;
+  }
+
+  try {
+    const response = await fetch(FACULTY_HOURS_ENDPOINT, { cache: "no-store" });
+    if (response.status === 401) {
+      facultyOfficeHours = {};
+      facultyHoursState = "locked";
+    } else if (response.ok) {
+      facultyOfficeHours = await response.json();
+      facultyHoursState = "ready";
+    } else {
+      facultyHoursState = "error";
+    }
+  } catch (error) {
+    facultyHoursState = "error";
+  }
+
+  renderHomeFaculty();
+  renderFacultyPage();
+}
+
 function getAllFacultyEntries(date = new Date()) {
   const entries = [];
 
@@ -1697,6 +1396,49 @@ function getAllFacultyEntries(date = new Date()) {
 
 function renderFacultyPage() {
   if (!facultyPageList) {
+    return;
+  }
+
+  if (facultyHoursState === "loading") {
+    if (facultyCount) {
+      facultyCount.textContent = "";
+    }
+    facultyPageList.innerHTML = '<p class="home-faculty-empty">Loading faculty hours...</p>';
+    return;
+  }
+
+  if (facultyHoursState === "error") {
+    if (facultyCount) {
+      facultyCount.textContent = "";
+    }
+    facultyPageList.innerHTML = '<p class="home-faculty-empty">Faculty hours could not load. Check your connection and try again.</p>';
+    return;
+  }
+
+  if (facultyHoursState === "locked") {
+    if (facultyCount) {
+      facultyCount.textContent = "";
+    }
+    facultyPageList.innerHTML = `
+      <div class="faculty-login-prompt">
+        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+        <p>Faculty office hours are for the JCSU community. Sign in with your JCSU email to see them.</p>
+        <button id="facultySignIn" class="primary-button" type="button">Sign in with Microsoft</button>
+        <p class="faculty-login-note" hidden>Microsoft sign-in arrives with the Azure backend (Phase 2). This preview is showing the locked guest view.</p>
+      </div>`;
+
+    const signInButton = document.querySelector("#facultySignIn");
+    const signInNote = document.querySelector(".faculty-login-note");
+    signInButton?.addEventListener("click", () => {
+      // Phase 2: Azure Static Web Apps serves /.auth/login/aad natively.
+      if (FACULTY_HOURS_ENDPOINT.startsWith("/api/")) {
+        window.location.href = "/.auth/login/aad";
+        return;
+      }
+      if (signInNote) {
+        signInNote.hidden = false;
+      }
+    });
     return;
   }
 
@@ -1754,6 +1496,22 @@ function renderFacultyPage() {
 }
 
 function renderHomeFaculty() {
+  if (facultyHoursState === "locked") {
+    if (homeFacultySummary) {
+      homeFacultySummary.textContent = "Sign in with your JCSU email to view office hours.";
+    }
+    return;
+  }
+
+  if (facultyHoursState !== "ready") {
+    if (homeFacultySummary) {
+      homeFacultySummary.textContent = facultyHoursState === "error"
+        ? "Faculty hours unavailable right now."
+        : "Loading faculty hours...";
+    }
+    return;
+  }
+
   const entries = getAllFacultyEntries();
   const availableCount = entries.filter((entry) => entry.status.isAvailable).length;
 
@@ -7649,6 +7407,7 @@ renderLocations(locations);
 renderSavedPanel();
 renderCampusLinks();
 renderHomePanel();
+loadFacultyHours();
 openHomeView();
 initializeNavigationMap();
 switchMapView("navigationMapView");

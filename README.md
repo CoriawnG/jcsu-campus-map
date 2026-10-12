@@ -41,6 +41,7 @@ https://coriawng.github.io/jcsu-campus-map/
 - `index.html` - main app page and UI structure
 - `style.css` - layout, mobile bottom sheet, map UI, modals, and responsive styling
 - `locations.js` - campus building and location data
+- `data/faculty-hours.json` - faculty office hours (fetched at runtime so an API can gate it behind JCSU login later)
 - `paths.js` - exported sidewalk/navigation path data
 - `navigation.js` - graph building and Dijkstra route logic
 - `script.js` - search, filters, location details, GPS, routing, feedback, safety, and PWA registration
