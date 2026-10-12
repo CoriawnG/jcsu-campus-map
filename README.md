@@ -35,6 +35,8 @@ https://coriawng.github.io/jcsu-campus-map/
 - Browser Geolocation API
 - Web App Manifest
 - Service Worker caching
+- Azure Static Web Apps + Microsoft (Entra ID) login for the gated faculty hours API (in progress)
+
 
 ## Main Files
 
@@ -42,6 +44,9 @@ https://coriawng.github.io/jcsu-campus-map/
 - `style.css` - layout, mobile bottom sheet, map UI, modals, and responsive styling
 - `locations.js` - campus building and location data
 - `data/faculty-hours.json` - faculty office hours (fetched at runtime so an API can gate it behind JCSU login later)
+- `staticwebapp.config.json` - Azure Static Web Apps routes: `/api/*` requires sign-in, the map stays public (GitHub Pages ignores this file)
+- `api/faculty-hours/` - Azure Function that serves office hours only to signed-in JCSU emails, plus its data copy and tests
+
 - `paths.js` - exported sidewalk/navigation path data
 - `navigation.js` - graph building and Dijkstra route logic
 - `script.js` - search, filters, location details, GPS, routing, feedback, safety, and PWA registration
@@ -101,6 +106,23 @@ For best route preference behavior, path names should be clear and consistent, f
 - `Parking Lot Path`
 - `Ramp`
 - `Shortcut`
+
+## Microsoft login (3-tier access)
+
+Faculty office hours are moving to a three-tier access model:
+
+1. **Guest** - public map, search, directions, and dining; faculty office hours stay locked with a sign-in prompt.
+2. **JCSU student/staff** - signs in with a Microsoft (Entra ID) account and sees faculty office hours.
+3. **Admin** - future phase: edit office hours in the app (stored in Azure Table Storage).
+
+How it works:
+
+- Login is handled by Azure Static Web Apps (Microsoft/Entra ID identity provider); no passwords are stored in this project.
+- `staticwebapp.config.json` requires authentication for `/api/*` only. The public map stays anonymous. GitHub Pages ignores this file, so nothing changes on the current host.
+- The `api/faculty-hours` Azure Function checks that the signed-in account's email ends in `@jcsu.edu` or `@mymail.jcsu.edu` (update `api/faculty-hours/auth.js` once IT confirms the exact domains) and returns `401` otherwise, with `Cache-Control: no-store`.
+- Until the Azure cutover, the app fetches the public `data/faculty-hours.json` exactly as before. At cutover: point `FACULTY_HOURS_ENDPOINT` in `script.js` to `/api/faculty-hours`, remove the public JSON, and enable the Microsoft identity provider with the tenant ID/app registration from JCSU IT.
+- Admin access will use the Entra app role `admin` (assigned to the `JCSU-Map-Admins` group); the function already honors it through the principal's `userRoles`.
+- Tests: `node api/faculty-hours/index.test.js`. Preview the locked guest state any time with `?lockFaculty=1`.
 
 ## Testing Priorities
 

@@ -1,0 +1,10 @@
+{
+  "name": "faculty-hours-function",
+  "version": "1.0.0",
+  "private": true,
+  "description": "JCSU Map - gated faculty office hours API",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.test.js"
+  }
+}

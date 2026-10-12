@@ -1345,8 +1345,9 @@ function renderCampusLinks() {
 }
 
 async function loadFacultyHours() {
-  // Phase 2 swaps FACULTY_HOURS_ENDPOINT to "/api/faculty-hours", which
-  // returns 401 for guests - the same "locked" state as the preview flag.
+  // At the Azure Static Web Apps cutover, switch FACULTY_HOURS_ENDPOINT to
+  // "/api/faculty-hours" - it returns 401 for guests (same locked state as
+  // this preview flag). See "Microsoft login (3-tier access)" in README.md.
   const lockPreview = new URLSearchParams(window.location.search).has("lockFaculty");
   if (lockPreview) {
     facultyOfficeHours = {};
