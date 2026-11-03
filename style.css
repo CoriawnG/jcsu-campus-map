@@ -4434,21 +4434,6 @@ body.home-view-open:not(.route-feature-active) .map-panel {
   line-height: 1.45;
 }
 
-.home-sports-board {
-  overflow: hidden;
-  background: #ffffff;
-  border: 1px solid rgba(0, 45, 86, 0.14);
-  border-radius: 10px;
-}
-
-.home-sports-board iframe {
-  display: block;
-  width: 100%;
-  min-height: 520px;
-  border: 0;
-  background: #ffffff;
-}
-
 .home-sports-list {
   display: grid;
   gap: 8px;
@@ -4533,9 +4518,6 @@ body.home-view-open:not(.route-feature-active) .map-panel {
     height: 62px;
   }
 
-  .home-sports-board iframe {
-    min-height: 460px;
-  }
 }
 
 /* Dedicated saved places screen */
@@ -5761,4 +5743,3 @@ body.route-feature-active .route-step-navigator {
     left: 12px;
   }
 }
-
