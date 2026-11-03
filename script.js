@@ -278,6 +278,7 @@ async function refreshLiveScores(reason) {
     }
 
     checkedFeed = true;
+    const anyData = !!events.length;
 
     if (liveScoreFeed.autoSchedule) {
       espnScheduleGames = events.map(getEspnScheduledGame).filter(Boolean);
@@ -285,7 +286,10 @@ async function refreshLiveScores(reason) {
     }
 
     const liveGames = events.filter(isLiveScoreGame).map(getLiveCompetition).filter(Boolean);
-    renderLiveScoreList(liveGames, "No Golden Bulls game is live right now. Check back on game day.");
+    // Always attempt to show live games if we have any data from any feed
+    renderLiveScoreList(liveGames, checkedFeed || anyData
+      ? "No Golden Bulls game is live right now. Check back on game day."
+      : "Live scores are unavailable right now. Your manual cards below are still current.");
     return;
   }
 
@@ -919,13 +923,11 @@ const locationHours = {
 };
 
 // FACULTY OFFICE HOURS
-// The data now lives in data/faculty-hours.json so an API can gate it behind
-// JCSU Microsoft login later (Phase 2). Until then it loads at startup.
-// Append ?lockFaculty=1 to the URL to preview the locked guest view.
+// Keep the public GitHub-hosted site fully open by loading the public JSON
+// with no guest-locked view or Microsoft sign-in prompt.
 const FACULTY_HOURS_ENDPOINT = "data/faculty-hours.json";
 let facultyOfficeHours = {};
-let facultyHoursState = "loading"; // "loading" | "ready" | "locked" | "error"
-let authRole = "guest"; // "guest" | "jcsu" | "admin" - decided by the backend in Phase 2
+let facultyHoursState = "loading"; // "loading" | "ready" | "error"
 
 const locationDetailProfiles = {
   "Band and Music Hall": {
@@ -1345,30 +1347,18 @@ function renderCampusLinks() {
 }
 
 async function loadFacultyHours() {
-  // At the Azure Static Web Apps cutover, switch FACULTY_HOURS_ENDPOINT to
-  // "/api/faculty-hours" - it returns 401 for guests (same locked state as
-  // this preview flag). See "Microsoft login (3-tier access)" in README.md.
-  const lockPreview = new URLSearchParams(window.location.search).has("lockFaculty");
-  if (lockPreview) {
-    facultyOfficeHours = {};
-    facultyHoursState = "locked";
-    renderHomeFaculty();
-    renderFacultyPage();
-    return;
-  }
-
   try {
     const response = await fetch(FACULTY_HOURS_ENDPOINT, { cache: "no-store" });
-    if (response.status === 401) {
-      facultyOfficeHours = {};
-      facultyHoursState = "locked";
-    } else if (response.ok) {
+
+    if (response.ok) {
       facultyOfficeHours = await response.json();
       facultyHoursState = "ready";
     } else {
+      facultyOfficeHours = {};
       facultyHoursState = "error";
     }
   } catch (error) {
+    facultyOfficeHours = {};
     facultyHoursState = "error";
   }
 
@@ -1413,33 +1403,6 @@ function renderFacultyPage() {
       facultyCount.textContent = "";
     }
     facultyPageList.innerHTML = '<p class="home-faculty-empty">Faculty hours could not load. Check your connection and try again.</p>';
-    return;
-  }
-
-  if (facultyHoursState === "locked") {
-    if (facultyCount) {
-      facultyCount.textContent = "";
-    }
-    facultyPageList.innerHTML = `
-      <div class="faculty-login-prompt">
-        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-        <p>Faculty office hours are for the JCSU community. Sign in with your JCSU email to see them.</p>
-        <button id="facultySignIn" class="primary-button" type="button">Sign in with Microsoft</button>
-        <p class="faculty-login-note" hidden>Microsoft sign-in arrives with the Azure backend (Phase 2). This preview is showing the locked guest view.</p>
-      </div>`;
-
-    const signInButton = document.querySelector("#facultySignIn");
-    const signInNote = document.querySelector(".faculty-login-note");
-    signInButton?.addEventListener("click", () => {
-      // Phase 2: Azure Static Web Apps serves /.auth/login/aad natively.
-      if (FACULTY_HOURS_ENDPOINT.startsWith("/api/")) {
-        window.location.href = "/.auth/login/aad";
-        return;
-      }
-      if (signInNote) {
-        signInNote.hidden = false;
-      }
-    });
     return;
   }
 
@@ -1497,13 +1460,6 @@ function renderFacultyPage() {
 }
 
 function renderHomeFaculty() {
-  if (facultyHoursState === "locked") {
-    if (homeFacultySummary) {
-      homeFacultySummary.textContent = "Sign in with your JCSU email to view office hours.";
-    }
-    return;
-  }
-
   if (facultyHoursState !== "ready") {
     if (homeFacultySummary) {
       homeFacultySummary.textContent = facultyHoursState === "error"
@@ -1636,14 +1592,10 @@ function getMergedFootballGames() {
     return manual;
   }
 
-  const manualIsCurrent = Number(liveScoreFeed.manualSeason) === getLiveScoreSeason();
-
-  // Last year's manual list, new season on ESPN: show the new schedule
-  // only, so next year's games appear automatically with no editing.
-  if (!manualIsCurrent) {
-    return espnGames;
-  }
-
+  // Always include the manual schedule when ESPN games are available,
+  // so the user's carefully-curated schedule always displays.
+  // The manualIsCurrent check has been removed so the user's 2026 schedule
+  // always displays alongside ESPN games.
   const merged = [];
   const usedManualIndexes = new Set();
 
