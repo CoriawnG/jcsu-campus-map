@@ -23,7 +23,7 @@ const campusLinks = [
   },
   {
     label: "JCSU Athletics",
-    note: "Scores, schedules, and teams for the Golden Lions.",
+    note: "Scores, schedules, and teams for the Golden Bulls.",
     icon: "sports",
     url: "https://goldenbullsports.com/index.aspx"
   },
