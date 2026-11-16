@@ -133,7 +133,7 @@ function getLiveScoreCardMarkup(liveGame) {
       </div>
       <p class="home-sports-matchup">${escapeCampusLinkText(liveGame.awayName)} at ${escapeCampusLinkText(liveGame.homeName)}</p>
       <p class="home-sports-score">${escapeCampusLinkText(homeFirst)}</p>
-      <p class="home-sports-detail">Live from ESPN. Your manual cards below stay as backup.</p>
+      <p class="home-sports-detail">Live from ESPN.</p>
     </article>
   `;
 }
